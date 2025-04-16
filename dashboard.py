@@ -1,3 +1,6 @@
+import os, pickle, datetime
+MODEL_DIR = "models"
+os.makedirs(MODEL_DIR, exist_ok=True)
 import streamlit as st
 import json
 
@@ -58,13 +61,21 @@ if env_type == "Gridworld":
     agent_type = None
     agent_count = st.sidebar.slider("Number of Agents", 1, 5, 3)
     n_obstacles = st.sidebar.slider("Number of Obstacles", 0, 10, 2)
-    agent_type_choices = ["Neuro-Fuzzy", "Tabular Q-Learning", "DQN RL"]
+    agent_type_choices = ["Neuro-Fuzzy", "Tabular Q-Learning", "DQN RL", "Multi-Modal Fusion Agent"]
     agent_types = [
         st.sidebar.selectbox(
             f"Agent {i+1} Type", agent_type_choices, key=f"agent_type_{i}"
         )
         for i in range(agent_count)
     ]
+    # Multi-modal settings
+    if "Multi-Modal Fusion Agent" in agent_types:
+        st.sidebar.markdown("---")
+        st.sidebar.markdown("**Multi-Modal Fusion Settings**")
+        mm_img_dim = st.sidebar.number_input("Image feature dim", 8, 128, 32, key="mm_img_dim")
+        mm_txt_dim = st.sidebar.number_input("Text feature dim", 4, 64, 16, key="mm_txt_dim")
+        mm_hidden_dim = st.sidebar.number_input("Fusion hidden dim", 8, 128, 32, key="mm_hidden_dim")
+        mm_n_actions = st.sidebar.number_input("Number of actions", 2, 10, 4, key="mm_n_actions")
 elif env_type == "Adversarial Gridworld":
     agent_type = "Tabular Q-Learning"
     n_pursuers = st.sidebar.slider("Number of Pursuers", 1, 3, 1)
@@ -115,6 +126,13 @@ def initialize_env_and_agents():
                         alpha=alpha,
                         gamma=gamma,
                         epsilon=epsilon,
+                    )
+                )
+            elif ag_type == "Multi-Modal Fusion Agent":
+                from src.core.multimodal_fusion_agent import MultiModalFusionAgent
+                agents.append(
+                    MultiModalFusionAgent(
+                        [mm_img_dim, mm_txt_dim], mm_hidden_dim, mm_n_actions
                     )
                 )
             else:
@@ -218,7 +236,14 @@ def simulate_step():
             perturbed_obs.append(obs)
     st.session_state.perturbed_obs = perturbed_obs
     actions = []
+    import numpy as np
+    from src.core.multimodal_fusion_agent import MultiModalFusionAgent
     for i, (agent, obs) in enumerate(zip(agents, perturbed_obs)):
+        # If agent is MultiModalFusionAgent and obs is not a list, inject random multi-modal input
+        if isinstance(agent, MultiModalFusionAgent) and not (isinstance(obs, list) and len(obs) == 2):
+            # Use agent.model.input_dims for feature sizes
+            img_dim, txt_dim = agent.model.input_dims
+            obs = [np.random.randn(img_dim), np.random.randn(txt_dim)]
         fb = feedback.get(i, {"approve": "Approve", "override_action": None, "custom_reward": None})
         if fb["approve"] == "Reject":
             action = getattr(agent, 'last_action', 0)
@@ -289,7 +314,7 @@ def simulate_step():
 
 # --- Main UI ---
 st.title(f"🤖 Multi-Agent System Dashboard ({agent_type})")
-tabs = st.tabs(["Simulation", "Analytics", "Manual Feedback", "Batch Experiments"])
+tabs = st.tabs(["Simulation", "Analytics", "Manual Feedback", "Batch Experiments", "Model Management", "Multi-Modal Demo"])
 
 # --- Manual Feedback Tab ---
 with tabs[2]:
@@ -310,6 +335,100 @@ with tabs[2]:
 
 # --- Batch Experiments Tab ---
 with tabs[3]:
+    pass
+# --- Model Management Tab ---
+
+with tabs[4]:
+    pass
+
+# --- Multi-Modal Fusion Agent Demo Tab ---
+with tabs[5]:
+    import numpy as np
+    from src.core.multimodal_fusion_agent import MultiModalFusionAgent
+    st.header("Multi-Modal Fusion Agent Demo")
+    st.write("Test the Multi-Modal Fusion Agent with random image and text features.")
+    img_dim = st.number_input("Image feature dim", 8, 128, 32)
+    txt_dim = st.number_input("Text feature dim", 4, 64, 16)
+    n_actions = st.number_input("Number of actions", 2, 10, 4)
+    hidden_dim = st.number_input("Fusion hidden dim", 8, 128, 32)
+    # Generate random modalities
+    img_feat = np.random.randn(img_dim)
+    txt_feat = np.random.randn(txt_dim)
+    st.write("#### Image Feature (random)")
+    st.write(img_feat)
+    st.write("#### Text Feature (random)")
+    st.write(txt_feat)
+    agent = MultiModalFusionAgent([img_dim, txt_dim], hidden_dim, n_actions)
+    action = agent.act([img_feat, txt_feat])
+    st.success(f"Agent selected action: {action}")
+    st.header("Model Management & Versioning")
+    save_name = st.text_input("Save Model As", value=f"model_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}")
+    if st.button("Save Current Agents", key="save_model"):
+        save_path = os.path.join(MODEL_DIR, save_name + ".pkl")
+        meta = {
+            "timestamp": datetime.datetime.now().isoformat(),
+            "agent_type": [type(a).__name__ for a in st.session_state.agents],
+            "params": getattr(st.session_state, 'env', None),
+        }
+        with open(save_path, "wb") as f:
+            pickle.dump({"agents": st.session_state.agents, "meta": meta}, f)
+        st.success(f"Saved to {save_path}")
+    # List saved models
+    model_files = [f for f in os.listdir(MODEL_DIR) if f.endswith(".pkl")]
+    st.write("### Saved Models")
+    st.write("### Evaluate & Compare Saved Models")
+    selected_models = st.multiselect("Select models to evaluate", model_files)
+    n_eval_episodes = st.number_input("Episodes per evaluation", min_value=1, max_value=50, value=5)
+    if st.button("Run Evaluation", key="eval_models") and selected_models:
+        eval_results = {}
+        for mf in selected_models:
+            with open(os.path.join(MODEL_DIR, mf), "rb") as f:
+                loaded = pickle.load(f)
+                agents = loaded["agents"]
+                env, _ = initialize_env_and_agents(agent_count=len(agents))
+                rewards_all = []
+                law_violations = []
+                for ep in range(n_eval_episodes):
+                    obs = env.reset()
+                    ep_rewards = [0 for _ in range(len(agents))]
+                    for step in range(100):
+                        acts = [agents[i].act(obs[i]) for i in range(len(agents))]
+                        obs, rewards, done = env.step(acts)
+                        for i in range(len(agents)):
+                            ep_rewards[i] += rewards[i]
+                        if done:
+                            break
+                    rewards_all.append(ep_rewards)
+                    law_violations.append([getattr(a, "law_violations", 0) for a in agents])
+                eval_results[mf] = {
+                    "avg_reward": np.mean(rewards_all, axis=0).tolist(),
+                    "law_violations": np.sum(law_violations, axis=0).tolist()
+                }
+        st.session_state.eval_results = eval_results
+        st.success("Evaluation complete!")
+    if "eval_results" in st.session_state:
+        st.write("### Evaluation Results")
+        import matplotlib.pyplot as plt
+        fig, ax = plt.subplots()
+        for mf, res in st.session_state.eval_results.items():
+            ax.plot(res["avg_reward"], label=f"{mf} (reward)")
+        ax.set_xlabel("Agent Index")
+        ax.set_ylabel("Avg Reward (eval)")
+        ax.legend(fontsize=7)
+        st.pyplot(fig)
+        st.write("### Law Violations")
+        for mf, res in st.session_state.eval_results.items():
+            st.write(f"{mf}: {res['law_violations']}")
+    for mf in model_files:
+        with open(os.path.join(MODEL_DIR, mf), "rb") as f:
+            content = pickle.load(f)
+            meta = content.get("meta", {})
+        st.write(f"**{mf}** | {meta.get('timestamp', '')} | {meta.get('agent_type', '')}")
+        if st.button(f"Load {mf}", key=f"load_{mf}"):
+            with open(os.path.join(MODEL_DIR, mf), "rb") as f2:
+                loaded = pickle.load(f2)
+                st.session_state.agents = loaded["agents"]
+            st.success(f"Loaded agents from {mf}")
     st.header("Batch Experimentation & Parameter Sweeps")
     st.write("Configure and run multiple experiments with different parameters. Results will be aggregated for analysis.")
     sweep_agent_counts = st.text_input("Agent Counts (comma-separated)", value="2,3,4")
