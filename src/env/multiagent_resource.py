@@ -1,6 +1,8 @@
 import numpy as np
 
-class MultiAgentResourceEnv:
+from .base_env import BaseEnvironment
+
+class MultiAgentResourceEnv(BaseEnvironment):
     """
     Multi-agent resource collection environment (grid).
     Agents collect resources for reward. Supports cooperative, competitive, or mixed.
@@ -20,11 +22,34 @@ class MultiAgentResourceEnv:
         self.resource_positions = set(self.resource_positions)
         self.collected = [0] * self.n_agents
         self.done = False
-        return self._get_obs()
+        return self.get_observation()
 
     def _get_obs(self):
         # Each agent observes its own position and all resource positions
         return [np.array(list(self.agent_positions[i]) + [coord for pos in self.resource_positions for coord in pos]) for i in range(self.n_agents)]
+
+    def get_observation(self):
+        return self._get_obs()
+
+    def get_state(self):
+        return {
+            "agent_positions": self.agent_positions,
+            "resource_positions": list(self.resource_positions),
+            "collected": self.collected,
+            "done": self.done
+        }
+
+    def render(self, mode="human"):
+        print(f"Agents: {self.agent_positions}, Resources: {self.resource_positions}, Collected: {self.collected}")
+
+    @property
+    def action_space(self):
+        return 4  # up, down, left, right
+
+    @property
+    def observation_space(self):
+        # own pos (2) + all resources (2 * n_resources)
+        return 2 + 2 * self.n_resources
 
     def step(self, actions):
         rewards = [0] * self.n_agents

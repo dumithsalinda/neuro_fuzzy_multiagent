@@ -1,11 +1,10 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from src.core.tabular_q_agent import TabularQLearningAgent
-from src.env.multiagent_gridworld import MultiAgentGridworldEnv
-from src.env.multiagent_resource import MultiAgentResourceEnv
+from src.env.environment_factory import EnvironmentFactory
 
 # --- Multi-Agent Gridworld Demo with Visualization ---
-grid_env = MultiAgentGridworldEnv(grid_size=5, n_agents=2, mode="cooperative")
+grid_env = EnvironmentFactory.create("multiagent_gridworld_v2", grid_size=5, n_agents=2, mode="cooperative")
 agents = [TabularQLearningAgent(n_states=25*25, n_actions=4) for _ in range(2)]
 reward_history = [[] for _ in agents]
 positions_history = [[] for _ in agents]
@@ -64,7 +63,7 @@ plt.legend()
 plt.show()
 
 # --- Multi-Agent Resource Collection Demo with Visualization ---
-res_env = MultiAgentResourceEnv(grid_size=5, n_agents=2, n_resources=3, mode="competitive")
+res_env = EnvironmentFactory.create("multiagent_resource", grid_size=5, n_agents=2, n_resources=3, mode="competitive")
 agents = [TabularQLearningAgent(n_states=None, n_actions=4) for _ in range(2)]
 reward_history = [[] for _ in agents]
 positions_history = [[] for _ in agents]

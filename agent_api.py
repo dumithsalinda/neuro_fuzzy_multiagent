@@ -64,9 +64,11 @@ def build_agents(agent_types, n_agents):
             agents.append(Agent(model=NeuroFuzzyHybrid(nn_config, fis_config)))
     return agents
 
+from src.env.environment_factory import EnvironmentFactory
+
 def build_env(env_type, n_agents, n_obstacles):
     if env_type == "MultiAgentGridworld":
-        return MultiAgentGridworldEnv(grid_size=5, n_agents=n_agents, n_obstacles=n_obstacles)
+        return EnvironmentFactory.create("multiagent_gridworld_v2", grid_size=5, n_agents=n_agents, n_obstacles=n_obstacles)
     raise ValueError("Unsupported env type")
 
 def reset_all():

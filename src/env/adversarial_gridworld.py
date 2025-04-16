@@ -1,6 +1,8 @@
 import numpy as np
 
-class AdversarialGridworldEnv:
+from .base_env import BaseEnvironment
+
+class AdversarialGridworldEnv(BaseEnvironment):
     """
     Multi-agent gridworld with pursuers and evaders.
     Pursuers try to catch evaders; evaders try to reach target or avoid capture.
@@ -57,6 +59,30 @@ class AdversarialGridworldEnv:
         pursuer_obs = [np.array(list(pos) + sum(self.evader_positions, ()) + list(self.target)) for pos in self.pursuer_positions]
         evader_obs = [np.array(list(pos) + sum(self.pursuer_positions, ()) + list(self.target)) for pos in self.evader_positions]
         return pursuer_obs + evader_obs
+
+    def get_observation(self):
+        return self._get_obs()
+
+    def get_state(self):
+        return {
+            "pursuer_positions": self.pursuer_positions,
+            "evader_positions": self.evader_positions,
+            "obstacles": self.obstacles,
+            "target": self.target,
+            "done": self.done
+        }
+
+    def render(self, mode="human"):
+        print(f"Pursuers: {self.pursuer_positions}, Evaders: {self.evader_positions}, Target: {self.target}, Obstacles: {self.obstacles}")
+
+    @property
+    def action_space(self):
+        return 5  # Example: 5 actions per agent
+
+    @property
+    def observation_space(self):
+        # Example: own pos (2) + all other agents + target (2) + obstacles
+        return 2 + 2 * (self.n_agents - 1) + 2 + 2 * self.n_obstacles
 
     def step(self, actions):
         # actions: list of ints, 0=up, 1=down, 2=left, 3=right, order: pursuers then evaders

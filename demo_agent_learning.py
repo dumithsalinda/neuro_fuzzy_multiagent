@@ -13,7 +13,7 @@ for episode in range(10):
     total_reward = 0
     for t in range(20):
         action = agent.act(state)
-        next_state, reward, done = env.step(action)
+        next_state, reward, done, _ = env.step(action)
         agent.observe(reward, next_state, done)
         state = next_state
         total_reward += reward
@@ -31,7 +31,7 @@ for episode in range(5):
     total_reward = 0
     for t in range(30):
         action = agent.act(state)
-        next_state, reward, done = env.step(action)
+        next_state, reward, done, _ = env.step(action)
         agent.observe(reward, next_state, done)
         state = next_state
         total_reward += reward

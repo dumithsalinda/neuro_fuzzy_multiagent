@@ -1,6 +1,8 @@
 import numpy as np
 
-class SimpleDiscreteEnv:
+from .base_env import BaseEnvironment
+
+class SimpleDiscreteEnv(BaseEnvironment):
     """
     Simple discrete environment for tabular Q-learning (e.g., N-state chain).
     """
@@ -10,7 +12,7 @@ class SimpleDiscreteEnv:
         self.state = 0
     def reset(self):
         self.state = np.random.randint(self.n_states)
-        return self.state
+        return self.get_observation()
     def step(self, action):
         # Move left/right in a chain
         if action == 0:
@@ -19,9 +21,26 @@ class SimpleDiscreteEnv:
             self.state = min(self.n_states - 1, self.state + 1)
         reward = 1 if self.state == self.n_states - 1 else 0
         done = self.state == self.n_states - 1
-        return self.state, reward, done
+        return self.get_observation(), reward, done, {}
 
-class SimpleContinuousEnv:
+    def render(self, mode="human"):
+        print(f"State: {self.state}")
+
+    def get_observation(self):
+        return self.state
+
+    def get_state(self):
+        return {"state": self.state}
+
+    @property
+    def action_space(self):
+        return self.n_actions
+
+    @property
+    def observation_space(self):
+        return self.n_states
+
+class SimpleContinuousEnv(BaseEnvironment):
     """
     Simple continuous environment for DQN (e.g., 2D point to goal).
     """
@@ -30,7 +49,7 @@ class SimpleContinuousEnv:
         self.goal = np.ones(2)
     def reset(self):
         self.state = np.random.uniform(-1, 1, size=2)
-        return self.state
+        return self.get_observation()
     def step(self, action):
         # Actions: 0=+x, 1=-x, 2=+y, 3=-y
         if action == 0:
@@ -44,4 +63,21 @@ class SimpleContinuousEnv:
         self.state = np.clip(self.state, -1, 1)
         reward = -np.linalg.norm(self.state - self.goal)
         done = np.linalg.norm(self.state - self.goal) < 0.2
-        return self.state.copy(), reward, done
+        return self.get_observation(), reward, done, {}
+
+    def render(self, mode="human"):
+        print(f"State: {self.state}, Goal: {self.goal}")
+
+    def get_observation(self):
+        return self.state.copy()
+
+    def get_state(self):
+        return {"state": self.state.copy(), "goal": self.goal.copy()}
+
+    @property
+    def action_space(self):
+        return 4
+
+    @property
+    def observation_space(self):
+        return 2

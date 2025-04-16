@@ -51,8 +51,20 @@ if st.sidebar.button(f"Real-World {realworld_mode}"):
         realworld_result_placeholder.error(f"Error: {ex}")
 
 # --- Sidebar: Agent Type Selection & Parameter Tuning ---
-env_type = st.sidebar.selectbox(
-    "Environment Type", ["Gridworld", "Adversarial Gridworld", "Resource Collection"]
+from src.env.environment_factory import EnvironmentFactory
+
+# List of registered environments for dynamic selection
+env_choices = [
+    ("Gridworld", "multiagent_gridworld_v2"),
+    ("Gridworld (Simple)", "multiagent_gridworld"),
+    ("Adversarial Gridworld", "adversarial_gridworld"),
+    ("Resource Collection", "multiagent_resource"),
+    ("Simple Discrete", "simple_discrete"),
+    ("Simple Continuous", "simple_continuous")
+]
+
+env_type, env_key = st.sidebar.selectbox(
+    "Environment Type", env_choices, format_func=lambda x: x[0]
 )
 
 agent_type = None  # Always defined for safety
@@ -112,10 +124,24 @@ def initialize_env_and_agents():
     # Recreate env and agents based on sidebar selections
     agents = []
     env = None
-    if env_type == "Gridworld":
-        from src.env.multiagent_gridworld import MultiAgentGridworldEnv
+    # Prepare kwargs for environment creation
+    env_kwargs = {}
+    if env_key == "multiagent_gridworld_v2":
+        env_kwargs = {"grid_size": 5, "n_agents": agent_count, "mode": "cooperative", "n_obstacles": n_obstacles}
+    elif env_key == "multiagent_gridworld":
+        env_kwargs = {"grid_size": 5, "n_agents": agent_count, "n_obstacles": n_obstacles}
+    elif env_key == "adversarial_gridworld":
+        env_kwargs = {"grid_size": 5, "n_pursuers": n_pursuers, "n_evaders": n_evaders, "n_obstacles": n_obstacles}
+    elif env_key == "multiagent_resource":
+        env_kwargs = {"grid_size": 5, "n_agents": agent_count, "n_resources": 3, "mode": "competitive"}
+    elif env_key == "simple_discrete":
+        env_kwargs = {"n_states": 5, "n_actions": 2}
+    elif env_key == "simple_continuous":
+        env_kwargs = {}
+    env = EnvironmentFactory.create(env_key, **env_kwargs)
 
-        n_states, n_actions = 5, 4
+    # Agent creation logic (preserve previous logic)
+    if env_key in ["multiagent_gridworld_v2", "multiagent_gridworld"]:
         for i in range(agent_count):
             ag_type = agent_types[i] if agent_types else "Tabular Q-Learning"
             if ag_type == "Neuro-Fuzzy":
@@ -152,9 +178,7 @@ def initialize_env_and_agents():
                         epsilon=epsilon,
                     )
                 )
-        env = MultiAgentGridworldEnv(
-            grid_size=5, n_agents=agent_count, n_obstacles=n_obstacles
-        )
+        # Environment is now created via EnvironmentFactory above
     elif env_type == "Adversarial Gridworld":
         from src.env.adversarial_gridworld import AdversarialGridworldEnv
 
