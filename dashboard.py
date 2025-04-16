@@ -184,13 +184,43 @@ def simulate_step():
             return int(a.item()) if a.size == 1 else int(a.flat[0])
         return int(a) if isinstance(a, (np.integer, np.floating)) else a
 
-    # --- Human-in-the-Loop feedback logic ---
+    # --- Adversarial perturbation logic ---
     feedback = st.session_state.get('feedback', {})
+    orig_obs = list(st.session_state.obs)
+    perturbed_obs = []
+    for i, obs in enumerate(orig_obs):
+        is_dqn = agents[i].__class__.__name__ == "DQNAgent"
+        if adversarial_enabled and i in adversarial_agents and adversarial_type != "None":
+            obs_arr = np.array(obs, dtype=np.float32)
+            if adversarial_type == "Gaussian Noise":
+                obs_arr = obs_arr + np.random.normal(0, adversarial_strength, size=obs_arr.shape)
+            elif adversarial_type == "Uniform Noise":
+                obs_arr = obs_arr + np.random.uniform(-adversarial_strength, adversarial_strength, size=obs_arr.shape)
+            elif adversarial_type == "Zeros":
+                obs_arr = np.zeros_like(obs_arr)
+            elif adversarial_type == "Max Value":
+                obs_arr = np.ones_like(obs_arr) * adversarial_strength
+            elif adversarial_type == "FGSM (Targeted, DQN)" and is_dqn:
+                try:
+                    import torch
+                    obs_tensor = torch.tensor(obs_arr, requires_grad=True).unsqueeze(0).float()
+                    qvals = agents[i].model(obs_tensor)
+                    action = torch.argmax(qvals, dim=1)
+                    loss = -qvals[0, action]
+                    loss.backward()
+                    grad_sign = obs_tensor.grad.data.sign().squeeze(0).numpy()
+                    obs_arr = obs_arr + adversarial_strength * grad_sign
+                except Exception:
+                    # If torch or model not available, fallback to Gaussian noise
+                    obs_arr = obs_arr + np.random.normal(0, adversarial_strength, size=obs_arr.shape)
+            perturbed_obs.append(obs_arr.tolist())
+        else:
+            perturbed_obs.append(obs)
+    st.session_state.perturbed_obs = perturbed_obs
     actions = []
-    for i, (agent, obs) in enumerate(zip(agents, st.session_state.obs)):
+    for i, (agent, obs) in enumerate(zip(agents, perturbed_obs)):
         fb = feedback.get(i, {"approve": "Approve", "override_action": None, "custom_reward": None})
         if fb["approve"] == "Reject":
-            # Skip action or set to a 'no-op' (here, use last_action if available, else 0)
             action = getattr(agent, 'last_action', 0)
         elif fb["approve"] == "Override" and fb["override_action"] is not None:
             try:
@@ -294,6 +324,20 @@ if st.sidebar.button("Send Online Update"):
     except Exception as ex:
         st.sidebar.error(f"Failed to send online update: {ex}")
 
+# --- Adversarial Testing Sidebar ---
+st.sidebar.markdown("---")
+st.sidebar.markdown("**Adversarial Testing**")
+adversarial_enabled = st.sidebar.checkbox("Enable Adversarial Testing", value=False)
+perturb_types = ["None", "Gaussian Noise", "Uniform Noise", "Zeros", "Max Value", "FGSM (Targeted, DQN)"]
+adversarial_type = st.sidebar.selectbox("Perturbation Type", perturb_types)
+adversarial_strength = st.sidebar.slider("Perturbation Strength", 0.0, 2.0, 0.2, 0.01)
+agent_count = st.session_state.get("agents", [None]*3)
+if isinstance(agent_count, int):
+    agent_indices = list(range(agent_count))
+else:
+    agent_indices = list(range(len(agent_count)))
+adversarial_agents = st.sidebar.multiselect("Agents to Attack", agent_indices, default=agent_indices)
+
 # --- Human-in-the-Loop Feedback ---
 st.sidebar.markdown("---")
 st.sidebar.markdown("**Human-in-the-Loop Feedback**")
@@ -310,10 +354,34 @@ with tabs[0]:
     if st.button("Step Simulation", key="main_step_sim"):
         simulate_step()
     if st.session_state.obs is not None:
-        st.write("### Agent Observations")
+        st.write("### Agent Observations (Original)")
         st.write(st.session_state.obs)
+        if adversarial_enabled and any(i in adversarial_agents for i in range(len(st.session_state.obs))):
+            st.write("### Agent Observations (Perturbed)")
+            st.write(st.session_state.perturbed_obs)
         st.write("### Rewards")
         st.write(st.session_state.rewards)
+
+        # --- Analytics: Plot rewards over time ---
+        if "reward_history" not in st.session_state:
+            st.session_state.reward_history = {i: [] for i in range(len(st.session_state.agents))}
+        for i, r in enumerate(st.session_state.rewards):
+            st.session_state.reward_history[i].append(r)
+        st.write("### Reward Trajectories")
+        import matplotlib.pyplot as plt
+        fig, ax = plt.subplots()
+        for i, rewards in st.session_state.reward_history.items():
+            color = "red" if adversarial_enabled and i in adversarial_agents else None
+            ax.plot(rewards, label=f"Agent {i}", color=color)
+        ax.set_xlabel("Step")
+        ax.set_ylabel("Reward")
+        ax.legend()
+        st.pyplot(fig)
+
+        # --- Law violations (if tracked) ---
+        st.write("### Law Violations (if any)")
+        violations = [getattr(agent, "law_violations", 0) for agent in st.session_state.agents]
+        st.write({f"Agent {i}": v for i, v in enumerate(violations)})
 
         # --- Inline Feedback UI ---
         if not auto_approve:
