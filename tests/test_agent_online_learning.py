@@ -9,6 +9,7 @@ def test_agent_learn_from_url(monkeypatch):
     class DummyResponse:
         def __init__(self, text):
             self.text = text
+            self.headers = {'Content-Type': 'text/plain'}
         def raise_for_status(self):
             pass
     def dummy_get(url):
@@ -31,6 +32,7 @@ def test_neurofuzzyagent_learn_from_url(monkeypatch):
     class DummyResponse:
         def __init__(self, text):
             self.text = text
+            self.headers = {'Content-Type': 'text/plain'}
         def raise_for_status(self):
             pass
     def dummy_get(url):
