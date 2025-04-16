@@ -6,13 +6,14 @@ class MultiAgentSystem:
     def __init__(self, agents):
         self.agents = agents
 
-    def broadcast(self, message, sender=None):
+    def broadcast(self, message, sender=None, group=None):
         """
-        Broadcast a message to all agents except sender.
+        Broadcast a message to all agents except sender. If group is specified, only to group members.
         """
         for agent in self.agents:
             if agent is not sender:
-                agent.receive_message(message, sender=sender)
+                if group is None or (hasattr(agent, 'group') and agent.group == group):
+                    agent.receive_message(message, sender=sender)
 
     def step_all(self, observations, states=None):
         """
@@ -41,15 +42,27 @@ class MultiAgentSystem:
 
     def broadcast_knowledge(self, knowledge, sender=None):
         """
-        Broadcast knowledge to all agents except sender, enforcing group and knowledge laws.
+        Broadcast knowledge to all agents except sender, enforcing group and knowledge laws, respecting privacy.
         """
         from core.laws import enforce_laws, LawViolation
+        privacy = knowledge.get('privacy', 'public') if isinstance(knowledge, dict) else 'public'
         try:
             enforce_laws(knowledge, state=None, category='group')
             enforce_laws(knowledge, state=None, category='knowledge')
-            for agent in self.agents:
-                if agent is not sender:
-                    agent.receive_message({'type': 'knowledge', 'content': knowledge}, sender=sender)
+            if privacy == 'private':
+                return  # Do not share
+            elif privacy == 'public':
+                for agent in self.agents:
+                    if agent is not sender:
+                        agent.receive_message({'type': 'knowledge', 'content': knowledge}, sender=sender)
+            elif privacy == 'group-only' and sender is not None and hasattr(sender, 'group'):
+                for agent in self.agents:
+                    if agent is not sender and hasattr(agent, 'group') and agent.group == sender.group:
+                        agent.receive_message({'type': 'knowledge', 'content': knowledge, 'privacy': 'group-only', 'group': sender.group}, sender=sender)
+            elif privacy == 'recipient-list' and 'recipients' in knowledge:
+                for agent in knowledge['recipients']:
+                    if agent is not sender:
+                        agent.receive_message({'type': 'knowledge', 'content': knowledge, 'privacy': 'recipient-list', 'recipients': knowledge['recipients']}, sender=sender)
         except LawViolation as e:
             print(f"[MultiAgentSystem] Knowledge broadcast blocked by law: {e}")
 

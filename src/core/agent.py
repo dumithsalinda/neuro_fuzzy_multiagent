@@ -58,16 +58,31 @@ class Agent(OnlineLearnerMixin):
         self.last_observation = None
         self.total_reward = 0
 
-    def share_knowledge(self, knowledge, system=None):
+    def share_knowledge(self, knowledge, system=None, group=None, recipients=None):
         """
-        Share knowledge with other agents via the system (broadcast).
-        Validates knowledge against laws before broadcasting.
+        Share knowledge with other agents, respecting privacy policies.
+        knowledge: dict with optional 'privacy' key (public, private, group-only, recipient-list)
+        system: MultiAgentSystem instance
+        group: optional group label (for group-only privacy)
+        recipients: optional list of agent instances (for recipient-list privacy)
         """
         from core.laws import enforce_laws, LawViolation
+        privacy = knowledge.get('privacy', 'public') if isinstance(knowledge, dict) else 'public'
         try:
             enforce_laws(knowledge, state=None, category='knowledge')
-            if system is not None:
+            if system is None:
+                return
+            # Determine recipients
+            if privacy == 'private':
+                return  # Do not share
+            elif privacy == 'public':
                 system.broadcast({'type': 'knowledge', 'content': knowledge}, sender=self)
+            elif privacy == 'group-only' and group is not None:
+                system.broadcast({'type': 'knowledge', 'content': knowledge, 'privacy': 'group-only', 'group': group}, sender=self, group=group)
+            elif privacy == 'recipient-list' and recipients is not None:
+                for agent in recipients:
+                    if agent is not self:
+                        agent.receive_message({'type': 'knowledge', 'content': knowledge, 'privacy': 'recipient-list', 'recipients': recipients}, sender=self)
         except LawViolation as e:
             print(f"[Agent] Knowledge sharing blocked by law: {e}")
 
