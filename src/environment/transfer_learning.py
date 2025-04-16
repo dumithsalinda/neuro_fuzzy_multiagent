@@ -138,4 +138,7 @@ def mmd(source, target, kernel='linear', gamma=1.0):
     return mmd_value
 
 def transfer_learning(pretrain_env, finetune_env, model, feature_extractor, steps=10, align_fn=None):
-    ...
+    """
+    Minimal stub: returns the input model unchanged.
+    """
+    return model

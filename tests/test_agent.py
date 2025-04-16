@@ -6,7 +6,7 @@ Tests for the Agent class in agent.py.
 
 import numpy as np
 import pytest
-from src.core.agent import Agent
+from core.agent import Agent, NeuroFuzzyAgent
 
 class DummyModel:
     def forward(self, x):

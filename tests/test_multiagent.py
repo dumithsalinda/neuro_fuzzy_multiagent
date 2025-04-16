@@ -5,9 +5,9 @@ Tests for multiagent simulation, agent-environment interface, and reward aggrega
 """
 
 import numpy as np
-from src.core.agent import Agent
-from src.environment.abstraction import SimpleEnvironment
-from src.environment.transfer_learning import FeatureExtractor
+from core.agent import Agent
+from environment.abstraction import SimpleEnvironment
+from environment.transfer_learning import FeatureExtractor
 
 def test_multiagent_simulation_runs():
     np.random.seed(2024)

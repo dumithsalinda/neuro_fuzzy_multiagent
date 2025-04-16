@@ -6,9 +6,9 @@ Ensures simulation runs, rewards are collected, and shapes are correct.
 """
 import numpy as np
 import pytest
-from src.core.agent import Agent, NeuroFuzzyAgent
-from src.environment.abstraction import SimpleEnvironment
-from src.environment.transfer_learning import FeatureExtractor
+from core.agent import Agent, NeuroFuzzyAgent
+from environment.abstraction import SimpleEnvironment
+from environment.transfer_learning import FeatureExtractor
 
 def test_benchmark_with_neurofuzzy_agent():
     np.random.seed(2025)
