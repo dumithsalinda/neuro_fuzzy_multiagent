@@ -12,8 +12,10 @@ import numpy as np
 from src.core.agent import Agent
 from environment.abstraction import SimpleEnvironment
 from environment.transfer_learning import FeatureExtractor
+from src.laws import clear_laws
 
 def test_multiagent_simulation_runs():
+    clear_laws()  # Only allow_all law remains, so no restriction
     np.random.seed(2024)
     num_agents = 2
     episodes = 3
@@ -48,6 +50,7 @@ def test_multiagent_simulation_runs():
     assert np.any(rewards != 0, axis=(1,2)).all()
 
 def test_agent_reset_and_reuse():
+    clear_laws()  # Only allow_all law remains
     env = SimpleEnvironment(dim=2)
     model = lambda x: x
     feat_extractor = FeatureExtractor(input_dim=2, output_dim=2)

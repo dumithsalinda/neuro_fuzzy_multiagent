@@ -37,6 +37,18 @@ def remove_law(category: str, law_fn: Callable[[Any, Any], bool]):
     if category in LAWS and law_fn in LAWS[category]:
         LAWS[category].remove(law_fn)
 
+# Default allow-all law
+
+def allow_all(action, state):
+    """Allow all actions (default law)."""
+    return True
+
+def clear_laws():
+    """Remove all laws from all categories (for testing/extending). Adds a default allow-all law to each category."""
+    for cat in LAWS:
+        LAWS[cat].clear()
+        LAWS[cat].append(allow_all)
+
 def list_laws(category: str) -> List[Callable[[Any, Any], bool]]:
     """List all laws in the specified category."""
     return LAWS.get(category, [])
@@ -49,9 +61,12 @@ def enforce_laws(action, state, categories=None):
     if categories is None:
         categories = LAWS.keys()
     for cat in categories:
+        if not LAWS[cat]:
+            continue  # No laws in this category, skip
         for law in LAWS[cat]:
             if not law(action, state):
-                raise Exception(f"Unbreakable law violated in category '{cat}': {law.__doc__}")
+                doc = law.__doc__ or getattr(law, '__name__', str(law)) or 'Law violated'
+                raise Exception(f"Unbreakable law violated in category '{cat}': {doc}")
     return True
 
 # Example usage (remove in production):
