@@ -7,7 +7,7 @@ Supports integration with neuro-fuzzy models, transfer learning, and various env
 
 import numpy as np
 from .neuro_fuzzy import NeuroFuzzyHybrid
-from src.laws import enforce_laws
+from laws import enforce_laws
 from .online_learning import OnlineLearnerMixin
 
 class Agent(OnlineLearnerMixin):
@@ -72,6 +72,7 @@ class Agent(OnlineLearnerMixin):
 class NeuroFuzzyAgent(Agent):
     """
     Agent that uses a NeuroFuzzyHybrid model to select actions.
+    Supports modular self-organization of fuzzy rules, membership functions, and neural network weights.
     """
     def __init__(self, nn_config, fis_config, policy=None):
         model = NeuroFuzzyHybrid(nn_config, fis_config)
@@ -79,9 +80,10 @@ class NeuroFuzzyAgent(Agent):
             policy = lambda obs, model: model.forward(obs)
         super().__init__(model, policy)
 
-    def self_organize(self, *args, **kwargs):
+    def self_organize(self, mutation_rate=0.01, tune_fuzzy=True, rule_change=True):
         """
-        Triggers self-organization in the underlying neuro-fuzzy model.
+        Trigger self-organization in the underlying neuro-fuzzy hybrid model.
+        This adapts neural weights, tunes fuzzy sets, and adds/removes rules.
         """
         if hasattr(self.model, 'self_organize'):
-            self.model.self_organize(*args, **kwargs)
+            self.model.self_organize(mutation_rate=mutation_rate, tune_fuzzy=tune_fuzzy, rule_change=rule_change)

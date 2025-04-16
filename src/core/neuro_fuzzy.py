@@ -139,6 +139,7 @@ class NeuroFuzzyHybrid:
                 idx = random.randint(0, len(self.fis.rules)-1)
                 rule = self.fis.rules[idx]
                 new_conseq = rule.consequent + np.random.randn()*0.1
+                new_conseq = np.clip(new_conseq, 0, 1)  # Clamp to [0, 1]
                 new_rule = type(rule)(rule.antecedents, new_conseq)
                 self.fis.add_rule(new_rule)
 
