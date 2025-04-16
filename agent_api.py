@@ -202,6 +202,39 @@ def observe_video(file: UploadFile = File(...)):
     os.remove(video_path)
     return {"action": action, "feature_dim": len(feature)}
 
+from src.integration.real_world_interface import RealWorldInterface
+real_world = RealWorldInterface()
+
+@app.post("/realworld/observe", dependencies=[Depends(verify_api_key)])
+def realworld_observe(source_type: str = Form(...), config: str = Form(...)):
+    """
+    Fetch real-world observation from robot, API, or IoT sensor.
+    config: JSON string with connection info
+    """
+    import json
+    try:
+        cfg = json.loads(config)
+        obs = real_world.get_observation(source_type, cfg)
+        return {"status": "ok", "observation": obs}
+    except Exception as ex:
+        raise HTTPException(status_code=400, detail=f"Observation failed: {ex}")
+
+@app.post("/realworld/act", dependencies=[Depends(verify_api_key)])
+def realworld_act(target_type: str = Form(...), action: str = Form(...), config: str = Form(...)):
+    """
+    Send action/command to robot, API, or IoT sensor.
+    action: JSON string
+    config: JSON string with connection info
+    """
+    import json
+    try:
+        act = json.loads(action)
+        cfg = json.loads(config)
+        result = real_world.send_action(target_type, act, cfg)
+        return {"status": "ok", "result": result}
+    except Exception as ex:
+        raise HTTPException(status_code=400, detail=f"Action failed: {ex}")
+
 @app.post("/explain", dependencies=[Depends(verify_api_key)])
 def explain_action(agent_id: int = Form(...), observation: str = Form(...)):
     """

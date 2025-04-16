@@ -1,4 +1,5 @@
 import streamlit as st
+import json
 
 st.set_page_config(page_title="Multi-Agent System Dashboard", layout="wide")
 import time
@@ -20,6 +21,31 @@ from src.core.multiagent import MultiAgentSystem
 from src.core.neuro_fuzzy import NeuroFuzzyHybrid
 from src.core.tabular_q_agent import TabularQLearningAgent
 from src.env.simple_env import SimpleContinuousEnv, SimpleDiscreteEnv
+
+# --- Real-World Integration Sidebar ---
+st.sidebar.markdown("---")
+st.sidebar.markdown("**Real-World Integration**")
+realworld_types = ["robot", "api", "iot_sensor"]
+realworld_mode = st.sidebar.selectbox("Mode", ["Observe", "Act"])
+realworld_type = st.sidebar.selectbox("Type", realworld_types)
+realworld_url = st.sidebar.text_input("Endpoint URL", value="http://localhost:9000/data")
+realworld_config = {"url": realworld_url}
+realworld_config_json = json.dumps(realworld_config)
+realworld_action = st.sidebar.text_input("Action (JSON)", value="{\"move\": \"forward\"}") if realworld_mode == "Act" else None
+realworld_result_placeholder = st.sidebar.empty()
+if st.sidebar.button(f"Real-World {realworld_mode}"):
+    try:
+        api_url = f"http://localhost:8000/realworld/{'observe' if realworld_mode == 'Observe' else 'act'}"
+        headers = {"X-API-Key": "mysecretkey"}
+        data = {"config": realworld_config_json, "source_type": realworld_type} if realworld_mode == "Observe" else {"config": realworld_config_json, "target_type": realworld_type, "action": realworld_action}
+        r = requests.post(api_url, data=data, headers=headers, timeout=3)
+        result = r.json()
+        if result.get("status") == "ok":
+            realworld_result_placeholder.success(f"Result: {result}")
+        else:
+            realworld_result_placeholder.warning(f"Failed: {result}")
+    except Exception as ex:
+        realworld_result_placeholder.error(f"Error: {ex}")
 
 # --- Sidebar: Agent Type Selection & Parameter Tuning ---
 env_type = st.sidebar.selectbox(
