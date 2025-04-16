@@ -20,25 +20,34 @@ env_type = st.sidebar.selectbox(
     "Environment Type", ["Gridworld", "Adversarial Gridworld", "Resource Collection"]
 )
 
+agent_type = None  # Always defined for safety
+
 if env_type == "Gridworld":
-    agent_type = st.sidebar.selectbox(
-        "Agent Type", ["Neuro-Fuzzy", "Tabular Q-Learning", "DQN RL"]
-    )
+    agent_type = None
     agent_count = st.sidebar.slider("Number of Agents", 1, 5, 3)
     n_obstacles = st.sidebar.slider("Number of Obstacles", 0, 10, 2)
+    agent_type_choices = ["Neuro-Fuzzy", "Tabular Q-Learning", "DQN RL"]
+    agent_types = [
+        st.sidebar.selectbox(
+            f"Agent {i+1} Type", agent_type_choices, key=f"agent_type_{i}"
+        )
+        for i in range(agent_count)
+    ]
 elif env_type == "Adversarial Gridworld":
     agent_type = "Tabular Q-Learning"
     n_pursuers = st.sidebar.slider("Number of Pursuers", 1, 3, 1)
     n_evaders = st.sidebar.slider("Number of Evaders", 1, 3, 1)
     n_obstacles = st.sidebar.slider("Number of Obstacles", 0, 10, 2)
-    agent_count = n_pursuers + n_evaders
+    agent_types = None
 else:
     agent_type = "Tabular Q-Learning"
     agent_count = st.sidebar.slider("Number of Agents", 1, 5, 3)
     n_obstacles = 0
+    agent_types = None
 
 # Human-in-the-loop: RL parameter tuning
-if agent_type in ["Tabular Q-Learning", "DQN RL"]:
+if (env_type == "Gridworld" and any(t in ["Tabular Q-Learning", "DQN RL"] for t in agent_types)) or \
+   (env_type != "Gridworld" and agent_type in ["Tabular Q-Learning", "DQN RL"]):
     st.sidebar.markdown("---")
     st.sidebar.markdown("**Agent Parameters**")
     alpha = st.sidebar.slider("Learning Rate (alpha)", 0.01, 1.0, 0.1, 0.01)
@@ -47,49 +56,85 @@ if agent_type in ["Tabular Q-Learning", "DQN RL"]:
 else:
     alpha = gamma = epsilon = None
 
+
 # --- Session State Setup ---
 def initialize_env_and_agents():
     # Recreate env and agents based on sidebar selections
+    agents = []
+    env = None
     if env_type == "Gridworld":
-        if agent_type == "Neuro-Fuzzy":
-            nn_config = {"input_dim": 2, "hidden_dim": 3, "output_dim": 1}
-            fis_config = None
-            agents = [Agent(model=NeuroFuzzyHybrid(nn_config, fis_config)) for _ in range(agent_count)]
-            env = None
-        elif agent_type == "Tabular Q-Learning":
-            from src.env.multiagent_gridworld import MultiAgentGridworldEnv
-            n_states, n_actions = 5, 4
-            agents = [TabularQLearningAgent(
-                n_states=n_states, n_actions=n_actions, alpha=alpha, gamma=gamma, epsilon=epsilon)
-                for _ in range(agent_count)]
-            env = MultiAgentGridworldEnv(grid_size=5, n_agents=agent_count, mode="cooperative", n_obstacles=n_obstacles)
-        elif agent_type == "DQN RL":
-            state_dim, action_dim = 2, 4
-            agents = [DQNAgent(state_dim=state_dim, action_dim=action_dim, alpha=alpha, gamma=gamma, epsilon=epsilon)
-                      for _ in range(agent_count)]
-            env = SimpleContinuousEnv()
-        else:
-            st.error("Unknown agent type.")
-            st.stop()
+        from src.env.multiagent_gridworld import MultiAgentGridworldEnv
+
+        n_states, n_actions = 5, 4
+        for i in range(agent_count):
+            ag_type = agent_types[i] if agent_types else "Tabular Q-Learning"
+            if ag_type == "Neuro-Fuzzy":
+                nn_config = {"input_dim": 2, "hidden_dim": 3, "output_dim": 1}
+                fis_config = None
+                agents.append(Agent(model=NeuroFuzzyHybrid(nn_config, fis_config)))
+            elif ag_type == "DQN RL":
+                agents.append(
+                    DQNAgent(
+                        state_dim=2,
+                        action_dim=4,
+                        alpha=alpha,
+                        gamma=gamma,
+                        epsilon=epsilon,
+                    )
+                )
+            else:
+                agents.append(
+                    TabularQLearningAgent(
+                        n_states=n_states,
+                        n_actions=n_actions,
+                        alpha=alpha,
+                        gamma=gamma,
+                        epsilon=epsilon,
+                    )
+                )
+        env = MultiAgentGridworldEnv(
+            grid_size=5, n_agents=agent_count, n_obstacles=n_obstacles
+        )
     elif env_type == "Adversarial Gridworld":
         from src.env.adversarial_gridworld import AdversarialGridworldEnv
+
         n_states, n_actions = 5, 4
-        agents = [TabularQLearningAgent(
-            n_states=n_states, n_actions=n_actions, alpha=alpha, gamma=gamma, epsilon=epsilon)
-            for _ in range(agent_count)]
-        env = AdversarialGridworldEnv(grid_size=5, n_pursuers=n_pursuers, n_evaders=n_evaders, n_obstacles=n_obstacles)
+        agents = [
+            TabularQLearningAgent(
+                n_states=n_states,
+                n_actions=n_actions,
+                alpha=alpha,
+                gamma=gamma,
+                epsilon=epsilon,
+            )
+            for _ in range(agent_count)
+        ]
+        env = AdversarialGridworldEnv(
+            grid_size=5,
+            n_pursuers=n_pursuers,
+            n_evaders=n_evaders,
+            n_obstacles=n_obstacles,
+        )
     else:
-        agents = [TabularQLearningAgent(n_states=5, n_actions=4, alpha=alpha, gamma=gamma, epsilon=epsilon)
-                  for _ in range(agent_count)]
+        agents = [
+            TabularQLearningAgent(
+                n_states=5, n_actions=4, alpha=alpha, gamma=gamma, epsilon=epsilon
+            )
+            for _ in range(agent_count)
+        ]
         env = None
     return env, agents
 
+
 if "env" not in st.session_state or st.sidebar.button("Reset Environment"):
     st.session_state.env, st.session_state.agents = initialize_env_and_agents()
-    st.session_state.obs = st.session_state.env.reset() if st.session_state.env else None
+    st.session_state.obs = (
+        st.session_state.env.reset() if st.session_state.env else None
+    )
     st.session_state.done = False
     st.session_state.rewards = [0 for _ in range(agent_count)]
     st.session_state.step = 0
+
 
 # --- Simulation Step ---
 def simulate_step():
@@ -98,19 +143,32 @@ def simulate_step():
     if env is None or st.session_state.done:
         return
     # Get actions for all agents
-    actions = [agent.act(obs) for agent, obs in zip(agents, st.session_state.obs)]
+    def to_scalar_action(a):
+        import numpy as np
+        if isinstance(a, np.ndarray):
+            return int(a.item()) if a.size == 1 else int(a.flat[0])
+        return int(a) if isinstance(a, (np.integer, np.floating)) else a
+
+    actions = [to_scalar_action(agent.act(obs)) for agent, obs in zip(agents, st.session_state.obs)]
     next_obs, rewards, done = env.step(actions)
     # Update agents with new experience
     import random
+
     for i, agent in enumerate(st.session_state.agents):
         # Simulate knowledge update
         agent.integrate_online_knowledge({"step": st.session_state.step})
-        agent.online_knowledge = {"step": st.session_state.step}  # Ensure dashboard always updates
+        agent.online_knowledge = {
+            "step": st.session_state.step
+        }  # Ensure dashboard always updates
         # Agent-to-agent communication: send message to a random other agent
         others = [a for a in st.session_state.agents if a is not agent]
         if others:
             recipient = random.choice(others)
-            msg = {"from": i, "step": st.session_state.step, "knowledge": agent.online_knowledge}
+            msg = {
+                "from": i,
+                "step": st.session_state.step,
+                "knowledge": agent.online_knowledge,
+            }
             agent.send_message(msg, recipient)
         # Track law violations
         try:
@@ -127,6 +185,7 @@ def simulate_step():
     st.session_state.rewards = rewards
     st.session_state.done = done
     st.session_state.step += 1
+
 
 # --- Main UI ---
 st.title(f"🤖 Multi-Agent System Dashboard ({agent_type})")
@@ -146,8 +205,12 @@ with tabs[0]:
     # Table of agent knowledge/law violations (example)
     st.write("### Agent Knowledge Table")
     for i, agent in enumerate(st.session_state.agents):
-        st.write(f"Agent {i} (Step {st.session_state.step}): Knowledge: {getattr(agent, 'online_knowledge', {})} Law Violations: {getattr(agent, 'law_violations', 0)} Last Msg: {getattr(agent, 'last_message', None)}")
-        agent.epsilon = epsilon
+        ag_type = agent_types[i] if agent_types else agent.__class__.__name__
+        st.write(
+            f"Agent {i} [{ag_type}] (Step {st.session_state.step}): Knowledge: {getattr(agent, 'online_knowledge', {})} Law Violations: {getattr(agent, 'law_violations', 0)} Last Msg: {getattr(agent, 'last_message', None)}"
+        )
+        if hasattr(agent, "epsilon"):
+            agent.epsilon = epsilon
 
 for i, agent in enumerate(st.session_state.agents):
     agent.group = "G1" if i < (agent_count // 2 + 1) else "G2"
@@ -168,7 +231,10 @@ with tabs[0]:
     auto_run = st.sidebar.checkbox("Auto Step (every 2s)")
 
     if "env_states" not in st.session_state:
-        st.session_state["env_states"] = [st.session_state.env.reset() if st.session_state.env else None for _ in st.session_state.agents]
+        st.session_state["env_states"] = [
+            st.session_state.env.reset() if st.session_state.env else None
+            for _ in st.session_state.agents
+        ]
     if "step" not in st.session_state:
         st.session_state["step"] = 0
 
