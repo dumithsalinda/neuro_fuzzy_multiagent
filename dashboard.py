@@ -2,71 +2,104 @@ import streamlit as st
 import networkx as nx
 import matplotlib.pyplot as plt
 import numpy as np
+import time
+from src.core.agent import Agent
+from src.core.multiagent import MultiAgentSystem
+from src.core.neuro_fuzzy import NeuroFuzzyHybrid
 from collections import deque
 
-# --- Demo Data Structures (Replace with real system integration) ---
-class DummyAgent:
-    def __init__(self, name, knowledge=None):
-        self.name = name
-        self.knowledge = knowledge or {}
-        self.group = None
-        self.law_violations = 0
-        self.color = "#1f78b4"
+# --- System Setup ---
+# Create neuro-fuzzy agents
+agent_count = 5
+nn_config = {'input_dim': 2, 'hidden_dim': 3, 'output_dim': 1}
+fis_config = None  # Or provide fuzzy rule config
+agents = [Agent(model=NeuroFuzzyHybrid(nn_config, fis_config)) for _ in range(agent_count)]
 
-# Simulated agent system (replace with hooks to your MultiAgentSystem)
-agents = [DummyAgent(f"A{i+1}") for i in range(5)]
-agents[0].knowledge = {"foo": 1}
-agents[1].knowledge = {"bar": 2}
-agents[2].knowledge = {"baz": 3}
-agents[3].knowledge = {"foo": 1, "bar": 2}
-agents[4].knowledge = {"baz": 3, "foo": 1}
+# Assign groups for demo privacy
+for i, agent in enumerate(agents):
+    agent.group = 'G1' if i < 3 else 'G2'
 
-# Simulated knowledge sharing events
+system = MultiAgentSystem(agents)
+
+# --- State Tracking ---
 knowledge_events = deque(maxlen=50)
-knowledge_events.append(("A1", "A2", {"foo": 1}, "public"))
-knowledge_events.append(("A2", "A3", {"bar": 2}, "public"))
-knowledge_events.append(("A3", "A4", {"baz": 3}, "group-only"))
-
-# Simulated group decisions
 group_decisions = deque(maxlen=20)
-group_decisions.append(("mean", [1, 2, 3, 2, 1], 1.8, True))
-group_decisions.append(("majority_vote", [0, 1, 1, 2, 1], 1, True))
-group_decisions.append(("weighted_mean", [2, 3, 2, 2, 2], 2.2, False))
+law_violations = {a: 0 for a in agents}
 
-# --- Streamlit Dashboard ---
+# --- Streamlit UI ---
 st.set_page_config(page_title="Multi-Agent System Dashboard", layout="wide")
-st.title("🤖 Neuro-Fuzzy Multi-Agent System Dashboard")
+st.title("🤖 Neuro-Fuzzy Multi-Agent System Dashboard (Live)")
 
-# Network Graph
-st.header("Agent Interaction Network")
-G = nx.Graph()
+# --- Simulation Controls ---
+run_sim = st.sidebar.button("Step Simulation")
+auto_run = st.sidebar.checkbox("Auto Step (every 2s)")
+
+if 'step' not in st.session_state:
+    st.session_state['step'] = 0
+
+# --- Simulation Step ---
+def simulate_step():
+    # Each agent acts on random observation
+    obs = [np.random.rand(2) for _ in agents]
+    actions = []
+    for i, agent in enumerate(agents):
+        try:
+            action = agent.act(obs[i])
+            actions.append(action)
+        except Exception as e:
+            law_violations[agent] += 1
+            actions.append(None)
+    # Random knowledge sharing event
+    src, dst = np.random.choice(agents, 2, replace=False)
+    knowledge = {'foo': np.random.randint(0, 10), 'privacy': np.random.choice(['public', 'group-only', 'private'])}
+    prev_knowledge = dict(dst.__dict__.get('online_knowledge', {}))
+    src.share_knowledge(knowledge, system=system, group=src.group)
+    if knowledge['privacy'] != 'private':
+        knowledge_events.append((src, dst, knowledge, knowledge['privacy']))
+    # Group decision
+    try:
+        result = system.group_decision(obs, method=np.random.choice(['mean', 'majority_vote', 'weighted_mean']), weights=np.ones(agent_count)/agent_count)
+        group_decisions.append((actions, result, True))
+    except Exception:
+        group_decisions.append((actions, None, False))
+
+# --- Main Loop ---
+if run_sim or auto_run:
+    simulate_step()
+    st.session_state['step'] += 1
+    if auto_run:
+        time.sleep(2)
+
+# --- Visualization ---
+# Agent network
+graph = nx.Graph()
 for agent in agents:
-    G.add_node(agent.name, knowledge=agent.knowledge, color=agent.color)
+    graph.add_node(agent.group + ':' + str(agents.index(agent)), knowledge=str(getattr(agent, 'online_knowledge', {})), color="#1f78b4")
 for src, dst, knowledge, privacy in knowledge_events:
-    G.add_edge(src, dst, label=str(knowledge), privacy=privacy)
+    graph.add_edge(src.group + ':' + str(agents.index(src)), dst.group + ':' + str(agents.index(dst)), label=str(knowledge), privacy=privacy)
 
 fig, ax = plt.subplots(figsize=(6, 4))
-pos = nx.spring_layout(G, seed=42)
-colors = [G.nodes[n]["color"] for n in G.nodes]
-nx.draw(G, pos, with_labels=True, node_color=colors, ax=ax, node_size=900)
-edge_labels = {(u, v): G.edges[u, v]["privacy"] for u, v in G.edges}
-nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels, ax=ax, font_color="red")
+pos = nx.spring_layout(graph, seed=42)
+colors = [graph.nodes[n]["color"] for n in graph.nodes]
+nx.draw(graph, pos, with_labels=True, node_color=colors, ax=ax, node_size=900)
+edge_labels = {(u, v): graph.edges[u, v]["privacy"] for u, v in graph.edges}
+nx.draw_networkx_edge_labels(graph, pos, edge_labels=edge_labels, ax=ax, font_color="red")
 st.pyplot(fig)
 
 # Per-Agent Knowledge Table
 st.header("Agent Knowledge State")
-agent_data = [{"Agent": a.name, "Knowledge": str(a.knowledge), "Law Violations": a.law_violations} for a in agents]
-st.table(agent_data)
+data = [{"Agent": agent.group + ':' + str(i), "Knowledge": str(getattr(agent, 'online_knowledge', {})), "Law Violations": law_violations[agent]} for i, agent in enumerate(agents)]
+st.table(data)
 
 # Knowledge Sharing Log
 st.header("Knowledge Sharing Events")
 for src, dst, knowledge, privacy in list(knowledge_events)[-10:][::-1]:
-    st.write(f"{src} ➡️ {dst} | {knowledge} | Privacy: {privacy}")
+    st.write(f"{src.group}:{agents.index(src)} ➡️ {dst.group}:{agents.index(dst)} | {knowledge} | Privacy: {privacy}")
 
 # Group Decisions Log
 st.header("Recent Group Decisions")
-for method, actions, result, legal in list(group_decisions)[-10:][::-1]:
+for actions, result, legal in list(group_decisions)[-10:][::-1]:
     color = "green" if legal else "red"
-    st.markdown(f"<span style='color:{color}'>[{method}] Actions: {actions} → Result: {result} | {'Legal' if legal else 'Violated Law'}</span>", unsafe_allow_html=True)
+    st.markdown(f"<span style='color:{color}'>Actions: {actions} → Result: {result} | {'Legal' if legal else 'Violated Law'}</span>", unsafe_allow_html=True)
 
-st.info("This dashboard is a live visualization template. Integrate with your real MultiAgentSystem for live data!")
+st.info("This dashboard is now running on your real MultiAgentSystem. Use the sidebar to step or auto-run the simulation.")

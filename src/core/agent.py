@@ -7,7 +7,7 @@ Supports integration with neuro-fuzzy models, transfer learning, and various env
 
 import numpy as np
 from .neuro_fuzzy import NeuroFuzzyHybrid
-from laws import enforce_laws
+from .laws import enforce_laws
 from .online_learning import OnlineLearnerMixin
 
 class Agent(OnlineLearnerMixin):
@@ -67,7 +67,7 @@ class Agent(OnlineLearnerMixin):
         recipients: optional list of agent instances (for recipient-list privacy)
         Enforces knowledge laws before sharing.
         """
-        from core.laws import enforce_laws, LawViolation
+        from .laws import enforce_laws, LawViolation
         privacy = knowledge.get('privacy', 'public') if isinstance(knowledge, dict) else 'public'
         try:
             enforce_laws(knowledge, state=None, category='knowledge')
@@ -94,7 +94,7 @@ class Agent(OnlineLearnerMixin):
         Enforces knowledge laws before integrating shared knowledge.
         """
         if isinstance(message, dict) and message.get('type') == 'knowledge':
-            from core.laws import enforce_laws, LawViolation
+            from .laws import enforce_laws, LawViolation
             try:
                 enforce_laws(message['content'], state=None, category='knowledge')
                 self.integrate_online_knowledge(message['content'])
