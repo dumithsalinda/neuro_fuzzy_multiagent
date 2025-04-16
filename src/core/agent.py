@@ -55,6 +55,13 @@ class Agent(OnlineLearnerMixin):
         self.last_observation = None
         self.total_reward = 0
 
+    def receive_message(self, message, sender=None):
+        """
+        Receive a message from another agent (for collaboration protocols).
+        Override in subclasses for custom behavior.
+        """
+        self.last_message = (message, sender)
+
     @staticmethod
     def random_policy(observation, model):
         # For demonstration: random action in the same shape as observation
