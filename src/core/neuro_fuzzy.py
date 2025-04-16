@@ -56,7 +56,14 @@ class NeuroFuzzyHybrid:
         if np.isscalar(fuzzy_out):
             fuzzy_out = np.array([fuzzy_out])
         nn_out = self.nn.forward(fuzzy_out)
-        return np.asarray(nn_out).flatten()
+        arr = np.asarray(nn_out)
+        if arr.shape == (1, 1):
+            return arr.flatten()
+        if arr.shape == (1,):
+            return arr
+        if arr.ndim == 0:
+            return arr.reshape(1)
+        return arr
 
 
     def backward(self, x, y, lr=0.01):

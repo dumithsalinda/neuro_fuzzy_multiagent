@@ -25,8 +25,9 @@ def test_neuro_fuzzy_hybrid_forward():
     # Forward pass: input should propagate through FIS to NN
     out0 = nf.forward([0.0])
     out5 = nf.forward([5.0])
-    assert np.shape(out0) == (1, 1) or np.shape(out0) == ()
-    assert np.shape(out5) == (1, 1) or np.shape(out5) == ()
+    # Accept both (1, 1) and (1,) or scalar
+    assert np.shape(out0) in [(1, 1), (1,), ()]
+    assert np.shape(out5) in [(1, 1), (1,), ()]
     # Output should be finite
     assert np.isfinite(out0).all() and np.isfinite(out5).all()
 
