@@ -7,25 +7,25 @@ Runs multiple agents for several episodes, collects rewards, and plots learning 
 
 import numpy as np
 import matplotlib.pyplot as plt
-from src.core.agent import Agent
+from src.core.agent import Agent, NeuroFuzzyAgent
 from src.environment.abstraction import SimpleEnvironment
 from src.environment.transfer_learning import FeatureExtractor
 
-class DummyModel:
-    def forward(self, x):
-        return x * 2
-
-def run_benchmark(num_agents=3, episodes=20, steps_per_episode=30):
+def run_benchmark(agent_types, episodes=20, steps_per_episode=30):
     np.random.seed(123)
     agents = []
     envs = []
     feat_extractors = []
+    num_agents = len(agent_types)
     rewards = np.zeros((num_agents, episodes, steps_per_episode))
-    for _ in range(num_agents):
-        env = SimpleEnvironment(dim=4)
-        model = DummyModel()
-        feat_extractor = FeatureExtractor(input_dim=4, output_dim=4)  # output_dim matches env dim
-        agent = Agent(model)
+    for agent_type in agent_types:
+        env = SimpleEnvironment(dim=1)
+        feat_extractor = FeatureExtractor(input_dim=1, output_dim=1)
+        if agent_type == 'neurofuzzy':
+            nn_config = {"input_dim": 1, "output_dim": 1, "hidden_dim": 4}
+            agent = NeuroFuzzyAgent(nn_config, None)
+        else:
+            agent = Agent(model=None)
         agents.append(agent)
         envs.append(env)
         feat_extractors.append(feat_extractor)
@@ -36,20 +36,23 @@ def run_benchmark(num_agents=3, episodes=20, steps_per_episode=30):
             for i, (agent, env, extractor) in enumerate(zip(agents, envs, feat_extractors)):
                 state = env.perceive()
                 features = extractor.extract(state)
-                action = agent.act(features)
-                next_state = env.step(action)
-                # Define reward as negative L2 norm of action (proxy for minimal effort)
+                if isinstance(agent, NeuroFuzzyAgent):
+                    action = agent.act(features)
+                else:
+                    action = np.random.randn(*features.shape)
+                env.step(action)
                 reward = -np.linalg.norm(action)
                 agent.observe(reward)
                 rewards[i, ep, step] = reward
     return rewards
 
-def plot_learning_curves(rewards):
+def plot_learning_curves(rewards, agent_types):
     num_agents, episodes, steps = rewards.shape
     avg_rewards = rewards.mean(axis=1)  # (num_agents, steps)
     plt.figure(figsize=(8, 5))
     for i in range(num_agents):
-        plt.plot(avg_rewards[i], label=f"Agent {i}")
+        label = f"Agent {i} ({agent_types[i]})"
+        plt.plot(avg_rewards[i], label=label)
     plt.xlabel("Step")
     plt.ylabel("Average Reward per Episode")
     plt.title("Multiagent Learning Curves")
@@ -58,5 +61,7 @@ def plot_learning_curves(rewards):
     plt.show()
 
 if __name__ == "__main__":
-    rewards = run_benchmark(num_agents=3, episodes=20, steps_per_episode=30)
-    plot_learning_curves(rewards)
+    agent_types = ['random', 'neurofuzzy']
+    rewards = run_benchmark(agent_types, episodes=20, steps_per_episode=30)
+    plot_learning_curves(rewards, agent_types)
+
