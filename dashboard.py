@@ -289,7 +289,7 @@ def simulate_step():
 
 # --- Main UI ---
 st.title(f"🤖 Multi-Agent System Dashboard ({agent_type})")
-tabs = st.tabs(["Simulation", "Analytics", "Manual Feedback"])
+tabs = st.tabs(["Simulation", "Analytics", "Manual Feedback", "Batch Experiments"])
 
 # --- Manual Feedback Tab ---
 with tabs[2]:
@@ -307,6 +307,80 @@ with tabs[2]:
                     "custom_reward": custom_reward
                 }
                 st.success(f"Feedback for Agent {i} updated.")
+
+# --- Batch Experiments Tab ---
+with tabs[3]:
+    st.header("Batch Experimentation & Parameter Sweeps")
+    st.write("Configure and run multiple experiments with different parameters. Results will be aggregated for analysis.")
+    sweep_agent_counts = st.text_input("Agent Counts (comma-separated)", value="2,3,4")
+    sweep_learning_rates = st.text_input("Learning Rates (comma-separated)", value="0.1,0.2,0.5")
+    sweep_gammas = st.text_input("Gammas (Discount, comma-separated)", value="0.9,0.95,0.99")
+    sweep_epsilons = st.text_input("Epsilons (Exploration, comma-separated)", value="0.05,0.1,0.2")
+    n_steps = st.number_input("Steps per Experiment", min_value=10, max_value=500, value=50)
+    run_batch = st.button("Run Batch Experiments")
+    if run_batch:
+        import itertools
+        agent_counts = [int(x) for x in sweep_agent_counts.split(",") if x.strip()]
+        learning_rates = [float(x) for x in sweep_learning_rates.split(",") if x.strip()]
+        gammas = [float(x) for x in sweep_gammas.split(",") if x.strip()]
+        epsilons = [float(x) for x in sweep_epsilons.split(",") if x.strip()]
+        results = []
+        for ac, lr, gamma, eps in itertools.product(agent_counts, learning_rates, gammas, epsilons):
+            # Minimal env/agent re-init for each run
+            env, agents = initialize_env_and_agents(agent_count=ac, alpha=lr, gamma=gamma, epsilon=eps)
+            obs = env.reset()
+            rewards_acc = [0 for _ in range(ac)]
+            for step in range(n_steps):
+                acts = [agents[i].act(obs[i]) for i in range(ac)]
+                obs, rewards, done = env.step(acts)
+                for i in range(ac):
+                    rewards_acc[i] += rewards[i]
+                if done:
+                    break
+            results.append({"agent_count": ac, "learning_rate": lr, "gamma": gamma, "epsilon": eps, "avg_reward": [r/n_steps for r in rewards_acc]})
+        st.session_state.batch_results = results
+        import requests, datetime
+        meta = {
+            "timestamp": datetime.datetime.now().isoformat(),
+            "user": "local_user",
+            "params": {
+                "agent_counts": agent_counts,
+                "learning_rates": learning_rates,
+                "gammas": gammas,
+                "epsilons": epsilons,
+                "steps": n_steps
+            },
+            "results": results
+        }
+        try:
+            r = requests.post("http://localhost:8000/api/experiments/log", json=meta, timeout=5)
+            if r.status_code == 200:
+                st.success("Batch experiments complete! Results logged to backend.")
+            else:
+                st.warning(f"Batch complete, but backend logging failed: {r.status_code}")
+        except Exception as ex:
+            st.warning(f"Batch complete, but backend logging error: {ex}")
+    if "batch_results" in st.session_state:
+        st.write("### Batch Results Table")
+        st.dataframe(st.session_state.batch_results)
+        # --- Export buttons ---
+        import pandas as pd
+        import json
+        df = pd.DataFrame(st.session_state.batch_results)
+        csv = df.to_csv(index=False).encode('utf-8')
+        json_str = json.dumps(st.session_state.batch_results, indent=2)
+        st.download_button("Download CSV", csv, "batch_results.csv", "text/csv")
+        st.download_button("Download JSON", json_str, "batch_results.json", "application/json")
+        st.write("### Aggregate Reward Plot")
+        import matplotlib.pyplot as plt
+        fig, ax = plt.subplots()
+        for res in st.session_state.batch_results:
+            label = f"Agents: {res['agent_count']}, LR: {res['learning_rate']}, γ: {res['gamma']}, ε: {res['epsilon']}"
+            ax.plot(res["avg_reward"], label=label)
+        ax.set_xlabel("Agent Index")
+        ax.set_ylabel("Avg Reward (per step)")
+        ax.legend(fontsize=7)
+        st.pyplot(fig)
 
 # --- Manual Online Update UI ---
 st.sidebar.markdown("---")
