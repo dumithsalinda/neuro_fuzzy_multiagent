@@ -51,16 +51,40 @@ class Agent(OnlineLearnerMixin):
         pass
 
     def reset(self):
+        """
+        Reset agent state for new episodes or reuse.
+        """
         self.last_action = None
         self.last_observation = None
         self.total_reward = 0
 
+    def share_knowledge(self, knowledge, system=None):
+        """
+        Share knowledge with other agents via the system (broadcast).
+        Validates knowledge against laws before broadcasting.
+        """
+        from core.laws import enforce_laws, LawViolation
+        try:
+            enforce_laws(knowledge, state=None, category='knowledge')
+            if system is not None:
+                system.broadcast({'type': 'knowledge', 'content': knowledge}, sender=self)
+        except LawViolation as e:
+            print(f"[Agent] Knowledge sharing blocked by law: {e}")
+
     def receive_message(self, message, sender=None):
         """
         Receive a message from another agent (for collaboration protocols).
-        Override in subclasses for custom behavior.
+        Handles knowledge sharing if message type is 'knowledge'.
         """
-        self.last_message = (message, sender)
+        if isinstance(message, dict) and message.get('type') == 'knowledge':
+            from core.laws import enforce_laws, LawViolation
+            try:
+                enforce_laws(message['content'], state=None, category='knowledge')
+                self.integrate_online_knowledge(message['content'])
+            except LawViolation as e:
+                print(f"[Agent] Received knowledge blocked by law: {e}")
+        else:
+            self.last_message = (message, sender)
 
     @staticmethod
     def random_policy(observation, model):

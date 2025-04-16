@@ -39,10 +39,23 @@ class MultiAgentSystem:
         enforce_laws(consensus, state={'actions': actions}, category='group')
         return consensus
 
-    def enforce_group_laws_on_knowledge(self, knowledge):
+    def broadcast_knowledge(self, knowledge, sender=None):
         """
-        Enforce group laws on shared knowledge before accepting it.
-        Raises LawViolation if any group law is broken.
+        Broadcast knowledge to all agents except sender, enforcing group and knowledge laws.
         """
-        from core.laws import enforce_laws
-        enforce_laws(knowledge, state=None, category='group')
+        from core.laws import enforce_laws, LawViolation
+        try:
+            enforce_laws(knowledge, state=None, category='group')
+            enforce_laws(knowledge, state=None, category='knowledge')
+            for agent in self.agents:
+                if agent is not sender:
+                    agent.receive_message({'type': 'knowledge', 'content': knowledge}, sender=sender)
+        except LawViolation as e:
+            print(f"[MultiAgentSystem] Knowledge broadcast blocked by law: {e}")
+
+    def aggregate_knowledge(self, attr='online_knowledge'):
+        """
+        Aggregate knowledge from all agents (e.g., for consensus or federated update).
+        Returns a list of all non-None knowledge attributes.
+        """
+        return [getattr(agent, attr, None) for agent in self.agents if getattr(agent, attr, None) is not None]
