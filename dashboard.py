@@ -184,8 +184,30 @@ def simulate_step():
             return int(a.item()) if a.size == 1 else int(a.flat[0])
         return int(a) if isinstance(a, (np.integer, np.floating)) else a
 
-    actions = [to_scalar_action(agent.act(obs)) for agent, obs in zip(agents, st.session_state.obs)]
+    # --- Human-in-the-Loop feedback logic ---
+    feedback = st.session_state.get('feedback', {})
+    actions = []
+    for i, (agent, obs) in enumerate(zip(agents, st.session_state.obs)):
+        fb = feedback.get(i, {"approve": "Approve", "override_action": None, "custom_reward": None})
+        if fb["approve"] == "Reject":
+            # Skip action or set to a 'no-op' (here, use last_action if available, else 0)
+            action = getattr(agent, 'last_action', 0)
+        elif fb["approve"] == "Override" and fb["override_action"] is not None:
+            try:
+                action = type(obs[0])(fb["override_action"]) if hasattr(obs, '__getitem__') else int(fb["override_action"])
+            except Exception:
+                action = fb["override_action"]
+        else:
+            action = to_scalar_action(agent.act(obs))
+        actions.append(action)
     next_obs, rewards, done = env.step(actions)
+    # Apply custom rewards if provided
+    for i, fb in feedback.items():
+        if fb.get("custom_reward") is not None:
+            try:
+                rewards[i] = float(fb["custom_reward"])
+            except Exception:
+                pass
     # Update agents with new experience
     import random
 
@@ -237,7 +259,24 @@ def simulate_step():
 
 # --- Main UI ---
 st.title(f"🤖 Multi-Agent System Dashboard ({agent_type})")
-tabs = st.tabs(["Simulation", "Analytics"])
+tabs = st.tabs(["Simulation", "Analytics", "Manual Feedback"])
+
+# --- Manual Feedback Tab ---
+with tabs[2]:
+    st.header("Manual Feedback Review and Edit")
+    feedback = st.session_state.get("feedback", {})
+    for i, agent in enumerate(st.session_state.agents):
+        with st.expander(f"Agent {i} Feedback History", expanded=False):
+            approve = st.radio(f"Approve action for Agent {i}? (Manual)", ["Approve", "Reject", "Override"], index=["Approve", "Reject", "Override"].index(feedback.get(i, {}).get("approve", "Approve")), key=f"manual_approve_{i}")
+            override_action = st.text_input(f"Override Action (optional, Manual)", value=str(feedback.get(i, {}).get("override_action", "")), key=f"manual_override_{i}")
+            custom_reward = st.number_input(f"Custom Reward (optional, Manual)", value=float(feedback.get(i, {}).get("custom_reward", st.session_state.rewards[i] if hasattr(st.session_state, 'rewards') else 0)), key=f"manual_reward_{i}")
+            if st.button(f"Update Feedback for Agent {i}", key=f"manual_update_{i}"):
+                st.session_state.feedback[i] = {
+                    "approve": approve,
+                    "override_action": override_action if approve == "Override" else None,
+                    "custom_reward": custom_reward
+                }
+                st.success(f"Feedback for Agent {i} updated.")
 
 # --- Manual Online Update UI ---
 st.sidebar.markdown("---")
@@ -255,6 +294,15 @@ if st.sidebar.button("Send Online Update"):
     except Exception as ex:
         st.sidebar.error(f"Failed to send online update: {ex}")
 
+# --- Human-in-the-Loop Feedback ---
+st.sidebar.markdown("---")
+st.sidebar.markdown("**Human-in-the-Loop Feedback**")
+auto_approve = st.sidebar.checkbox("Auto-approve all agent actions", value=False)
+
+# Store feedback in session state
+if "feedback" not in st.session_state:
+    st.session_state.feedback = {}
+
 
 with tabs[0]:
     st.write(f"Step: {st.session_state.step}")
@@ -266,6 +314,25 @@ with tabs[0]:
         st.write(st.session_state.obs)
         st.write("### Rewards")
         st.write(st.session_state.rewards)
+
+        # --- Inline Feedback UI ---
+        if not auto_approve:
+            st.write("## Human-in-the-Loop Feedback (Approve, Override, or Reward)")
+            for i, agent in enumerate(st.session_state.agents):
+                with st.expander(f"Agent {i} Feedback", expanded=True):
+                    default_action = getattr(agent, 'last_action', None)
+                    approve = st.radio(f"Approve action for Agent {i}?", ["Approve", "Reject", "Override"], key=f"approve_{i}")
+                    override_action = st.text_input(f"Override Action (optional)", value=str(default_action) if default_action is not None else "", key=f"override_{i}")
+                    custom_reward = st.number_input(f"Custom Reward (optional)", value=float(st.session_state.rewards[i]), key=f"reward_{i}")
+                    st.session_state.feedback[i] = {
+                        "approve": approve,
+                        "override_action": override_action if approve == "Override" else None,
+                        "custom_reward": custom_reward
+                    }
+        else:
+            # Auto-approve: set feedback to approve for all
+            for i, agent in enumerate(st.session_state.agents):
+                st.session_state.feedback[i] = {"approve": "Approve", "override_action": None, "custom_reward": st.session_state.rewards[i]}
 
     # Table of agent knowledge/law violations (example)
     st.write("### Agent Knowledge Table")
