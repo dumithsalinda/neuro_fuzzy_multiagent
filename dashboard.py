@@ -78,6 +78,7 @@ if env_type == "Gridworld":
         mm_txt_dim = st.sidebar.number_input("Text feature dim", 4, 64, 16, key="mm_txt_dim")
         mm_hidden_dim = st.sidebar.number_input("Fusion hidden dim", 8, 128, 32, key="mm_hidden_dim")
         mm_n_actions = st.sidebar.number_input("Number of actions", 2, 10, 4, key="mm_n_actions")
+        mm_fusion_type = st.sidebar.selectbox("Fusion Method", ["concat", "attention", "gating"], index=0, key="mm_fusion_type")
         # TODO: Add more modalities and fusion methods (e.g., attention, gating) here
 elif env_type == "Adversarial Gridworld":
     agent_type = "Tabular Q-Learning"
@@ -137,7 +138,7 @@ def initialize_env_and_agents():
                 from src.core.multimodal_fusion_agent import MultiModalFusionAgent
                 agents.append(
                     MultiModalFusionAgent(
-                        [mm_img_dim, mm_txt_dim], mm_hidden_dim, mm_n_actions
+                        [mm_img_dim, mm_txt_dim], mm_hidden_dim, mm_n_actions, fusion_type=mm_fusion_type
                     )
                 )
                 # TODO: Pass real environment features when available (see README for extension)
