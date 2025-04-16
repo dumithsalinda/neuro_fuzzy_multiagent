@@ -69,6 +69,8 @@ if env_type == "Gridworld":
         for i in range(agent_count)
     ]
     # Multi-modal settings
+    # Multi-modal agent settings
+    # If any agent is a Multi-Modal Fusion Agent, expose fusion settings in sidebar
     if "Multi-Modal Fusion Agent" in agent_types:
         st.sidebar.markdown("---")
         st.sidebar.markdown("**Multi-Modal Fusion Settings**")
@@ -76,6 +78,7 @@ if env_type == "Gridworld":
         mm_txt_dim = st.sidebar.number_input("Text feature dim", 4, 64, 16, key="mm_txt_dim")
         mm_hidden_dim = st.sidebar.number_input("Fusion hidden dim", 8, 128, 32, key="mm_hidden_dim")
         mm_n_actions = st.sidebar.number_input("Number of actions", 2, 10, 4, key="mm_n_actions")
+        # TODO: Add more modalities and fusion methods (e.g., attention, gating) here
 elif env_type == "Adversarial Gridworld":
     agent_type = "Tabular Q-Learning"
     n_pursuers = st.sidebar.slider("Number of Pursuers", 1, 3, 1)
@@ -129,12 +132,15 @@ def initialize_env_and_agents():
                     )
                 )
             elif ag_type == "Multi-Modal Fusion Agent":
+                # Multi-Modal Fusion Agent: accepts a list of modalities (e.g., image, text)
+                # Uses FusionNetwork for decision making (see src/core/fusion.py)
                 from src.core.multimodal_fusion_agent import MultiModalFusionAgent
                 agents.append(
                     MultiModalFusionAgent(
                         [mm_img_dim, mm_txt_dim], mm_hidden_dim, mm_n_actions
                     )
                 )
+                # TODO: Pass real environment features when available (see README for extension)
             else:
                 agents.append(
                     TabularQLearningAgent(
@@ -240,10 +246,12 @@ def simulate_step():
     from src.core.multimodal_fusion_agent import MultiModalFusionAgent
     for i, (agent, obs) in enumerate(zip(agents, perturbed_obs)):
         # If agent is MultiModalFusionAgent and obs is not a list, inject random multi-modal input
+        # This allows dashboard simulation even if environment is not multi-modal aware
         if isinstance(agent, MultiModalFusionAgent) and not (isinstance(obs, list) and len(obs) == 2):
             # Use agent.model.input_dims for feature sizes
             img_dim, txt_dim = agent.model.input_dims
             obs = [np.random.randn(img_dim), np.random.randn(txt_dim)]
+            # TODO: Replace with real multi-modal features from environment when available
         fb = feedback.get(i, {"approve": "Approve", "override_action": None, "custom_reward": None})
         if fb["approve"] == "Reject":
             action = getattr(agent, 'last_action', 0)

@@ -15,7 +15,11 @@ A robust, environment-independent, dynamic self-organizing neuro-fuzzy multi-age
 - Flexible group decision-making with law enforcement.
 - Online learning and knowledge integration from the internet.
 - Modular, extensible agent and system design.
-- **Multi-Modal Fusion Agent & API:** Accepts text, image, audio, and video inputs, fuses features for action selection via REST API.
+- **Multi-Modal Fusion Agent:** Accepts multiple modalities (e.g., text, image) as input, fuses features for action selection. Supports dashboard demo and simulation with random or real multi-modal data.
+- **Model Management & Versioning:** Save, load, list, and evaluate agent models directly from the dashboard. Compare agent versions on evaluation tasks.
+- **Batch Experimentation:** Run parameter sweeps and batch experiments; export and log results.
+- **Adversarial Testing:** Perturb agent observations with various adversarial methods for robustness analysis.
+- **Dashboard:** Interactive dashboard for simulation, analytics, manual feedback, batch experiments, model management, and multi-modal agent demo.
 
 ## Core Modules
 - `src/core/agent.py`: Agent logic, knowledge sharing, law compliance, extensibility.
@@ -23,28 +27,18 @@ A robust, environment-independent, dynamic self-organizing neuro-fuzzy multi-age
 - `src/core/laws.py`: Law registration, enforcement, and compliance.
 - `src/core/online_learning.py`: Online learning mixin for web knowledge.
 
-## Multi-Modal Fusion Agent & API
+## Multi-Modal Fusion Agent
 
 ### Overview
-This system supports a multi-modal fusion agent that can take text, image, audio, and video as input, extract features (BERT for text, ResNet18 for image/video, Whisper+BERT for audio), and select actions using a fusion network.
+Supports agents that take multiple modalities (e.g., text, image) as input and use a fusion network (concatenation; extensible to attention/gating) for action selection. Includes:
+- Dashboard demo tab for interactive testing with random multi-modal input.
+- Simulation support for multi-modal agents (random or real data).
+- Easily extendable to new fusion methods and modalities.
 
-### API Endpoints
-- `/observe/multimodal`: Accepts `text` (string), `image` (file), `audio` (file), and `video` (file) in a single POST request. Returns agent action based on fused multi-modal input.
-- `/observe/text`, `/observe/audio`, `/observe/image`, `/observe/video`: Single-modality endpoints.
-
-#### Example: Multi-Modal Request (Python)
-```python
-import requests
-files = {
-    "text": (None, "A cat on a mat."),
-    "image": ("cat.jpg", open("cat.jpg", "rb"), "image/jpeg"),
-    "audio": ("cat.wav", open("cat.wav", "rb"), "audio/wav"),
-    "video": ("cat.mp4", open("cat.mp4", "rb"), "video/mp4"),
-}
-headers = {"X-API-Key": "mysecretkey"}
-r = requests.post("http://localhost:8000/observe/multimodal", files=files, headers=headers)
-print(r.json())
-```
+### How to Use
+- Select "Multi-Modal Fusion Agent" in the dashboard sidebar to configure and simulate with multi-modal agents.
+- Use the "Multi-Modal Demo" tab to test agent action selection on random input.
+- To use real multi-modal data, update your environment to return `[modality1, modality2, ...]` per agent.
 
 ### Quickstart
 1. Install dependencies:
