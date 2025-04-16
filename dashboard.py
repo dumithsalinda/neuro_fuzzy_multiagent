@@ -14,9 +14,16 @@ from collections import defaultdict, deque
 
 import matplotlib.pyplot as plt
 import requests
+from dashboard_viz import plot_group_leader_spatial, plot_som_grid
+from dashboard_tables import render_knowledge_table, render_group_decisions_log
+from dashboard_env import realworld_sidebar, initialize_env_and_agents
 
 # --- RL Reward History ---
 reward_history = defaultdict(lambda: deque(maxlen=100))
+
+# --- Environment and Agents Initialization ---
+# Example usage (adapt as needed):
+# env, agents = initialize_env_and_agents(agent_type, agent_count, n_obstacles)
 
 import networkx as nx
 import numpy as np
@@ -29,43 +36,7 @@ from src.core.tabular_q_agent import TabularQLearningAgent
 from src.env.simple_env import SimpleContinuousEnv, SimpleDiscreteEnv
 
 # --- Real-World Integration Sidebar ---
-st.sidebar.markdown("---")
-st.sidebar.markdown("**Real-World Integration**")
-realworld_types = ["robot", "api", "iot_sensor"]
-realworld_mode = st.sidebar.selectbox("Mode", ["Observe", "Act"])
-realworld_type = st.sidebar.selectbox("Type", realworld_types)
-realworld_url = st.sidebar.text_input(
-    "Endpoint URL", value="http://localhost:9000/data"
-)
-realworld_config = {"url": realworld_url}
-realworld_config_json = json.dumps(realworld_config)
-realworld_action = (
-    st.sidebar.text_input("Action (JSON)", value='{"move": "forward"}')
-    if realworld_mode == "Act"
-    else None
-)
-realworld_result_placeholder = st.sidebar.empty()
-if st.sidebar.button(f"Real-World {realworld_mode}"):
-    try:
-        api_url = f"http://localhost:8000/realworld/{'observe' if realworld_mode == 'Observe' else 'act'}"
-        headers = {"X-API-Key": "mysecretkey"}
-        data = (
-            {"config": realworld_config_json, "source_type": realworld_type}
-            if realworld_mode == "Observe"
-            else {
-                "config": realworld_config_json,
-                "target_type": realworld_type,
-                "action": realworld_action,
-            }
-        )
-        r = requests.post(api_url, data=data, headers=headers, timeout=3)
-        result = r.json()
-        if result.get("status") == "ok":
-            realworld_result_placeholder.success(f"Result: {result}")
-        else:
-            realworld_result_placeholder.warning(f"Failed: {result}")
-    except Exception as ex:
-        realworld_result_placeholder.error(f"Error: {ex}")
+realworld_sidebar()
 
 # --- Sidebar: Agent Type Selection & Parameter Tuning ---
 from src.env.environment_factory import EnvironmentFactory
@@ -157,121 +128,8 @@ else:
 
 
 # --- Session State Setup ---
-def initialize_env_and_agents():
-    # Recreate env and agents based on sidebar selections
-    agents = []
-    env = None
-    # Prepare kwargs for environment creation
-    env_kwargs = {}
-    if env_key == "multiagent_gridworld_v2":
-        env_kwargs = {
-            "grid_size": 5,
-            "n_agents": agent_count,
-            "mode": "cooperative",
-            "n_obstacles": n_obstacles,
-        }
-    elif env_key == "multiagent_gridworld":
-        env_kwargs = {
-            "grid_size": 5,
-            "n_agents": agent_count,
-            "n_obstacles": n_obstacles,
-        }
-    elif env_key == "adversarial_gridworld":
-        env_kwargs = {
-            "grid_size": 5,
-            "n_pursuers": n_pursuers,
-            "n_evaders": n_evaders,
-            "n_obstacles": n_obstacles,
-        }
-    elif env_key == "multiagent_resource":
-        env_kwargs = {
-            "grid_size": 5,
-            "n_agents": agent_count,
-            "n_resources": 3,
-            "mode": "competitive",
-        }
-    elif env_key == "simple_discrete":
-        env_kwargs = {"n_states": 5, "n_actions": 2}
-    elif env_key == "simple_continuous":
-        env_kwargs = {}
-    env = EnvironmentFactory.create(env_key, **env_kwargs)
-
-    # Agent creation logic (preserve previous logic)
-    if env_key in ["multiagent_gridworld_v2", "multiagent_gridworld"]:
-        for i in range(agent_count):
-            ag_type = agent_types[i] if agent_types else "Tabular Q-Learning"
-            if ag_type == "Neuro-Fuzzy":
-                nn_config = {"input_dim": 2, "hidden_dim": 3, "output_dim": 1}
-                fis_config = None
-                agents.append(Agent(model=NeuroFuzzyHybrid(nn_config, fis_config)))
-            elif ag_type == "DQN RL":
-                agents.append(
-                    DQNAgent(
-                        state_dim=2,
-                        action_dim=4,
-                        alpha=alpha,
-                        gamma=gamma,
-                        epsilon=epsilon,
-                    )
-                )
-            elif ag_type == "Multi-Modal Fusion Agent":
-                # Multi-Modal Fusion Agent: accepts a list of modalities (e.g., image, text)
-                # Uses FusionNetwork for decision making (see src/core/fusion.py)
-                from src.core.multimodal_fusion_agent import MultiModalFusionAgent
-
-                agents.append(
-                    MultiModalFusionAgent(
-                        [mm_img_dim, mm_txt_dim],
-                        mm_hidden_dim,
-                        mm_n_actions,
-                        fusion_type=mm_fusion_type,
-                    )
-                )
-                # TODO: Pass real environment features when available (see README for extension)
-            else:
-                agents.append(
-                    TabularQLearningAgent(
-                        n_states=n_states,
-                        n_actions=n_actions,
-                        alpha=alpha,
-                        gamma=gamma,
-                        epsilon=epsilon,
-                    )
-                )
-        # Environment is now created via EnvironmentFactory above
-    elif env_type == "Adversarial Gridworld":
-        from src.env.adversarial_gridworld import AdversarialGridworldEnv
-
-        n_states, n_actions = 5, 4
-        agents = [
-            TabularQLearningAgent(
-                n_states=n_states,
-                n_actions=n_actions,
-                alpha=alpha,
-                gamma=gamma,
-                epsilon=epsilon,
-            )
-            for _ in range(agent_count)
-        ]
-        env = AdversarialGridworldEnv(
-            grid_size=5,
-            n_pursuers=n_pursuers,
-            n_evaders=n_evaders,
-            n_obstacles=n_obstacles,
-        )
-    else:
-        agents = [
-            TabularQLearningAgent(
-                n_states=5, n_actions=4, alpha=alpha, gamma=gamma, epsilon=epsilon
-            )
-            for _ in range(agent_count)
-        ]
-        env = None
-    return env, agents
-
-
 if "env" not in st.session_state or st.sidebar.button("Reset Environment"):
-    st.session_state.env, st.session_state.agents = initialize_env_and_agents()
+    st.session_state.env, st.session_state.agents = initialize_env_and_agents(agent_type, agent_count, n_obstacles)
     st.session_state.obs = (
         st.session_state.env.reset() if st.session_state.env else None
     )
@@ -1239,22 +1097,6 @@ if agent_type in ("Tabular Q-Learning", "DQN RL"):
         if agent_type == "Tabular Q-Learning" and hasattr(agent, "q_table"):
             st.text(f"Q-table for Agent {i+1}:")
             st.write(agent.q_table)
-
-# Knowledge Sharing Log
-st.header("Knowledge Sharing Events")
-for src, dst, knowledge, privacy in list(knowledge_events)[-10:][::-1]:
-    st.write(
-        f"{src.group}:{agents.index(src)} ➡️ {dst.group}:{agents.index(dst)} | {knowledge} | Privacy: {privacy}"
-    )
-
-# Group Decisions Log
-st.header("Recent Group Decisions")
-for actions, result, legal in list(group_decisions)[-10:][::-1]:
-    color = "green" if legal else "red"
-    st.markdown(
-        f"<span style='color:{color}'>Actions: {actions} → Result: {result} | {'Legal' if legal else 'Violated Law'}</span>",
-        unsafe_allow_html=True,
-    )
 
 st.info(
     f"This dashboard is running RL agents ({agent_type}) with live visualization. Use the sidebar to step or auto-run the simulation."
