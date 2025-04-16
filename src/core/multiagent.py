@@ -26,19 +26,48 @@ class MultiAgentSystem:
             actions.append(agent.act(observations[i], state=state))
         return actions
 
-    def coordinate_actions(self, observations, states=None):
+    def group_decision(self, observations, states=None, method="mean", weights=None, custom_fn=None):
         """
-        Let agents share their chosen actions, then agree on a consensus action (e.g., mean).
-        Enforces group laws on the consensus action.
-        Returns the consensus action if legal, else raises LawViolation.
+        Make a group decision using the specified method:
+        - 'mean': arithmetic mean (default)
+        - 'weighted_mean': weighted average (requires weights)
+        - 'majority_vote': mode (for discrete actions)
+        - 'custom': user-supplied aggregation function (custom_fn)
+        Enforces group laws on the result.
+        Returns the group action.
         """
         actions = self.step_all(observations, states)
         import numpy as np
-        consensus = np.mean(actions, axis=0)
-        # Enforce group laws
-        from core.laws import enforce_laws, LawViolation
-        enforce_laws(consensus, state={'actions': actions}, category='group')
-        return consensus
+        from core.laws import enforce_laws
+        result = None
+        if method == "mean":
+            result = np.mean(actions, axis=0)
+        elif method == "weighted_mean":
+            if weights is None:
+                raise ValueError("Weights required for weighted_mean.")
+            weights = np.array(weights)
+            actions = np.array(actions)
+            result = np.average(actions, axis=0, weights=weights)
+        elif method == "majority_vote":
+            # Assume actions are 1D discrete values
+            from scipy.stats import mode
+            result = mode(np.array(actions), axis=0).mode[0]
+        elif method == "custom":
+            if custom_fn is None:
+                raise ValueError("custom_fn must be provided for custom aggregation.")
+            result = custom_fn(actions)
+        else:
+            raise ValueError(f"Unknown group decision method: {method}")
+        enforce_laws(result, state={'actions': actions}, category='group')
+        return result
+
+    def coordinate_actions(self, observations, states=None):
+        """
+        Backward-compatible: Let agents agree on a consensus action (mean).
+        Enforces group laws on the consensus action.
+        Returns the consensus action if legal, else raises LawViolation.
+        """
+        return self.group_decision(observations, states, method="mean")
 
     def broadcast_knowledge(self, knowledge, sender=None):
         """

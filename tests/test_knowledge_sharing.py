@@ -32,7 +32,9 @@ def test_knowledge_sharing_blocked_by_law():
     assert knowledge not in receiver.knowledge_received
 
 def test_multiagent_broadcast_knowledge_and_aggregation():
-    clear_laws('knowledge')
+    # Only register group law for numeric actions, not for knowledge sharing
+    from core.laws import clear_laws
+    clear_laws('group')
     a1 = DummyAgent()
     a2 = DummyAgent()
     a3 = DummyAgent()
