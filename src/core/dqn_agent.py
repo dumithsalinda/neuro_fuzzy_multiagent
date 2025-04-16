@@ -6,6 +6,9 @@ from .agent import Agent
 from .laws import enforce_laws, LawViolation
 
 class QNetwork(nn.Module):
+    """
+    Q-Network for DQNAgent. state_dim should match the feature vector dimension for the agent's input type (e.g., 768 for BERT, 512 for ResNet18).
+    """
     def __init__(self, state_dim, action_dim):
         super().__init__()
         self.net = nn.Sequential(

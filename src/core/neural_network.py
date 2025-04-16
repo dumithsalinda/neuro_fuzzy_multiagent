@@ -1,12 +1,20 @@
 """
 neural_network.py
-Minimal feedforward neural network class for neuro-fuzzy hybrid systems.
-Supports forward, backward, and evolutionary update stubs.
+Minimal feedforward neural network class for NeuroFuzzyHybrid:
+    Adaptive Neuro-Fuzzy Inference System (ANFIS)-like hybrid model.
+    input_dim should match the feature vector dimension for the agent's input type (e.g., 768 for BERT, 512 for ResNet18).
+    Combines neural network and fuzzy inference system for hybrid learning.
+    Supports forward, backward, and evolutionary update stubs.
 """
 
 import numpy as np
 
 class FeedforwardNeuralNetwork:
+    """
+    Minimal feedforward neural network for hybrid neuro-fuzzy systems.
+    input_dim should match the feature vector dimension for the agent's input type (e.g., 768 for BERT, 512 for ResNet18).
+    Extendable for hybrid learning (backpropagation + evolution).
+    """
     """
     Minimal feedforward neural network for hybrid neuro-fuzzy systems.
     Extendable for hybrid learning (backpropagation + evolution).
