@@ -14,6 +14,7 @@ class Agent(OnlineLearnerMixin):
     """
     Generic agent that interacts with an environment using a model and policy.
     Now supports online learning from web resources.
+    Supports dynamic group membership for self-organization.
     """
     def __init__(self, model, policy=None):
         self.model = model
@@ -23,6 +24,7 @@ class Agent(OnlineLearnerMixin):
         self.total_reward = 0
         self.message_inbox = []
         self.last_message = None
+        self.group = None  # Group identifier, None if not in a group
 
     def act(self, observation, state=None):
         """
