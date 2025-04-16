@@ -1,0 +1,37 @@
+"""
+neural_network.py
+Minimal feedforward neural network class for neuro-fuzzy hybrid systems.
+Supports forward, backward, and evolutionary update stubs.
+"""
+
+import numpy as np
+
+class FeedforwardNeuralNetwork:
+    """
+    Minimal feedforward neural network for hybrid neuro-fuzzy systems.
+    Extendable for hybrid learning (backpropagation + evolution).
+    """
+    def __init__(self, input_dim, hidden_dim, output_dim, activation=np.tanh):
+        self.input_dim = input_dim
+        self.hidden_dim = hidden_dim
+        self.output_dim = output_dim
+        self.activation = activation
+        # Weight initialization
+        self.W1 = np.random.randn(input_dim, hidden_dim) * 0.1
+        self.b1 = np.zeros(hidden_dim)
+        self.W2 = np.random.randn(hidden_dim, output_dim) * 0.1
+        self.b2 = np.zeros(output_dim)
+
+    def forward(self, x):
+        """Forward pass."""
+        h = self.activation(np.dot(x, self.W1) + self.b1)
+        out = np.dot(h, self.W2) + self.b2
+        return out
+
+    def backward(self, x, y, lr=0.01):
+        """Stub for backpropagation update. To be implemented."""
+        pass
+
+    def evolutionary_update(self, mutation_rate=0.01):
+        """Stub for evolutionary update (mutation/crossover). To be implemented."""
+        pass
