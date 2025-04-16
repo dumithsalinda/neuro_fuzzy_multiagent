@@ -1,7 +1,15 @@
 """
 fuzzy_system.py
-Fuzzy set, fuzzy rule, and fuzzy inference system classes.
-Supports dynamic rule generation and self-tuning membership functions.
+
+Implements fuzzy set, fuzzy rule, and fuzzy inference system classes for neuro-fuzzy and hybrid learning systems.
+Supports dynamic rule generation, self-tuning membership functions, and interpretable fuzzy logic modeling.
+
+Classes:
+- FuzzySet: Represents a fuzzy set with a Gaussian membership function and self-tuning capability.
+- FuzzyRule: Encodes an IF-THEN rule with antecedents and a consequent.
+- FuzzyInferenceSystem: Manages rules and performs fuzzy inference for reasoning and learning.
+
+This module enables interpretable, adaptive, and robust fuzzy logic-based reasoning in multiagent and hybrid systems.
 """
 
 import numpy as np
@@ -10,19 +18,44 @@ class FuzzySet:
     """
     Represents a fuzzy set with a membership function.
     Supports self-tuning of membership parameters.
+
+    Parameters
+    ----------
+    name : str
+        Name of the fuzzy set (e.g., 'Low', 'High').
+    params : list or np.ndarray
+        Parameters for the membership function (e.g., [center, width] for Gaussian).
     """
     def __init__(self, name, params):
         self.name = name
         self.params = params  # e.g., [center, width]
 
     def membership(self, x):
-        """Gaussian membership function (example)."""
+        """
+        Gaussian membership function.
+
+        Parameters
+        ----------
+        x : float or np.ndarray
+            Input value(s) to evaluate membership.
+        Returns
+        -------
+        float or np.ndarray
+            Membership grade(s) in [0, 1].
+        """
         c, w = self.params
         return np.exp(-0.5 * ((x - c) / w) ** 2)
 
     def tune(self, data):
-        """Self-tune the center and width using data (simple mean/std update)."""
-        # data: list or array of samples belonging to this fuzzy set
+        """
+        Self-tune the center and width using data (mean/std update).
+
+        Parameters
+        ----------
+        data : array-like
+            Samples belonging to this fuzzy set.
+        Updates the internal parameters to fit the data.
+        """
         if len(data) > 0:
             c = np.mean(data)
             w = np.std(data) + 1e-6  # avoid zero std
@@ -30,9 +63,14 @@ class FuzzySet:
 
 class FuzzyRule:
     """
-    Represents a fuzzy rule (IF-THEN) with antecedents and consequents.
-    antecedents: list of (input_index, FuzzySet)
-    consequent: output value (float or class)
+    Represents a fuzzy rule (IF-THEN) with antecedents and a consequent.
+
+    Parameters
+    ----------
+    antecedents : list of (int, FuzzySet)
+        List of (input_index, FuzzySet) pairs for the rule antecedent.
+    consequent : float or object
+        Output value or class label for the rule's THEN part.
     """
     def __init__(self, antecedents, consequent):
         self.antecedents = antecedents  # list of (input_index, FuzzySet)
@@ -41,11 +79,23 @@ class FuzzyRule:
 class FuzzyInferenceSystem:
     """
     Fuzzy inference system with dynamic rule generation and evaluation.
+    Manages fuzzy rules and computes outputs via fuzzy logic reasoning.
     """
     def __init__(self):
+        """
+        Initialize an empty fuzzy inference system.
+        """
         self.rules = []
 
     def add_rule(self, rule):
+        """
+        Add a fuzzy rule to the system.
+
+        Parameters
+        ----------
+        rule : FuzzyRule
+            Rule to add to the system.
+        """
         self.rules.append(rule)
 
     def dynamic_rule_generation(self, X, y, fuzzy_sets_per_input):

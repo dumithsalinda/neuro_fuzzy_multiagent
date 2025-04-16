@@ -1,7 +1,13 @@
 """
 neuro_fuzzy.py
-ANFIS-like neuro-fuzzy hybrid model combining neural and fuzzy logic.
-Supports both evolutionary and gradient-based learning.
+
+Implements an ANFIS-like neuro-fuzzy hybrid model combining neural networks and fuzzy logic systems.
+Supports both evolutionary and gradient-based learning for transfer learning, adaptation, and robust inference.
+
+Classes:
+- NeuroFuzzyHybrid: Integrates a FeedforwardNeuralNetwork with a FuzzyInferenceSystem for hybrid learning.
+
+This module is central to experiments in adaptive, interpretable, and robust learning systems.
 """
 
 import numpy as np
@@ -11,25 +17,59 @@ from .fuzzy_system import FuzzyInferenceSystem
 class NeuroFuzzyHybrid:
     """
     Adaptive Neuro-Fuzzy Inference System (ANFIS)-like hybrid model.
-    Combines neural network and fuzzy inference system.
-    Supports hybrid learning (evolution + backpropagation).
+    Combines neural network and fuzzy inference system for hybrid learning.
+
+    Parameters
+    ----------
+    nn_config : dict
+        Configuration for FeedforwardNeuralNetwork (e.g., layer sizes, activations).
+    fis_config : dict
+        Configuration for FuzzyInferenceSystem (e.g., rules, membership functions).
     """
     def __init__(self, nn_config, fis_config):
+        """
+        Initialize the hybrid model with neural and fuzzy system configs.
+
+        Parameters
+        ----------
+        nn_config : dict
+            Neural network configuration.
+        fis_config : dict
+            Fuzzy inference system configuration.
+        """
         self.nn = FeedforwardNeuralNetwork(**nn_config)
         self.fis = FuzzyInferenceSystem(**fis_config)
 
     def forward(self, x):
-        """Forward pass through fuzzy system and neural network."""
+        """
+        Forward pass through fuzzy system and neural network.
+
+        Parameters
+        ----------
+        x : np.ndarray
+            Input feature vector.
+        Returns
+        -------
+        np.ndarray
+            Output of the neural network after fuzzy inference.
+        """
         fuzzy_out = self.fis.evaluate(x)
         nn_out = self.nn.forward(fuzzy_out)
         return nn_out
 
     def backward(self, x, y, lr=0.01):
         """
-        Hybrid backpropagation update:
-        - For batch input: evaluate each x through fuzzy system, stack results
-        - Forward pass: batch_fuzzy_out -> neural network
-        - Compute MSE loss and gradients for neural network weights only
+        Hybrid backpropagation update for the neural component.
+
+        Parameters
+        ----------
+        x : np.ndarray
+            Batch of input vectors.
+        y : np.ndarray
+            Batch of target outputs.
+        lr : float, optional
+            Learning rate for gradient descent.
+        Updates only the neural network parameters (fuzzy system is static).
         """
         # Batch fuzzy evaluation
         batch_fuzzy_out = np.array([self.fis.evaluate(xi) for xi in x])
