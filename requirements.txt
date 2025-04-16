@@ -5,3 +5,8 @@ matplotlib
 networkx
 numpy
 scipy
+transformers
+torchvision
+openai-whisper
+Pillow
+opencv-python

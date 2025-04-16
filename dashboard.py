@@ -5,6 +5,11 @@ import time
 from collections import deque
 
 import matplotlib.pyplot as plt
+from collections import defaultdict, deque
+
+# --- RL Reward History ---
+reward_history = defaultdict(lambda: deque(maxlen=100))
+
 import networkx as nx
 import numpy as np
 
@@ -206,12 +211,18 @@ with tabs[0]:
     st.write("### Agent Knowledge Table")
     for i, agent in enumerate(st.session_state.agents):
         ag_type = agent_types[i] if agent_types else agent.__class__.__name__
+        last_msg = getattr(agent, 'last_message', None)
+        if isinstance(last_msg, tuple) and len(last_msg) == 2 and isinstance(last_msg[0], dict):
+            last_msg_display = last_msg[0]
+        else:
+            last_msg_display = last_msg
         st.write(
-            f"Agent {i} [{ag_type}] (Step {st.session_state.step}): Knowledge: {getattr(agent, 'online_knowledge', {})} Law Violations: {getattr(agent, 'law_violations', 0)} Last Msg: {getattr(agent, 'last_message', None)}"
+            f"Agent {i} [{ag_type}] (Step {st.session_state.step}): Knowledge: {getattr(agent, 'online_knowledge', {})} Law Violations: {getattr(agent, 'law_violations', 0)} Last Msg: {last_msg_display}"
         )
         if hasattr(agent, "epsilon"):
             agent.epsilon = epsilon
 
+agent_count = len(st.session_state.agents)
 for i, agent in enumerate(st.session_state.agents):
     agent.group = "G1" if i < (agent_count // 2 + 1) else "G2"
 
@@ -352,9 +363,9 @@ if agent_type in ("Tabular Q-Learning", "DQN RL"):
     st.header("RL Agent Rewards")
     for i, agent in enumerate(st.session_state.agents):
         st.subheader(f"Agent {i+1} Reward History")
-        r = list(reward_history[agent])
+        r = list(reward_history.get(agent, []))
         st.line_chart(r if r else [0])
-        if agent_type == "Tabular Q-Learning":
+        if agent_type == "Tabular Q-Learning" and hasattr(agent, "q_table"):
             st.text(f"Q-table for Agent {i+1}:")
             st.write(agent.q_table)
 

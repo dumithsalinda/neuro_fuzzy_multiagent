@@ -15,12 +15,49 @@ A robust, environment-independent, dynamic self-organizing neuro-fuzzy multi-age
 - Flexible group decision-making with law enforcement.
 - Online learning and knowledge integration from the internet.
 - Modular, extensible agent and system design.
+- **Multi-Modal Fusion Agent & API:** Accepts text, image, audio, and video inputs, fuses features for action selection via REST API.
 
 ## Core Modules
 - `src/core/agent.py`: Agent logic, knowledge sharing, law compliance, extensibility.
 - `src/core/multiagent.py`: Multi-agent system, group decision, privacy-aware knowledge sharing.
 - `src/core/laws.py`: Law registration, enforcement, and compliance.
 - `src/core/online_learning.py`: Online learning mixin for web knowledge.
+
+## Multi-Modal Fusion Agent & API
+
+### Overview
+This system supports a multi-modal fusion agent that can take text, image, audio, and video as input, extract features (BERT for text, ResNet18 for image/video, Whisper+BERT for audio), and select actions using a fusion network.
+
+### API Endpoints
+- `/observe/multimodal`: Accepts `text` (string), `image` (file), `audio` (file), and `video` (file) in a single POST request. Returns agent action based on fused multi-modal input.
+- `/observe/text`, `/observe/audio`, `/observe/image`, `/observe/video`: Single-modality endpoints.
+
+#### Example: Multi-Modal Request (Python)
+```python
+import requests
+files = {
+    "text": (None, "A cat on a mat."),
+    "image": ("cat.jpg", open("cat.jpg", "rb"), "image/jpeg"),
+    "audio": ("cat.wav", open("cat.wav", "rb"), "audio/wav"),
+    "video": ("cat.mp4", open("cat.mp4", "rb"), "video/mp4"),
+}
+headers = {"X-API-Key": "mysecretkey"}
+r = requests.post("http://localhost:8000/observe/multimodal", files=files, headers=headers)
+print(r.json())
+```
+
+### Quickstart
+1. Install dependencies:
+   ```sh
+   pip install -r requirements.txt
+   ```
+2. Run the API server:
+   ```sh
+   uvicorn agent_api:app --reload
+   ```
+3. Send requests as above to `/observe/multimodal`.
+
+---
 
 ## Example Usage
 ```python
