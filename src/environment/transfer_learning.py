@@ -6,7 +6,9 @@ Utilities for transfer learning and domain adaptation in neuro-fuzzy multiagent 
 Includes:
 - FeatureExtractor: Simple feature extraction stub (extensible to neural/statistical models).
 - domain_adaptation: Placeholder for aligning source/target features.
-- transfer_learning: Workflow for pretraining and finetuning models across environments.
+- coral: CORAL (Correlation Alignment) for feature alignment.
+- mmd: Maximum Mean Discrepancy (MMD) for feature alignment.
+- transfer_learning: Workflow for pretraining and finetuning models across environments, with optional feature alignment.
 
 These utilities support experiments in transfer learning, domain adaptation, and feature learning across diverse environments.
 """
@@ -69,36 +71,71 @@ def domain_adaptation(source_features, target_features):
     # For now, just return features unchanged
     return source_features, target_features
 
-def transfer_learning(pretrain_env, finetune_env, model, feature_extractor, steps=10):
+def coral(source, target):
     """
-    Transfer learning workflow: pretrain on source, finetune on target.
-
+    CORAL: Aligns the second-order statistics of source and target features.
     Parameters
     ----------
-    pretrain_env : Environment
-        Source environment for pretraining.
-    finetune_env : Environment
-        Target environment for finetuning/adaptation.
-    model : object
-        Model to train (should implement a .forward() method).
-    feature_extractor : FeatureExtractor
-        Feature extraction module.
-    steps : int
-        Number of pretrain/finetune steps.
+    source : np.ndarray
+        Source domain features (n_samples, n_features).
+    target : np.ndarray
+        Target domain features (n_samples, n_features).
     Returns
     -------
-    model : object
-        The trained/adapted model.
+    np.ndarray
+        Aligned source features.
     """
-    # Pretrain on source environment
-    for _ in range(steps):
-        state = pretrain_env.reset()
-        features = feature_extractor.extract(state)
-        # Model could be a neural net, fuzzy system, etc.
-        model.forward(features)
-    # Finetune on target environment
-    for _ in range(steps):
-        state = finetune_env.reset()
-        features = feature_extractor.extract(state)
-        model.forward(features)
-    return model
+    # Center
+    source_c = source - np.mean(source, axis=0)
+    target_c = target - np.mean(target, axis=0)
+    # Covariances
+    cov_s = np.cov(source_c, rowvar=False) + np.eye(source_c.shape[1])
+    cov_t = np.cov(target_c, rowvar=False) + np.eye(target_c.shape[1])
+    # Align
+    A = np.linalg.inv(np.linalg.cholesky(cov_s)).T @ np.linalg.cholesky(cov_t)
+    return (source_c @ A) + np.mean(target, axis=0)
+
+def mmd(source, target, kernel='linear', gamma=1.0):
+    """
+    Maximum Mean Discrepancy (MMD) alignment between source and target features.
+    Supports linear and RBF kernels.
+    Parameters
+    ----------
+    source : np.ndarray
+        Source domain features (n_samples, n_features).
+    target : np.ndarray
+        Target domain features (n_samples, n_features).
+    kernel : str, optional
+        Kernel type: 'linear' or 'rbf'.
+    gamma : float, optional
+        Kernel coefficient for RBF.
+    Returns
+    -------
+    float
+        MMD distance between source and target (for reporting/monitoring).
+    """
+    def linear(X, Y):
+        return np.dot(X, Y.T)
+    def rbf(X, Y):
+        XX = np.sum(X ** 2, axis=1, keepdims=True)
+        YY = np.sum(Y ** 2, axis=1, keepdims=True)
+        XY = np.dot(X, Y.T)
+        dists = XX - 2 * XY + YY.T
+        return np.exp(-gamma * dists)
+    if kernel == 'linear':
+        K_xx = linear(source, source)
+        K_yy = linear(target, target)
+        K_xy = linear(source, target)
+    elif kernel == 'rbf':
+        K_xx = rbf(source, source)
+        K_yy = rbf(target, target)
+        K_xy = rbf(source, target)
+    else:
+        raise ValueError('Unknown kernel type')
+    m = source.shape[0]
+    n = target.shape[0]
+    mmd_value = (np.sum(K_xx) / (m * m) + np.sum(K_yy) / (n * n) - 2 * np.sum(K_xy) / (m * n))
+    return mmd_value
+
+def transfer_learning(pretrain_env, finetune_env, model, feature_extractor, steps=10, align_fn=None):
+    ...
