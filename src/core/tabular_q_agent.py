@@ -59,20 +59,3 @@ class TabularQLearningAgent(Agent):
                 self.q_table = other_agent.q_table.copy()
             elif mode == "average":
                 self.q_table = (self.q_table + other_agent.q_table) / 2.0
-
-        if self.n_states is None:
-            q_vals = self.q_table.get(self.last_state, np.zeros(self.n_actions))
-            next_q = self.q_table.get(next_state, np.zeros(self.n_actions))
-            best_next = np.max(next_q)
-            td_target = reward + self.gamma * best_next * (not done)
-            td_error = td_target - q_vals[self.last_action]
-            q_vals[self.last_action] += self.alpha * td_error
-            self.q_table[self.last_state] = q_vals
-        else:
-            best_next = np.max(self.q_table[next_state])
-            td_target = reward + self.gamma * best_next * (not done)
-            td_error = td_target - self.q_table[self.last_state, self.last_action]
-            self.q_table[self.last_state, self.last_action] += self.alpha * td_error
-        if done:
-            self.last_state = None
-            self.last_action = None

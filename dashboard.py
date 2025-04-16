@@ -48,71 +48,71 @@ reward_history = {a: deque(maxlen=30) for a in agents}
 st.set_page_config(page_title="Multi-Agent System Dashboard", layout="wide")
 st.title(f"🤖 Multi-Agent System Dashboard ({agent_type})")
 
-run_sim = st.sidebar.button("Step Simulation")
-auto_run = st.sidebar.checkbox("Auto Step (every 2s)")
+tabs = st.tabs(["Simulation", "Analytics"])
 
-if 'env_states' not in st.session_state:
-    st.session_state['env_states'] = [env.reset() if env else None for _ in agents]
-if 'step' not in st.session_state:
-    st.session_state['step'] = 0
+with tabs[0]:
+    run_sim = st.sidebar.button("Step Simulation")
+    auto_run = st.sidebar.checkbox("Auto Step (every 2s)")
 
-# --- Simulation Step ---
-def simulate_step():
-    obs = []
-    actions = []
-    rewards = []
-    next_states = []
-    dones = []
-    # RL agents interact with env, others get random obs
-    for i, agent in enumerate(agents):
-        state = st.session_state['env_states'][i] if env else None
-        if agent_type == "Tabular Q-Learning":
-            action = agent.act(state)
-            next_state, reward, done = env.step(action)
-            agent.observe(reward, next_state, done)
-            st.session_state['env_states'][i] = next_state if not done else env.reset()
-            obs.append(state)
-            actions.append(action)
-            rewards.append(reward)
-            next_states.append(next_state)
-            dones.append(done)
-            reward_history[agent].append(reward)
-        elif agent_type == "DQN RL":
-            action = agent.act(state)
-            next_state, reward, done = env.step(action)
-            agent.observe(reward, next_state, done)
-            st.session_state['env_states'][i] = next_state if not done else env.reset()
-            obs.append(state)
-            actions.append(action)
-            rewards.append(reward)
-            next_states.append(next_state)
-            dones.append(done)
-            reward_history[agent].append(reward)
-        else:
-            o = np.random.rand(2)
-            action = agent.act(o)
-            obs.append(o)
-            actions.append(action)
-            rewards.append(None)
-            next_states.append(None)
-            dones.append(False)
-        # Law violation tracking
-        # (Assume law_violations incremented in agent.act if exception)
-    # Knowledge sharing (simulate)
-    src, dst = np.random.choice(agents, 2, replace=False)
-    knowledge = {'foo': np.random.randint(0, 10), 'privacy': np.random.choice(['public', 'group-only', 'private'])}
-    src.share_knowledge(knowledge, system=system, group=src.group)
-    if knowledge['privacy'] != 'private':
-        knowledge_events.append((src, dst, knowledge, knowledge['privacy']))
-    # Group decision
-    try:
-        result = system.group_decision(obs, method=np.random.choice(['mean', 'majority_vote', 'weighted_mean']), weights=np.ones(agent_count)/agent_count)
-        group_decisions.append((actions, result, True))
-    except Exception:
-        group_decisions.append((actions, None, False))
+    if 'env_states' not in st.session_state:
+        st.session_state['env_states'] = [env.reset() if env else None for _ in agents]
+    if 'step' not in st.session_state:
+        st.session_state['step'] = 0
 
-if run_sim or auto_run:
-    simulate_step()
+    # --- Simulation Step ---
+    def simulate_step():
+        obs = []
+        actions = []
+        rewards = []
+        next_states = []
+        dones = []
+        # RL agents interact with env, others get random obs
+        for i, agent in enumerate(agents):
+            state = st.session_state['env_states'][i] if env else None
+            if agent_type == "Tabular Q-Learning":
+                action = agent.act(state)
+                next_state, reward, done = env.step(action)
+                agent.observe(reward, next_state, done)
+                st.session_state['env_states'][i] = next_state if not done else env.reset()
+                obs.append(state)
+                actions.append(action)
+                rewards.append(reward)
+                next_states.append(next_state)
+                dones.append(done)
+                reward_history[agent].append(reward)
+            elif agent_type == "DQN RL":
+                action = agent.act(state)
+                next_state, reward, done = env.step(action)
+                agent.observe(reward, next_state, done)
+                st.session_state['env_states'][i] = next_state if not done else env.reset()
+                obs.append(state)
+                actions.append(action)
+                rewards.append(reward)
+                next_states.append(next_state)
+                dones.append(done)
+                reward_history[agent].append(reward)
+            else:
+                o = np.random.rand(2)
+                action = agent.act(o)
+                obs.append(o)
+                actions.append(action)
+                rewards.append(None)
+                next_states.append(None)
+                dones.append(False)
+            # Law violation tracking
+            # (Assume law_violations incremented in agent.act if exception)
+        # Knowledge sharing (simulate)
+        src, dst = np.random.choice(agents, 2, replace=False)
+        knowledge = {'foo': np.random.randint(0, 10), 'privacy': np.random.choice(['public', 'group-only', 'private'])}
+        src.share_knowledge(knowledge, system=system, group=src.group)
+        if knowledge['privacy'] != 'private':
+            knowledge_events.append((src, dst, knowledge, knowledge['privacy']))
+        # Group decision
+        try:
+            result = system.group_decision(obs, method=np.random.choice(['mean', 'majority_vote', 'weighted_mean']), weights=np.ones(agent_count)/agent_count)
+            group_decisions.append((actions, result, True))
+        except Exception:
+            group_decisions.append((actions, None, False))
     st.session_state['step'] += 1
     if auto_run:
         time.sleep(2)
