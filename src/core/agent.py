@@ -7,6 +7,8 @@ Supports integration with neuro-fuzzy models, transfer learning, and various env
 
 import numpy as np
 
+from .neuro_fuzzy import NeuroFuzzyHybrid
+
 class Agent:
     """
     Generic agent that interacts with an environment using a model and policy.
@@ -55,3 +57,23 @@ class Agent:
     def random_policy(observation, model):
         # For demonstration: random action in the same shape as observation
         return np.random.randn(*observation.shape)
+
+class NeuroFuzzyAgent(Agent):
+    """
+    Agent that uses a NeuroFuzzyHybrid model to select actions.
+
+    Parameters
+    ----------
+    nn_config : dict
+        Neural network configuration for NeuroFuzzyHybrid.
+    fis_config : dict
+        Fuzzy inference system configuration for NeuroFuzzyHybrid.
+    policy : callable, optional
+        Policy function (defaults to greedy via model.forward).
+    """
+    def __init__(self, nn_config, fis_config, policy=None):
+        model = NeuroFuzzyHybrid(nn_config, fis_config)
+        if policy is None:
+            # Greedy: action = model.forward(observation)
+            policy = lambda obs, model: model.forward(obs)
+        super().__init__(model, policy)

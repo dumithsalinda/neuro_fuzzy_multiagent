@@ -23,22 +23,20 @@ class NeuroFuzzyHybrid:
     ----------
     nn_config : dict
         Configuration for FeedforwardNeuralNetwork (e.g., layer sizes, activations).
-    fis_config : dict
-        Configuration for FuzzyInferenceSystem (e.g., rules, membership functions).
+    fis_config : dict, optional
+        Configuration for FuzzyInferenceSystem (e.g., rule generation params, fuzzy sets).
+        If provided, used for dynamic rule generation after initialization.
     """
-    def __init__(self, nn_config, fis_config):
-        """
-        Initialize the hybrid model with neural and fuzzy system configs.
-
-        Parameters
-        ----------
-        nn_config : dict
-            Neural network configuration.
-        fis_config : dict
-            Fuzzy inference system configuration.
-        """
+    def __init__(self, nn_config, fis_config=None):
         self.nn = FeedforwardNeuralNetwork(**nn_config)
-        self.fis = FuzzyInferenceSystem(**fis_config)
+        self.fis = FuzzyInferenceSystem()
+        # Optionally generate rules if info provided
+        if fis_config is not None:
+            # Example: {'X': ..., 'y': ..., 'fuzzy_sets_per_input': ...}
+            if all(k in fis_config for k in ('X', 'y', 'fuzzy_sets_per_input')):
+                self.fis.dynamic_rule_generation(
+                    fis_config['X'], fis_config['y'], fis_config['fuzzy_sets_per_input']
+                )
 
     def forward(self, x):
         """
@@ -54,8 +52,12 @@ class NeuroFuzzyHybrid:
             Output of the neural network after fuzzy inference.
         """
         fuzzy_out = self.fis.evaluate(x)
+        # Ensure input to NN is 1D array
+        if np.isscalar(fuzzy_out):
+            fuzzy_out = np.array([fuzzy_out])
         nn_out = self.nn.forward(fuzzy_out)
-        return nn_out
+        return np.asarray(nn_out).flatten()
+
 
     def backward(self, x, y, lr=0.01):
         """
