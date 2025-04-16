@@ -39,7 +39,27 @@ class TabularQLearningAgent(Agent):
         self.last_action = action
         return action
 
-    def observe(self, reward, next_state, done):
+    def share_knowledge(self, other_agent, mode="average"):
+        """
+        Share Q-table knowledge with another agent.
+        mode: 'copy' (overwrite self), 'average' (elementwise mean)
+        """
+        if self.n_states is None:
+            # Dict-based Q-table
+            all_keys = set(self.q_table.keys()).union(other_agent.q_table.keys())
+            for k in all_keys:
+                q1 = self.q_table.get(k, np.zeros(self.n_actions))
+                q2 = other_agent.q_table.get(k, np.zeros(self.n_actions))
+                if mode == "copy":
+                    self.q_table[k] = q2.copy()
+                elif mode == "average":
+                    self.q_table[k] = (q1 + q2) / 2.0
+        else:
+            if mode == "copy":
+                self.q_table = other_agent.q_table.copy()
+            elif mode == "average":
+                self.q_table = (self.q_table + other_agent.q_table) / 2.0
+
         if self.n_states is None:
             q_vals = self.q_table.get(self.last_state, np.zeros(self.n_actions))
             next_q = self.q_table.get(next_state, np.zeros(self.n_actions))

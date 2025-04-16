@@ -26,7 +26,10 @@ for episode in range(5):
         obs = next_obs
         if done:
             break
-    print(f"Episode {episode+1}: Rewards = {total_rewards}")
+    # Knowledge sharing after each episode (average Q-tables)
+    agents[0].share_knowledge(agents[1], mode="average")
+    agents[1].share_knowledge(agents[0], mode="average")
+    print(f"Episode {episode+1}: Rewards = {total_rewards} | Knowledge shared.")
 
 # --- Multi-Agent Resource Collection Demo ---
 print("\n=== Multi-Agent Resource Collection (Competitive) ===")
@@ -51,4 +54,7 @@ for episode in range(5):
         obs = next_obs
         if done:
             break
-    print(f"Episode {episode+1}: Rewards = {total_rewards}")
+    # Knowledge sharing after each episode (average Q-tables)
+    agents[0].share_knowledge(agents[1], mode="average")
+    agents[1].share_knowledge(agents[0], mode="average")
+    print(f"Episode {episode+1}: Rewards = {total_rewards} | Knowledge shared.")

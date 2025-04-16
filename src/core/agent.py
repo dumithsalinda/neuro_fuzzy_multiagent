@@ -32,9 +32,9 @@ class Agent(OnlineLearnerMixin):
         self.last_observation = observation
         return action
 
-    def observe(self, reward):
+    def observe(self, reward, *args, **kwargs):
         """
-        Receive reward and update internal state.
+        Receive reward and update internal state. RL subclasses may override.
         """
         self.total_reward += reward
 
