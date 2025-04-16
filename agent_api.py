@@ -1,7 +1,7 @@
-from fastapi import FastAPI, Request, HTTPException, Depends
+from fastapi import FastAPI, Request, HTTPException, Depends, File, UploadFile, Form
 from fastapi.security import APIKeyHeader
 from pydantic import BaseModel
-from typing import List, Any
+from typing import List, Any, Optional
 import numpy as np
 import logging
 from src.core.agent import Agent
@@ -9,6 +9,10 @@ from src.core.tabular_q_agent import TabularQLearningAgent
 from src.core.dqn_agent import DQNAgent
 from src.core.neuro_fuzzy import NeuroFuzzyHybrid
 from src.env.multiagent_gridworld import MultiAgentGridworldEnv
+import speech_recognition as sr
+from PIL import Image
+from src.core.multimodal_dqn_agent import MultiModalDQNAgent
+import cv2
 
 app = FastAPI()
 
@@ -26,6 +30,12 @@ def verify_api_key(key: str = Depends(api_key_header)):
 # --- Dynamic agent/env selection ---
 AGENT_TYPES = ["Tabular Q-Learning", "DQN RL", "Neuro-Fuzzy"]
 ENV_TYPES = ["MultiAgentGridworld"]
+
+# --- Multi-modal agent (text+image+audio+video) ---
+# Example: text (BERT 768) + image (ResNet18 512) + audio (BERT on Whisper transcript 768) + video (ResNet18 512)
+MULTIMODAL_INPUT_DIMS = [768, 512, 768, 512]
+MULTIMODAL_ACTION_DIM = 4
+multimodal_agent = MultiModalDQNAgent(input_dims=MULTIMODAL_INPUT_DIMS, action_dim=MULTIMODAL_ACTION_DIM)
 
 # --- State ---
 state = {
@@ -120,6 +130,127 @@ def get_state():
         "agent_types": state["agent_types"],
         "env_type": state["env_type"]
     }
+
+@app.post("/observe/text", dependencies=[Depends(verify_api_key)])
+def observe_text(text: str = Form(...)):
+    # NLP: Use transformer to embed text
+    inputs = nlp_tokenizer(text, return_tensors="pt", truncation=True, padding=True)
+    with torch.no_grad():
+        outputs = nlp_model(**inputs)
+        # Use [CLS] token embedding as feature
+        feature = outputs.last_hidden_state[:, 0, :].squeeze().numpy().tolist()
+    action = int(state["agents"][0].act(feature))
+    logger.info(f"/observe/text: text={text} -> action={action}")
+    return {"action": action}
+
+@app.post("/observe/audio", dependencies=[Depends(verify_api_key)])
+def observe_audio(file: UploadFile = File(...)):
+    import tempfile
+    import os
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmp:
+        tmp.write(file.file.read())
+        audio_path = tmp.name
+    # Whisper speech-to-text
+    result = whisper_model.transcribe(audio_path)
+    transcript = result["text"]
+    # NLP embedding of transcript
+    inputs = nlp_tokenizer(transcript, return_tensors="pt", truncation=True, padding=True)
+    with torch.no_grad():
+        outputs = nlp_model(**inputs)
+        feature = outputs.last_hidden_state[:, 0, :].squeeze().numpy().tolist()
+    action = int(state["agents"][0].act(feature))
+    logger.info(f"/observe/audio: transcript={transcript} -> action={action}")
+    os.remove(audio_path)
+    return {"action": action, "transcript": transcript}
+
+@app.post("/observe/image", dependencies=[Depends(verify_api_key)])
+def observe_image(file: UploadFile = File(...)):
+    import io
+    image = Image.open(io.BytesIO(file.file.read())).convert("RGB")
+    img_tensor = vision_transform(image).unsqueeze(0)
+    with torch.no_grad():
+        feat = vision_model(img_tensor)
+        feature = feat.squeeze().numpy().tolist()
+    action = int(state["agents"][0].act(feature))
+    logger.info(f"/observe/image: feature[0:5]={feature[:5]}... -> action={action}")
+    return {"action": action, "feature_dim": len(feature)}
+
+@app.post("/observe/video", dependencies=[Depends(verify_api_key)])
+def observe_video(file: UploadFile = File(...)):
+    import tempfile
+    import os
+    import cv2
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as tmp:
+        tmp.write(file.file.read())
+        video_path = tmp.name
+    # Extract first frame
+    cap = cv2.VideoCapture(video_path)
+    ret, frame = cap.read()
+    cap.release()
+    if not ret:
+        os.remove(video_path)
+        raise HTTPException(status_code=400, detail="Could not read video file")
+    # Convert frame to PIL Image
+    image = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+    img_tensor = vision_transform(image).unsqueeze(0)
+    with torch.no_grad():
+        feat = vision_model(img_tensor)
+        feature = feat.squeeze().numpy().tolist()
+    action = int(state["agents"][0].act(feature))
+    logger.info(f"/observe/video: feature[0:5]={feature[:5]}... -> action={action}")
+    os.remove(video_path)
+    return {"action": action, "feature_dim": len(feature)}
+
+@app.post("/observe/multimodal", dependencies=[Depends(verify_api_key)])
+def observe_multimodal(
+    text: str = Form(...),
+    image: UploadFile = File(...),
+    audio: UploadFile = File(...),
+    video: UploadFile = File(...),
+):
+    import tempfile, os, cv2
+    # Text feature (BERT)
+    inputs = nlp_tokenizer(text, return_tensors="pt", truncation=True, padding=True)
+    with torch.no_grad():
+        outputs = nlp_model(**inputs)
+        text_feature = outputs.last_hidden_state[:, 0, :].squeeze().numpy()
+    # Image feature (ResNet18)
+    img = Image.open(image.file).convert("RGB")
+    img_tensor = vision_transform(img).unsqueeze(0)
+    with torch.no_grad():
+        img_feature = vision_model(img_tensor).squeeze().numpy()
+    # Audio feature: Whisper transcript -> BERT
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmp:
+        tmp.write(audio.file.read())
+        audio_path = tmp.name
+    whisper_result = whisper_model.transcribe(audio_path)
+    transcript = whisper_result["text"]
+    audio_inputs = nlp_tokenizer(transcript, return_tensors="pt", truncation=True, padding=True)
+    with torch.no_grad():
+        audio_outputs = nlp_model(**audio_inputs)
+        audio_feature = audio_outputs.last_hidden_state[:, 0, :].squeeze().numpy()
+    os.remove(audio_path)
+    # Video feature: ResNet18 on first frame
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as tmp:
+        tmp.write(video.file.read())
+        video_path = tmp.name
+    cap = cv2.VideoCapture(video_path)
+    ret, frame = cap.read()
+    cap.release()
+    if not ret:
+        os.remove(video_path)
+        raise HTTPException(status_code=400, detail="Could not read video file")
+    img_video = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+    img_video_tensor = vision_transform(img_video).unsqueeze(0)
+    with torch.no_grad():
+        video_feature = vision_model(img_video_tensor).squeeze().numpy()
+    os.remove(video_path)
+    # Multi-modal agent expects [text_feature, img_feature, audio_feature, video_feature]
+    action = multimodal_agent.act([
+        text_feature, img_feature, audio_feature, video_feature
+    ])
+    logger.info(f"/observe/multimodal: action={action}")
+    return {"action": action}
 
 @app.post("/config", dependencies=[Depends(verify_api_key)])
 def set_agent_env_config(cfg: AgentEnvConfig):
