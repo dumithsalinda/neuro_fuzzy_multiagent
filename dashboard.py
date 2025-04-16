@@ -101,10 +101,17 @@ def simulate_step():
     actions = [agent.act(obs) for agent, obs in zip(agents, st.session_state.obs)]
     next_obs, rewards, done = env.step(actions)
     # Update agents with new experience
+    import random
     for i, agent in enumerate(st.session_state.agents):
         # Simulate knowledge update
         agent.integrate_online_knowledge({"step": st.session_state.step})
         agent.online_knowledge = {"step": st.session_state.step}  # Ensure dashboard always updates
+        # Agent-to-agent communication: send message to a random other agent
+        others = [a for a in st.session_state.agents if a is not agent]
+        if others:
+            recipient = random.choice(others)
+            msg = {"from": i, "step": st.session_state.step, "knowledge": agent.online_knowledge}
+            agent.send_message(msg, recipient)
         # Track law violations
         try:
             agent.observe(rewards[i], next_obs[i], done)
@@ -139,7 +146,7 @@ with tabs[0]:
     # Table of agent knowledge/law violations (example)
     st.write("### Agent Knowledge Table")
     for i, agent in enumerate(st.session_state.agents):
-        st.write(f"Agent {i} (Step {st.session_state.step}): Knowledge: {getattr(agent, 'online_knowledge', {})} Law Violations: {getattr(agent, 'law_violations', 0)}")
+        st.write(f"Agent {i} (Step {st.session_state.step}): Knowledge: {getattr(agent, 'online_knowledge', {})} Law Violations: {getattr(agent, 'law_violations', 0)} Last Msg: {getattr(agent, 'last_message', None)}")
         agent.epsilon = epsilon
 
 for i, agent in enumerate(st.session_state.agents):

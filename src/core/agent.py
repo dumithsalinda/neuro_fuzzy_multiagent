@@ -21,6 +21,8 @@ class Agent(OnlineLearnerMixin):
         self.last_action = None
         self.last_observation = None
         self.total_reward = 0
+        self.message_inbox = []
+        self.last_message = None
 
     def act(self, observation, state=None):
         """
@@ -57,6 +59,13 @@ class Agent(OnlineLearnerMixin):
         self.last_action = None
         self.last_observation = None
         self.total_reward = 0
+
+    def send_message(self, message, recipient):
+        recipient.receive_message(message, sender=self)
+
+    def receive_message(self, message, sender=None):
+        self.message_inbox.append((message, sender))
+        self.last_message = message
 
     def share_knowledge(self, knowledge, system=None, group=None, recipients=None):
         """
