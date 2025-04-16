@@ -2,23 +2,47 @@ import numpy as np
 
 class MultiAgentGridworldEnv:
     """
-    Multi-agent gridworld environment.
+    Multi-agent gridworld environment with optional obstacles.
     Agents move on a grid, can be cooperative or competitive.
     """
-    def __init__(self, grid_size=5, n_agents=2, mode="cooperative"):
+    def __init__(self, grid_size=5, n_agents=2, mode="cooperative", n_obstacles=0):
         self.grid_size = grid_size
         self.n_agents = n_agents
         self.mode = mode  # "cooperative" or "competitive"
+        self.n_obstacles = n_obstacles
         self.reset()
 
     def reset(self):
-        self.agent_positions = [tuple(np.random.randint(0, self.grid_size, size=2)) for _ in range(self.n_agents)]
-        self.target = tuple(np.random.randint(0, self.grid_size, size=2))
+        # Place agents and target first
+        taken = set()
+        self.agent_positions = []
+        for _ in range(self.n_agents):
+            while True:
+                pos = tuple(np.random.randint(0, self.grid_size, size=2))
+                if pos not in taken:
+                    self.agent_positions.append(pos)
+                    taken.add(pos)
+                    break
+        while True:
+            self.target = tuple(np.random.randint(0, self.grid_size, size=2))
+            if self.target not in taken:
+                taken.add(self.target)
+                break
+        # Place obstacles
+        self.obstacles = []
+        for _ in range(self.n_obstacles):
+            while True:
+                obs = tuple(np.random.randint(0, self.grid_size, size=2))
+                if obs not in taken:
+                    self.obstacles.append(obs)
+                    taken.add(obs)
+                    break
         self.done = [False] * self.n_agents
         return self._get_obs()
 
     def _get_obs(self):
-        # Each agent observes its own position and the target
+        # Each agent observes its own position, the target, and (optionally) obstacles
+        # For now, obstacles are not included in obs vector for simplicity
         return [np.array(list(self.agent_positions[i]) + list(self.target)) for i in range(self.n_agents)]
 
     def step(self, actions):
@@ -28,17 +52,20 @@ class MultiAgentGridworldEnv:
                 continue
             # Actions: 0=up, 1=down, 2=left, 3=right
             x, y = self.agent_positions[i]
+            nx, ny = x, y
             if action == 0 and y > 0:
-                y -= 1
+                ny -= 1
             elif action == 1 and y < self.grid_size - 1:
-                y += 1
+                ny += 1
             elif action == 2 and x > 0:
-                x -= 1
+                nx -= 1
             elif action == 3 and x < self.grid_size - 1:
-                x += 1
-            self.agent_positions[i] = (x, y)
+                nx += 1
+            # Check if new position is an obstacle
+            if (nx, ny) not in self.obstacles:
+                self.agent_positions[i] = (nx, ny)
             # Check if reached target
-            if (x, y) == self.target:
+            if self.agent_positions[i] == self.target:
                 self.done[i] = True
                 if self.mode == "cooperative":
                     rewards[i] = 1

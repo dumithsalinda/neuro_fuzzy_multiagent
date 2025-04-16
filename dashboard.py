@@ -1,63 +1,169 @@
 import streamlit as st
-import networkx as nx
-import matplotlib.pyplot as plt
-import numpy as np
+
+st.set_page_config(page_title="Multi-Agent System Dashboard", layout="wide")
 import time
 from collections import deque
+
+import matplotlib.pyplot as plt
+import networkx as nx
+import numpy as np
+
 from src.core.agent import Agent
+from src.core.dqn_agent import DQNAgent
 from src.core.multiagent import MultiAgentSystem
 from src.core.neuro_fuzzy import NeuroFuzzyHybrid
 from src.core.tabular_q_agent import TabularQLearningAgent
-from src.core.dqn_agent import DQNAgent
-from src.env.simple_env import SimpleDiscreteEnv, SimpleContinuousEnv
+from src.env.simple_env import SimpleContinuousEnv, SimpleDiscreteEnv
 
-# --- Sidebar: Agent Type Selection ---
-agent_type = st.sidebar.selectbox("Agent Type", ["Neuro-Fuzzy", "Tabular Q-Learning", "DQN RL"])
-agent_count = st.sidebar.slider("Number of Agents", 1, 5, 3)
+# --- Sidebar: Agent Type Selection & Parameter Tuning ---
+env_type = st.sidebar.selectbox(
+    "Environment Type", ["Gridworld", "Adversarial Gridworld", "Resource Collection"]
+)
 
-# --- System Setup ---
-if agent_type == "Neuro-Fuzzy":
-    nn_config = {'input_dim': 2, 'hidden_dim': 3, 'output_dim': 1}
-    fis_config = None
-    agents = [Agent(model=NeuroFuzzyHybrid(nn_config, fis_config)) for _ in range(agent_count)]
-    env = None
-elif agent_type == "Tabular Q-Learning":
-    n_states, n_actions = 5, 2
-    agents = [TabularQLearningAgent(n_states=n_states, n_actions=n_actions) for _ in range(agent_count)]
-    env = SimpleDiscreteEnv(n_states=n_states, n_actions=n_actions)
-elif agent_type == "DQN RL":
-    state_dim, action_dim = 2, 4
-    agents = [DQNAgent(state_dim=state_dim, action_dim=action_dim) for _ in range(agent_count)]
-    env = SimpleContinuousEnv()
+if env_type == "Gridworld":
+    agent_type = st.sidebar.selectbox(
+        "Agent Type", ["Neuro-Fuzzy", "Tabular Q-Learning", "DQN RL"]
+    )
+    agent_count = st.sidebar.slider("Number of Agents", 1, 5, 3)
+    n_obstacles = st.sidebar.slider("Number of Obstacles", 0, 10, 2)
+elif env_type == "Adversarial Gridworld":
+    agent_type = "Tabular Q-Learning"
+    n_pursuers = st.sidebar.slider("Number of Pursuers", 1, 3, 1)
+    n_evaders = st.sidebar.slider("Number of Evaders", 1, 3, 1)
+    n_obstacles = st.sidebar.slider("Number of Obstacles", 0, 10, 2)
+    agent_count = n_pursuers + n_evaders
 else:
-    st.error("Unknown agent type.")
-    st.stop()
+    agent_type = "Tabular Q-Learning"
+    agent_count = st.sidebar.slider("Number of Agents", 1, 5, 3)
+    n_obstacles = 0
 
-for i, agent in enumerate(agents):
-    agent.group = 'G1' if i < (agent_count // 2 + 1) else 'G2'
+# Human-in-the-loop: RL parameter tuning
+if agent_type in ["Tabular Q-Learning", "DQN RL"]:
+    st.sidebar.markdown("---")
+    st.sidebar.markdown("**Agent Parameters**")
+    alpha = st.sidebar.slider("Learning Rate (alpha)", 0.01, 1.0, 0.1, 0.01)
+    gamma = st.sidebar.slider("Discount Factor (gamma)", 0.0, 1.0, 0.99, 0.01)
+    epsilon = st.sidebar.slider("Exploration Rate (epsilon)", 0.0, 1.0, 0.1, 0.01)
+else:
+    alpha = gamma = epsilon = None
 
-system = MultiAgentSystem(agents)
+# --- Session State Setup ---
+def initialize_env_and_agents():
+    # Recreate env and agents based on sidebar selections
+    if env_type == "Gridworld":
+        if agent_type == "Neuro-Fuzzy":
+            nn_config = {"input_dim": 2, "hidden_dim": 3, "output_dim": 1}
+            fis_config = None
+            agents = [Agent(model=NeuroFuzzyHybrid(nn_config, fis_config)) for _ in range(agent_count)]
+            env = None
+        elif agent_type == "Tabular Q-Learning":
+            from src.env.multiagent_gridworld import MultiAgentGridworldEnv
+            n_states, n_actions = 5, 4
+            agents = [TabularQLearningAgent(
+                n_states=n_states, n_actions=n_actions, alpha=alpha, gamma=gamma, epsilon=epsilon)
+                for _ in range(agent_count)]
+            env = MultiAgentGridworldEnv(grid_size=5, n_agents=agent_count, mode="cooperative", n_obstacles=n_obstacles)
+        elif agent_type == "DQN RL":
+            state_dim, action_dim = 2, 4
+            agents = [DQNAgent(state_dim=state_dim, action_dim=action_dim, alpha=alpha, gamma=gamma, epsilon=epsilon)
+                      for _ in range(agent_count)]
+            env = SimpleContinuousEnv()
+        else:
+            st.error("Unknown agent type.")
+            st.stop()
+    elif env_type == "Adversarial Gridworld":
+        from src.env.adversarial_gridworld import AdversarialGridworldEnv
+        n_states, n_actions = 5, 4
+        agents = [TabularQLearningAgent(
+            n_states=n_states, n_actions=n_actions, alpha=alpha, gamma=gamma, epsilon=epsilon)
+            for _ in range(agent_count)]
+        env = AdversarialGridworldEnv(grid_size=5, n_pursuers=n_pursuers, n_evaders=n_evaders, n_obstacles=n_obstacles)
+    else:
+        agents = [TabularQLearningAgent(n_states=5, n_actions=4, alpha=alpha, gamma=gamma, epsilon=epsilon)
+                  for _ in range(agent_count)]
+        env = None
+    return env, agents
+
+if "env" not in st.session_state or st.sidebar.button("Reset Environment"):
+    st.session_state.env, st.session_state.agents = initialize_env_and_agents()
+    st.session_state.obs = st.session_state.env.reset() if st.session_state.env else None
+    st.session_state.done = False
+    st.session_state.rewards = [0 for _ in range(agent_count)]
+    st.session_state.step = 0
+
+# --- Simulation Step ---
+def simulate_step():
+    env = st.session_state.env
+    agents = st.session_state.agents
+    if env is None or st.session_state.done:
+        return
+    # Get actions for all agents
+    actions = [agent.act(obs) for agent, obs in zip(agents, st.session_state.obs)]
+    next_obs, rewards, done = env.step(actions)
+    # Update agents with new experience
+    for i, agent in enumerate(st.session_state.agents):
+        # Simulate knowledge update
+        agent.integrate_online_knowledge({"step": st.session_state.step})
+        agent.online_knowledge = {"step": st.session_state.step}  # Ensure dashboard always updates
+        # Track law violations
+        try:
+            agent.observe(rewards[i], next_obs[i], done)
+        except Exception as e:
+            # If a LawViolation, increment counter
+            if e.__class__.__name__ == "LawViolation":
+                if not hasattr(agent, "law_violations"):
+                    agent.law_violations = 0
+                agent.law_violations += 1
+            else:
+                raise
+    st.session_state.obs = next_obs
+    st.session_state.rewards = rewards
+    st.session_state.done = done
+    st.session_state.step += 1
+
+# --- Main UI ---
+st.title(f"🤖 Multi-Agent System Dashboard ({agent_type})")
+tabs = st.tabs(["Simulation", "Analytics"])
+
+with tabs[0]:
+    st.write(f"Step: {st.session_state.step}")
+    st.write(f"Done: {st.session_state.done}")
+    if st.button("Step Simulation", key="main_step_sim"):
+        simulate_step()
+    if st.session_state.obs is not None:
+        st.write("### Agent Observations")
+        st.write(st.session_state.obs)
+        st.write("### Rewards")
+        st.write(st.session_state.rewards)
+
+    # Table of agent knowledge/law violations (example)
+    st.write("### Agent Knowledge Table")
+    for i, agent in enumerate(st.session_state.agents):
+        st.write(f"Agent {i} (Step {st.session_state.step}): Knowledge: {getattr(agent, 'online_knowledge', {})} Law Violations: {getattr(agent, 'law_violations', 0)}")
+        agent.epsilon = epsilon
+
+for i, agent in enumerate(st.session_state.agents):
+    agent.group = "G1" if i < (agent_count // 2 + 1) else "G2"
+
+system = MultiAgentSystem(st.session_state.agents)
 
 # --- State Tracking ---
 knowledge_events = deque(maxlen=50)
 group_decisions = deque(maxlen=20)
-law_violations = {a: 0 for a in agents}
-reward_history = {a: deque(maxlen=30) for a in agents}
 
 # --- Streamlit UI ---
-st.set_page_config(page_title="Multi-Agent System Dashboard", layout="wide")
 st.title(f"🤖 Multi-Agent System Dashboard ({agent_type})")
 
 tabs = st.tabs(["Simulation", "Analytics"])
 
 with tabs[0]:
-    run_sim = st.sidebar.button("Step Simulation")
+    run_sim = st.sidebar.button("Step Simulation", key="sidebar_step_sim")
     auto_run = st.sidebar.checkbox("Auto Step (every 2s)")
 
-    if 'env_states' not in st.session_state:
-        st.session_state['env_states'] = [env.reset() if env else None for _ in agents]
-    if 'step' not in st.session_state:
-        st.session_state['step'] = 0
+    if "env_states" not in st.session_state:
+        st.session_state["env_states"] = [st.session_state.env.reset() if st.session_state.env else None for _ in st.session_state.agents]
+    if "step" not in st.session_state:
+        st.session_state["step"] = 0
 
     # --- Simulation Step ---
     def simulate_step():
@@ -66,14 +172,16 @@ with tabs[0]:
         rewards = []
         next_states = []
         dones = []
-        # RL agents interact with env, others get random obs
-        for i, agent in enumerate(agents):
-            state = st.session_state['env_states'][i] if env else None
+        # RL agents interact with st.session_state.env, others get random obs
+        for i, agent in enumerate(st.session_state.agents):
+            state = st.session_state["env_states"][i] if st.session_state.env else None
             if agent_type == "Tabular Q-Learning":
                 action = agent.act(state)
-                next_state, reward, done = env.step(action)
+                next_state, reward, done = st.session_state.env.step(action)
                 agent.observe(reward, next_state, done)
-                st.session_state['env_states'][i] = next_state if not done else env.reset()
+                st.session_state["env_states"][i] = (
+                    next_state if not done else st.session_state.env.reset()
+                )
                 obs.append(state)
                 actions.append(action)
                 rewards.append(reward)
@@ -82,9 +190,11 @@ with tabs[0]:
                 reward_history[agent].append(reward)
             elif agent_type == "DQN RL":
                 action = agent.act(state)
-                next_state, reward, done = env.step(action)
+                next_state, reward, done = st.session_state.env.step(action)
                 agent.observe(reward, next_state, done)
-                st.session_state['env_states'][i] = next_state if not done else env.reset()
+                st.session_state["env_states"][i] = (
+                    next_state if not done else st.session_state.env.reset()
+                )
                 obs.append(state)
                 actions.append(action)
                 rewards.append(reward)
@@ -103,45 +213,71 @@ with tabs[0]:
             # (Assume law_violations incremented in agent.act if exception)
         # Knowledge sharing (simulate)
         src, dst = np.random.choice(agents, 2, replace=False)
-        knowledge = {'foo': np.random.randint(0, 10), 'privacy': np.random.choice(['public', 'group-only', 'private'])}
+        knowledge = {
+            "foo": np.random.randint(0, 10),
+            "privacy": np.random.choice(["public", "group-only", "private"]),
+        }
         src.share_knowledge(knowledge, system=system, group=src.group)
-        if knowledge['privacy'] != 'private':
-            knowledge_events.append((src, dst, knowledge, knowledge['privacy']))
+        if knowledge["privacy"] != "private":
+            knowledge_events.append((src, dst, knowledge, knowledge["privacy"]))
         # Group decision
         try:
-            result = system.group_decision(obs, method=np.random.choice(['mean', 'majority_vote', 'weighted_mean']), weights=np.ones(agent_count)/agent_count)
+            result = system.group_decision(
+                obs,
+                method=np.random.choice(["mean", "majority_vote", "weighted_mean"]),
+                weights=np.ones(agent_count) / agent_count,
+            )
             group_decisions.append((actions, result, True))
         except Exception:
             group_decisions.append((actions, None, False))
-    st.session_state['step'] += 1
+
+    st.session_state["step"] += 1
     if auto_run:
         time.sleep(2)
 
 # --- Visualization ---
 # Agent network
 graph = nx.Graph()
-for agent in agents:
-    graph.add_node(agent.group + ':' + str(agents.index(agent)), knowledge=str(getattr(agent, 'online_knowledge', {})), color="#1f78b4")
+for agent in st.session_state.agents:
+    graph.add_node(
+        agent.group + ":" + str(st.session_state.agents.index(agent)),
+        knowledge=str(getattr(agent, "online_knowledge", {})),
+        color="#1f78b4",
+    )
 for src, dst, knowledge, privacy in knowledge_events:
-    graph.add_edge(src.group + ':' + str(agents.index(src)), dst.group + ':' + str(agents.index(dst)), label=str(knowledge), privacy=privacy)
+    graph.add_edge(
+        src.group + ":" + str(agents.index(src)),
+        dst.group + ":" + str(agents.index(dst)),
+        label=str(knowledge),
+        privacy=privacy,
+    )
 
 fig, ax = plt.subplots(figsize=(6, 4))
 pos = nx.spring_layout(graph, seed=42)
 colors = [graph.nodes[n]["color"] for n in graph.nodes]
 nx.draw(graph, pos, with_labels=True, node_color=colors, ax=ax, node_size=900)
 edge_labels = {(u, v): graph.edges[u, v]["privacy"] for u, v in graph.edges}
-nx.draw_networkx_edge_labels(graph, pos, edge_labels=edge_labels, ax=ax, font_color="red")
+nx.draw_networkx_edge_labels(
+    graph, pos, edge_labels=edge_labels, ax=ax, font_color="red"
+)
 st.pyplot(fig)
 
 # Per-Agent Knowledge Table
 st.header("Agent Knowledge State")
-data = [{"Agent": agent.group + ':' + str(i), "Knowledge": str(getattr(agent, 'online_knowledge', {})), "Law Violations": law_violations[agent]} for i, agent in enumerate(agents)]
+data = [
+    {
+        "Agent": agent.group + ":" + str(i),
+        "Knowledge": str(getattr(agent, "online_knowledge", {})),
+        "Law Violations": getattr(agent, "law_violations", 0),
+    }
+    for i, agent in enumerate(st.session_state.agents)
+]
 st.table(data)
 
 # RL-specific: Reward plot and Q-table
 if agent_type in ("Tabular Q-Learning", "DQN RL"):
     st.header("RL Agent Rewards")
-    for i, agent in enumerate(agents):
+    for i, agent in enumerate(st.session_state.agents):
         st.subheader(f"Agent {i+1} Reward History")
         r = list(reward_history[agent])
         st.line_chart(r if r else [0])
@@ -152,12 +288,19 @@ if agent_type in ("Tabular Q-Learning", "DQN RL"):
 # Knowledge Sharing Log
 st.header("Knowledge Sharing Events")
 for src, dst, knowledge, privacy in list(knowledge_events)[-10:][::-1]:
-    st.write(f"{src.group}:{agents.index(src)} ➡️ {dst.group}:{agents.index(dst)} | {knowledge} | Privacy: {privacy}")
+    st.write(
+        f"{src.group}:{agents.index(src)} ➡️ {dst.group}:{agents.index(dst)} | {knowledge} | Privacy: {privacy}"
+    )
 
 # Group Decisions Log
 st.header("Recent Group Decisions")
 for actions, result, legal in list(group_decisions)[-10:][::-1]:
     color = "green" if legal else "red"
-    st.markdown(f"<span style='color:{color}'>Actions: {actions} → Result: {result} | {'Legal' if legal else 'Violated Law'}</span>", unsafe_allow_html=True)
+    st.markdown(
+        f"<span style='color:{color}'>Actions: {actions} → Result: {result} | {'Legal' if legal else 'Violated Law'}</span>",
+        unsafe_allow_html=True,
+    )
 
-st.info(f"This dashboard is running RL agents ({agent_type}) with live visualization. Use the sidebar to step or auto-run the simulation.")
+st.info(
+    f"This dashboard is running RL agents ({agent_type}) with live visualization. Use the sidebar to step or auto-run the simulation."
+)
