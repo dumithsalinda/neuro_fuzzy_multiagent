@@ -8,10 +8,12 @@ Supports integration with neuro-fuzzy models, transfer learning, and various env
 import numpy as np
 from .neuro_fuzzy import NeuroFuzzyHybrid
 from laws import enforce_laws
+from .online_learning import OnlineLearnerMixin
 
-class Agent:
+class Agent(OnlineLearnerMixin):
     """
     Generic agent that interacts with an environment using a model and policy.
+    Now supports online learning from web resources.
     """
     def __init__(self, model, policy=None):
         self.model = model
@@ -58,27 +60,15 @@ class Agent:
         # For demonstration: random action in the same shape as observation
         return np.random.randn(*observation.shape)
 
-class NeuroFuzzyAgent(Agent):
-    """
-    Agent that uses a NeuroFuzzyHybrid model to select actions.
-    """
-    def __init__(self, nn_config, fis_config, policy=None):
-        model = NeuroFuzzyHybrid(nn_config, fis_config)
-        if policy is None:
-            policy = lambda obs, model: model.forward(obs)
-        super().__init__(model, policy)
-
-    def self_organize(self, *args, **kwargs):
+    def integrate_online_knowledge(self, knowledge):
         """
-        Triggers self-organization in the underlying neuro-fuzzy model.
+        Default: try to update policy/model if possible, else store as attribute.
         """
-        if hasattr(self.model, 'self_organize'):
-            self.model.self_organize(*args, **kwargs)
+        if hasattr(self.model, 'update_from_knowledge'):
+            self.model.update_from_knowledge(knowledge)
+        else:
+            self.online_knowledge = knowledge
 
-class Agent:
-    """
-    Generic agent that interacts with an environment using a model and policy.
-    """
     def __init__(self, model, policy=None):
         self.model = model
         self.policy = policy if policy is not None else self.random_policy
