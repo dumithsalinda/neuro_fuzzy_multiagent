@@ -1,2 +1,7 @@
 torch
 scikit-fuzzy
+streamlit
+matplotlib
+networkx
+numpy
+scipy

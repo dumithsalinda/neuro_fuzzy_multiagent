@@ -72,6 +72,11 @@ class MultiAgentSystem:
     def broadcast_knowledge(self, knowledge, sender=None):
         """
         Broadcast knowledge to all agents except sender, enforcing group and knowledge laws, respecting privacy.
+        Supports different privacy levels:
+        - 'public': broadcast to all agents
+        - 'private': do not share
+        - 'group-only': share within sender's group
+        - 'recipient-list': share with specified recipients
         """
         from core.laws import enforce_laws, LawViolation
         privacy = knowledge.get('privacy', 'public') if isinstance(knowledge, dict) else 'public'

@@ -1,64 +1,72 @@
-# Environment-Independent Dynamic Self-Organizing Neuro-Fuzzy Multi-Agent System
+# Neuro-Fuzzy Multi-Agent System
 
-This project combines neural networks, fuzzy logic, multi-agent collaboration, and self-organization to create an adaptive, robust AI system that can operate across diverse environments without explicit reprogramming.
+## Overview
+A robust, environment-independent, dynamic self-organizing neuro-fuzzy multi-agent system with:
+- **Unbreakable Laws:** Hard constraints on agent and group behavior.
+- **Modular Neuro-Fuzzy Agents:** Hybrid models, self-organization, and extensibility.
+- **Multi-Agent Collaboration:** Communication, consensus, and privacy-aware knowledge sharing.
+- **Online Learning:** Agents learn from web resources and integrate knowledge.
+- **Advanced Group Decision-Making:** Mean, weighted mean, majority vote, custom aggregation.
+- **Thorough Testing & Extensibility:** Easily add new laws, agent types, or aggregation methods.
 
 ## Features
-- Neural network and fuzzy logic core
-- Multi-agent self-organization and collaboration
-- Global rule set enforcement
-- Internet and video-based learning
-- **Environment abstraction and transfer learning** (Phase 2)
+- Law registration, enforcement, and compliance for all actions and knowledge.
+- Privacy-aware knowledge sharing (public, private, group-only, recipient-list).
+- Flexible group decision-making with law enforcement.
+- Online learning and knowledge integration from the internet.
+- Modular, extensible agent and system design.
 
-## Directory Structure
-```
-core/
-    neural_network.py
-    fuzzy_logic.py
-    agent.py
-    evolution.py
-    rules.py
-multiagent/
-    collaboration.py
-    environment.py
-environment/
-    abstraction.py
-    transfer_learning.py
-internet_learning/
-    web_search.py
-    video_learning.py
-    knowledge_base.py
-main.py
-requirements.txt
-```
+## Core Modules
+- `src/core/agent.py`: Agent logic, knowledge sharing, law compliance, extensibility.
+- `src/core/multiagent.py`: Multi-agent system, group decision, privacy-aware knowledge sharing.
+- `src/core/laws.py`: Law registration, enforcement, and compliance.
+- `src/core/online_learning.py`: Online learning mixin for web knowledge.
 
-## Usage
-- Run `python main.py` to start the system.
-- Customize agents, rules, and learning modules as needed.
-
-### Environment Abstraction Example
+## Example Usage
 ```python
-from src.environment.abstraction import SimpleEnvironment
+from core.agent import Agent
+from core.multiagent import MultiAgentSystem
+from core.laws import register_law, LawViolation
 
-env = SimpleEnvironment(dim=4)
-state = env.reset()  # Random initial state
-features = env.extract_features()  # Identity mapping by default
+# Register a custom law
+@register_law
+def no_negative_actions(action, state=None):
+    return (action >= 0).all()
+
+# Create agents and system
+agents = [Agent(model=None) for _ in range(3)]
+system = MultiAgentSystem(agents)
+
+# Group decision (mean)
+obs = [None, None, None]
+try:
+    consensus = system.coordinate_actions(obs)
+except LawViolation as e:
+    print("Law broken:", e)
+
+# Share knowledge (public)
+knowledge = {'rule': 'IF x > 0 THEN y = 1', 'privacy': 'public'}
+agents[0].share_knowledge(knowledge, system=system)
 ```
 
-### Transfer Learning Example
-```python
-from src.environment.abstraction import SimpleEnvironment
-from src.environment.transfer_learning import FeatureExtractor, transfer_learning
-from src.core.neural_network import FeedforwardNeuralNetwork
+## Running Tests
+To run all tests:
+```sh
+PYTHONPATH=src pytest --disable-warnings -q
+```
 
-# Source and target environments
-env1 = SimpleEnvironment(dim=4)
-env2 = SimpleEnvironment(dim=4)
+## Extensibility
+- **Add a new law:** Define a function and decorate with `@register_law`.
+- **Add a new agent type:** Subclass `Agent` and override methods as needed.
+- **Add a group aggregation method:** Use `MultiAgentSystem.group_decision(..., method="custom", custom_fn=...)`.
 
-# Feature extractor and model
-feat = FeatureExtractor(input_dim=4, output_dim=2)
-model = FeedforwardNeuralNetwork(input_dim=2, hidden_dim=3, output_dim=1)
+## Project Goals
+- Environment-independent, dynamic, and robust multi-agent learning.
+- Strict compliance with unbreakable laws.
+- Modular, extensible, and well-documented codebase.
 
-# Run transfer learning (pretrain on env1, finetune on env2)
+---
+For more details, see module/class/method docstrings in the source code.
 trained_model = transfer_learning(env1, env2, model, feat, steps=10)
 ```
 

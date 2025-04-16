@@ -65,6 +65,7 @@ class Agent(OnlineLearnerMixin):
         system: MultiAgentSystem instance
         group: optional group label (for group-only privacy)
         recipients: optional list of agent instances (for recipient-list privacy)
+        Enforces knowledge laws before sharing.
         """
         from core.laws import enforce_laws, LawViolation
         privacy = knowledge.get('privacy', 'public') if isinstance(knowledge, dict) else 'public'
@@ -90,6 +91,7 @@ class Agent(OnlineLearnerMixin):
         """
         Receive a message from another agent (for collaboration protocols).
         Handles knowledge sharing if message type is 'knowledge'.
+        Enforces knowledge laws before integrating shared knowledge.
         """
         if isinstance(message, dict) and message.get('type') == 'knowledge':
             from core.laws import enforce_laws, LawViolation
@@ -103,12 +105,16 @@ class Agent(OnlineLearnerMixin):
 
     @staticmethod
     def random_policy(observation, model):
-        # For demonstration: random action in the same shape as observation
-        return np.random.randn(*observation.shape)
+        """
+        Example random policy for demonstration/testing.
+        """
+        import numpy as np
+        return np.random.uniform(-1, 1, size=np.shape(observation))
 
     def integrate_online_knowledge(self, knowledge):
         """
         Default: try to update policy/model if possible, else store as attribute.
+        Override for custom knowledge/model/rule updates.
         """
         if hasattr(self.model, 'update_from_knowledge'):
             self.model.update_from_knowledge(knowledge)
