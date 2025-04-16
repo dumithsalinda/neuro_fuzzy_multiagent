@@ -6,6 +6,7 @@ from collections import deque
 
 import matplotlib.pyplot as plt
 from collections import defaultdict, deque
+import requests
 
 # --- RL Reward History ---
 reward_history = defaultdict(lambda: deque(maxlen=100))
@@ -49,6 +50,9 @@ else:
     agent_count = st.sidebar.slider("Number of Agents", 1, 5, 3)
     n_obstacles = 0
     agent_types = None
+
+# --- Online Learning Toggle ---
+online_learning_enabled = st.sidebar.checkbox("Enable Online Learning", value=True)
 
 # Human-in-the-loop: RL parameter tuning
 if (env_type == "Gridworld" and any(t in ["Tabular Q-Learning", "DQN RL"] for t in agent_types)) or \
@@ -186,6 +190,19 @@ def simulate_step():
                 agent.law_violations += 1
             else:
                 raise
+        # --- Online Learning: Automatic ---
+        if online_learning_enabled:
+            # For DQN-like: input=obs, target=[reward, next_obs, done]
+            try:
+                api_url = "http://localhost:8000/learn/online"
+                headers = {"X-API-Key": "mysecretkey"}
+                obs_str = ",".join(str(x) for x in st.session_state.obs[i])
+                next_obs_str = ",".join(str(x) for x in next_obs[i])
+                target_str = f"{rewards[i]},{next_obs_str},{int(done)}"
+                data = {"agent_id": i, "input": obs_str, "target": target_str}
+                requests.post(api_url, data=data, headers=headers, timeout=2)
+            except Exception as ex:
+                st.session_state["online_learning_log"] = f"Online update failed for agent {i}: {ex}"
     st.session_state.obs = next_obs
     st.session_state.rewards = rewards
     st.session_state.done = done
@@ -195,6 +212,23 @@ def simulate_step():
 # --- Main UI ---
 st.title(f"🤖 Multi-Agent System Dashboard ({agent_type})")
 tabs = st.tabs(["Simulation", "Analytics"])
+
+# --- Manual Online Update UI ---
+st.sidebar.markdown("---")
+st.sidebar.markdown("**Manual Online Update**")
+manual_agent_id = st.sidebar.number_input("Agent ID", min_value=0, max_value=4, value=0)
+manual_input = st.sidebar.text_input("Input (comma-separated)", value="1.0,2.0")
+manual_target = st.sidebar.text_input("Target (comma-separated)", value="0.5")
+if st.sidebar.button("Send Online Update"):
+    try:
+        api_url = "http://localhost:8000/learn/online"
+        headers = {"X-API-Key": "mysecretkey"}
+        data = {"agent_id": manual_agent_id, "input": manual_input, "target": manual_target}
+        r = requests.post(api_url, data=data, headers=headers, timeout=2)
+        st.sidebar.success(f"Online update sent: {r.json()}")
+    except Exception as ex:
+        st.sidebar.error(f"Failed to send online update: {ex}")
+
 
 with tabs[0]:
     st.write(f"Step: {st.session_state.step}")

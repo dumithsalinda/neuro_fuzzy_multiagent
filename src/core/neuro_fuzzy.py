@@ -17,6 +17,7 @@ from .fuzzy_system import FuzzyInferenceSystem
 class NeuroFuzzyHybrid:
     """
     Adaptive Neuro-Fuzzy Inference System (ANFIS)-like hybrid model.
+    nn_config['input_dim'] should match the feature vector dimension for the agent's input type (e.g., 768 for BERT, 512 for ResNet18).
     Combines neural network and fuzzy inference system for hybrid learning.
 
     Parameters
@@ -37,6 +38,15 @@ class NeuroFuzzyHybrid:
                 self.fis.dynamic_rule_generation(
                     fis_config['X'], fis_config['y'], fis_config['fuzzy_sets_per_input']
                 )
+
+    def online_update(self, x, y, lr=0.01):
+        """
+        Online/continual learning update. x: input, y: target output.
+        Calls neural network backward method if implemented.
+        """
+        if hasattr(self.nn, 'backward'):
+            self.nn.backward(x, y, lr=lr)
+        # Optionally update fuzzy rules in future
 
     def forward(self, x):
         """

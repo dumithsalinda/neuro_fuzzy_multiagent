@@ -12,6 +12,7 @@ from src.env.multiagent_gridworld import MultiAgentGridworldEnv
 import speech_recognition as sr
 from PIL import Image
 from src.core.multimodal_dqn_agent import MultiModalDQNAgent
+from src.core.neuro_fuzzy import NeuroFuzzyHybrid
 import cv2
 
 app = FastAPI()
@@ -200,6 +201,44 @@ def observe_video(file: UploadFile = File(...)):
     logger.info(f"/observe/video: feature[0:5]={feature[:5]}... -> action={action}")
     os.remove(video_path)
     return {"action": action, "feature_dim": len(feature)}
+
+@app.post("/learn/online", dependencies=[Depends(verify_api_key)])
+def learn_online(agent_id: int = Form(...), input: str = Form(...), target: str = Form(...)):
+    """
+    Online/continual learning endpoint.
+    - agent_id: index of agent in state["agents"]
+    - input: comma-separated floats or JSON-encoded list/array
+    - target: comma-separated floats or JSON-encoded list/array
+    """
+    import json
+    import numpy as np
+    try:
+        agent = state["agents"][agent_id]
+    except Exception:
+        raise HTTPException(status_code=404, detail="Agent not found")
+    # Parse input/target
+    def parse_vec(s):
+        try:
+            return np.array(json.loads(s))
+        except Exception:
+            return np.array([float(x) for x in s.split(",")])
+    x = parse_vec(input)
+    y = parse_vec(target)
+    # Route to appropriate update method
+    if hasattr(agent, "online_update"):
+        agent.online_update(x, y)
+        logger.info(f"/learn/online: agent {agent_id} online_update called.")
+        return {"status": "ok", "agent_id": agent_id}
+    elif hasattr(agent, "observe"):
+        # For DQN-style agents, treat y as (reward, next_state, done)
+        reward = y[0]
+        next_state = y[1:-1]
+        done = bool(y[-1])
+        agent.observe(reward, next_state, done)
+        logger.info(f"/learn/online: agent {agent_id} observe called.")
+        return {"status": "ok", "agent_id": agent_id}
+    else:
+        raise HTTPException(status_code=400, detail="Agent does not support online learning")
 
 @app.post("/observe/multimodal", dependencies=[Depends(verify_api_key)])
 def observe_multimodal(
