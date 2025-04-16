@@ -109,6 +109,39 @@ class NeuroFuzzyHybrid:
         self.nn.b1 += np.random.randn(*self.nn.b1.shape) * mutation_rate
         self.nn.b2 += np.random.randn(*self.nn.b2.shape) * mutation_rate
 
+    def self_organize(self, mutation_rate=0.01, tune_fuzzy=True, rule_change=True):
+        """
+        Self-organization: adapts neural and fuzzy structure/parameters.
+        - Mutates neural network weights.
+        - Tunes fuzzy sets (random data for demonstration).
+        - Adds/removes fuzzy rules (randomly, for demonstration).
+        """
+        # Mutate neural network weights
+        self.evolutionary_update(mutation_rate)
+
+        # Tune fuzzy sets (using random data for demonstration)
+        if tune_fuzzy:
+            for rule in self.fis.rules:
+                for i, fs in rule.antecedents:
+                    # Generate random data for tuning
+                    data = np.random.randn(10) * 0.5 + 0.5  # Example: 10 samples
+                    fs.tune(data)
+
+        # Randomly add or remove a rule (demonstration only)
+        if rule_change and hasattr(self.fis, 'rules') and len(self.fis.rules) > 0:
+            import random
+            if random.random() < 0.5 and len(self.fis.rules) > 1:
+                # Remove a random rule
+                idx = random.randint(0, len(self.fis.rules)-1)
+                del self.fis.rules[idx]
+            else:
+                # Duplicate a random rule with small perturbation
+                idx = random.randint(0, len(self.fis.rules)-1)
+                rule = self.fis.rules[idx]
+                new_conseq = rule.consequent + np.random.randn()*0.1
+                new_rule = type(rule)(rule.antecedents, new_conseq)
+                self.fis.add_rule(new_rule)
+
     def loss(self, x, y):
         """Mean squared error loss for current input x and target y."""
         pred = self.forward(x)

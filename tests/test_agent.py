@@ -4,9 +4,13 @@ test_agent.py
 Tests for the Agent class in agent.py.
 """
 
+import sys
+import os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 import numpy as np
 import pytest
-from core.agent import Agent, NeuroFuzzyAgent
+from src.core.agent import Agent, NeuroFuzzyAgent
 
 class DummyModel:
     def forward(self, x):

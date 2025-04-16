@@ -4,8 +4,12 @@ test_multiagent.py
 Tests for multiagent simulation, agent-environment interface, and reward aggregation.
 """
 
+import sys
+import os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 import numpy as np
-from core.agent import Agent
+from src.core.agent import Agent
 from environment.abstraction import SimpleEnvironment
 from environment.transfer_learning import FeatureExtractor
 

@@ -42,6 +42,12 @@ class Agent:
         """
         pass
 
+    def self_organize(self, *args, **kwargs):
+        """
+        Placeholder for agent self-organization (to be overridden).
+        """
+        pass
+
     def reset(self):
         self.last_action = None
         self.last_observation = None
@@ -61,6 +67,13 @@ class NeuroFuzzyAgent(Agent):
         if policy is None:
             policy = lambda obs, model: model.forward(obs)
         super().__init__(model, policy)
+
+    def self_organize(self, *args, **kwargs):
+        """
+        Triggers self-organization in the underlying neuro-fuzzy model.
+        """
+        if hasattr(self.model, 'self_organize'):
+            self.model.self_organize(*args, **kwargs)
 
 class Agent:
     """
@@ -96,6 +109,12 @@ class Agent:
         """
         pass
 
+    def self_organize(self, *args, **kwargs):
+        """
+        Placeholder for agent self-organization (to be overridden).
+        """
+        pass
+
     def reset(self):
         self.last_action = None
         self.last_observation = None
@@ -115,3 +134,10 @@ class NeuroFuzzyAgent(Agent):
         if policy is None:
             policy = lambda obs, model: model.forward(obs)
         super().__init__(model, policy)
+
+    def self_organize(self, *args, **kwargs):
+        """
+        Triggers self-organization in the underlying neuro-fuzzy model.
+        """
+        if hasattr(self.model, 'self_organize'):
+            self.model.self_organize(*args, **kwargs)
