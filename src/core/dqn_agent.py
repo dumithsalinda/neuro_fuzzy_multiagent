@@ -22,6 +22,18 @@ class QNetwork(nn.Module):
         return self.net(x)
 
 class DQNAgent(Agent):
+    def explain_action(self, observation):
+        import torch
+        obs_tensor = torch.FloatTensor(observation).unsqueeze(0).to(self.device)
+        with torch.no_grad():
+            q_values = self.q_net(obs_tensor).cpu().numpy().flatten()
+        action = int(q_values.argmax())
+        return {
+            "q_values": q_values.tolist(),
+            "chosen_action": action,
+            "epsilon": self.epsilon
+        }
+
     """
     Deep Q-Learning Agent for continuous or large state spaces.
     """

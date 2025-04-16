@@ -202,6 +202,39 @@ def observe_video(file: UploadFile = File(...)):
     os.remove(video_path)
     return {"action": action, "feature_dim": len(feature)}
 
+@app.post("/explain", dependencies=[Depends(verify_api_key)])
+def explain_action(agent_id: int = Form(...), observation: str = Form(...)):
+    """
+    Explain agent's action given observation/features.
+    Accepts: agent_id, observation (comma-separated or JSON list)
+    Returns: explanation dict
+    """
+    import json
+    import numpy as np
+    try:
+        agent = state["agents"][agent_id]
+    except Exception:
+        raise HTTPException(status_code=404, detail="Agent not found")
+    # Parse observation/features
+    def parse_vec(s):
+        try:
+            return np.array(json.loads(s))
+        except Exception:
+            return np.array([float(x) for x in s.split(",")])
+    obs = parse_vec(observation)
+    # For multimodal, expect a list of arrays
+    if hasattr(agent, "explain_action"):
+        try:
+            # Try multimodal input if needed
+            if hasattr(agent, "input_dims") and isinstance(obs, np.ndarray) and obs.dtype == object:
+                obs = [np.array(x) for x in obs]
+            result = agent.explain_action(obs)
+            return {"status": "ok", "explanation": result}
+        except Exception as ex:
+            raise HTTPException(status_code=400, detail=f"Explain failed: {ex}")
+    else:
+        raise HTTPException(status_code=400, detail="Agent does not support explainability")
+
 @app.post("/learn/online", dependencies=[Depends(verify_api_key)])
 def learn_online(agent_id: int = Form(...), input: str = Form(...), target: str = Form(...)):
     """

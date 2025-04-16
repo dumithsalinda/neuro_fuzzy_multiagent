@@ -243,6 +243,7 @@ with tabs[0]:
 
     # Table of agent knowledge/law violations (example)
     st.write("### Agent Knowledge Table")
+    import requests
     for i, agent in enumerate(st.session_state.agents):
         ag_type = agent_types[i] if agent_types else agent.__class__.__name__
         last_msg = getattr(agent, 'last_message', None)
@@ -255,6 +256,43 @@ with tabs[0]:
         )
         if hasattr(agent, "epsilon"):
             agent.epsilon = epsilon
+        # Only display Q-table for Tabular Q-Learning
+        if agent_type == "Tabular Q-Learning" and hasattr(agent, "q_table"):
+            st.text(f"Q-table for Agent {i+1}:")
+            st.write(agent.q_table)
+        # --- Explainability Button ---
+        explain_placeholder = st.empty()
+        if st.button(f"Explain Agent {i}"):
+            try:
+                api_url = "http://localhost:8000/explain"
+                headers = {"X-API-Key": "mysecretkey"}
+                # Prepare observation string for API
+                obs = st.session_state.obs[i]
+                if isinstance(obs, (list, tuple)):
+                    obs_str = ",".join(str(x) for x in obs)
+                else:
+                    obs_str = str(obs)
+                data = {"agent_id": i, "observation": obs_str}
+                r = requests.post(api_url, data=data, headers=headers, timeout=2)
+                result = r.json()
+                if result.get("status") == "ok":
+                    explanation = result['explanation']
+                    # Pretty visualization
+                    if 'q_values' in explanation:
+                        st.subheader(f"Q-values for Agent {i}")
+                        st.table([[j, v] for j, v in enumerate(explanation['q_values'])])
+                    if 'rule_activations' in explanation:
+                        st.subheader(f"Fuzzy Rule Activations for Agent {i}")
+                        st.table([[j, v] for j, v in enumerate(explanation['rule_activations'])])
+                    if 'nn_output' in explanation:
+                        st.subheader(f"Neural Net Output for Agent {i}")
+                        st.write(explanation['nn_output'])
+                    st.info(f"Other Explanation Info: { {k: v for k, v in explanation.items() if k not in ['q_values', 'rule_activations', 'nn_output']} }")
+                else:
+                    explain_placeholder.warning(f"Failed to explain: {result}")
+            except Exception as ex:
+                explain_placeholder.error(f"Failed to get explanation: {ex}")
+
 
 agent_count = len(st.session_state.agents)
 for i, agent in enumerate(st.session_state.agents):

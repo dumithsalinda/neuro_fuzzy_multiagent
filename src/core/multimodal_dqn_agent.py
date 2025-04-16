@@ -4,6 +4,18 @@ from .agent import Agent
 from .fusion import FusionNetwork
 
 class MultiModalDQNAgent(Agent):
+    def explain_action(self, features):
+        import torch
+        features = [torch.FloatTensor(f).unsqueeze(0).to(self.device) for f in features]
+        with torch.no_grad():
+            q_values = self.fusion_net(features).cpu().numpy().flatten()
+        action = int(q_values.argmax())
+        return {
+            "q_values": q_values.tolist(),
+            "chosen_action": action,
+            "epsilon": self.epsilon
+        }
+
     """
     DQN agent that takes multi-modal features (e.g., text + image) as input.
     Features should be provided as a list of tensors (one per modality).

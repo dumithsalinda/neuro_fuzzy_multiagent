@@ -3,6 +3,19 @@ from .agent import Agent
 from .laws import enforce_laws, LawViolation
 
 class TabularQLearningAgent(Agent):
+    def explain_action(self, observation):
+        import numpy as np
+        if self.n_states is None:
+            q_vals = self.q_table.get(observation, np.zeros(self.n_actions))
+        else:
+            q_vals = self.q_table[observation]
+        action = int(np.argmax(q_vals))
+        return {
+            "q_values": q_vals.tolist(),
+            "chosen_action": action,
+            "epsilon": self.epsilon
+        }
+
     """
     Tabular Q-Learning Agent for discrete state and action spaces.
     If n_states is None, uses a dict-based Q-table for large/sparse spaces.

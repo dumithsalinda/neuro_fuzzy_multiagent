@@ -15,6 +15,26 @@ from .neural_network import FeedforwardNeuralNetwork
 from .fuzzy_system import FuzzyInferenceSystem
 
 class NeuroFuzzyHybrid:
+    def explain_action(self, x):
+        # Fuzzy rule activations
+        rule_activations = []
+        if hasattr(self.fis, "rules"):
+            for rule in self.fis.rules:
+                activation = 1.0
+                for (i, fs) in rule.antecedents:
+                    activation *= fs.membership(x[i])
+                rule_activations.append(activation)
+        # Neural net output
+        nn_out = self.nn.forward(x)
+        # Chosen action (argmax of neural net output)
+        import numpy as np
+        action = int(np.argmax(nn_out)) if hasattr(nn_out, "__len__") and len(nn_out) > 1 else float(nn_out)
+        return {
+            "rule_activations": rule_activations,
+            "nn_output": nn_out.tolist() if hasattr(nn_out, "tolist") else nn_out,
+            "chosen_action": action
+        }
+
     """
     Adaptive Neuro-Fuzzy Inference System (ANFIS)-like hybrid model.
     nn_config['input_dim'] should match the feature vector dimension for the agent's input type (e.g., 768 for BERT, 512 for ResNet18).
