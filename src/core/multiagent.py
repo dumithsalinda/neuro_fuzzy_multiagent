@@ -12,6 +12,7 @@ class MultiAgentSystem:
         self.agents = agents
         self.groups = {}  # group_id -> set of agent indices
         self.group_leaders = {}  # group_id -> agent index
+        self.group_modules = {}  # group_id -> group-specific module (rules/subnetwork)
 
     def elect_leaders(self):
         """
@@ -80,11 +81,17 @@ class MultiAgentSystem:
 
     def form_group(self, group_id, agent_indices):
         """
-        Create a new group with the specified agents.
+        Create a new group with the specified agents. Also create a group-specific module (rules/subnetwork).
         """
         self.groups[group_id] = set(agent_indices)
         for idx in agent_indices:
             self.agents[idx].group = group_id
+        # --- Dynamic module/rule/subnetwork creation ---
+        # For demonstration, use a dummy rule list and subnetwork placeholder
+        self.group_modules[group_id] = {
+            'rules': [f"rule_{group_id}_1", f"rule_{group_id}_2"],
+            'subnetwork': f"subnet_{group_id}"
+        }
 
     def join_group(self, agent_idx, group_id):
         """
@@ -108,12 +115,15 @@ class MultiAgentSystem:
 
     def dissolve_group(self, group_id):
         """
-        Remove all agents from the specified group and delete the group.
+        Remove all agents from the specified group and delete the group. Also remove the group-specific module.
         """
         if group_id in self.groups:
             for idx in self.groups[group_id]:
                 self.agents[idx].group = None
             del self.groups[group_id]
+        # --- Dynamic module/rule/subnetwork removal ---
+        if group_id in self.group_modules:
+            del self.group_modules[group_id]
 
     """
     Manages a group of agents and facilitates collaboration/communication.
