@@ -934,6 +934,12 @@ with tabs[0]:
     run_sim = st.sidebar.button("Step Simulation", key="sidebar_step_sim")
     auto_run = st.sidebar.checkbox("Auto Step (every 2s)")
     online_learning_enabled = st.sidebar.checkbox("Enable Online Learning for Fusion Agents", value=True)
+    # --- SOM Grid Visualization ---
+    if hasattr(system, 'groups'):
+        from dashboard_viz import plot_som_grid
+        group_ids = list(system.groups.keys())
+        group_colors = {gid: plt.cm.tab10(i % 10) for i, gid in enumerate(group_ids)}
+        plot_som_grid(group_ids, st.session_state.agents, group_colors)
 
 if fusion_agents and len(tabs) > 2:
     with tabs[2]:
@@ -1040,6 +1046,24 @@ if fusion_agents and len(tabs) > 2:
                 dones.append(False)
             # Law violation tracking
             # (Assume law_violations incremented in agent.act if exception)
+        # --- SOM-based clustering and dynamic group formation ---
+        # Extract features for all agents (for demo, use obs or obs vectors)
+        try:
+            feature_matrix = []
+            for o in obs:
+                # Flatten if needed
+                if isinstance(o, (list, tuple, np.ndarray)):
+                    arr = np.array(o).flatten()
+                else:
+                    arr = np.array([o])
+                feature_matrix.append(arr)
+            feature_matrix = np.array(feature_matrix)
+            if feature_matrix.ndim == 1:
+                feature_matrix = feature_matrix.reshape(-1, 1)
+            # Run SOM clustering and update group assignments
+            system.auto_group_by_som(feature_matrix)
+        except Exception as ex:
+            st.warning(f"SOM clustering failed: {ex}")
         # Knowledge sharing (simulate)
         src, dst = np.random.choice(agents, 2, replace=False)
         knowledge = {
