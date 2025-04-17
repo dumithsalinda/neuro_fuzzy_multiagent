@@ -1185,6 +1185,12 @@ for i, agent in enumerate(st.session_state.agents):
             st.write("**Widths:**", agent.model.widths)
             st.markdown("---")
             st.subheader("Fuzzy Rule Management")
+            # Experience Replay Settings Display
+            if hasattr(agent, 'replay_enabled'):
+                st.markdown(
+                    f"**Experience Replay:** {'Enabled' if getattr(agent, 'replay_enabled', False) else 'Disabled'}  "+
+                    f"Buffer Size: {getattr(agent, 'buffer_size', 'N/A')}, Batch Size: {getattr(agent, 'replay_batch', 'N/A')}"
+                )
             # Add rule controls
             with st.form(f"add_rule_form_{i}", clear_on_submit=True):
                 new_center = st.text_input("New Rule Center (comma-separated)", value=",")

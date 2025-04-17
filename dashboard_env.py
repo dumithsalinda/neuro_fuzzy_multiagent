@@ -5,6 +5,16 @@ from src.core.multiagent import MultiAgentSystem
 from src.core.neuro_fuzzy import NeuroFuzzyHybrid
 from src.core.tabular_q_agent import TabularQLearningAgent
 from src.core.anfis_agent import NeuroFuzzyANFISAgent
+
+# --- ANFIS Experience Replay Sidebar Controls ---
+def anfis_replay_sidebar():
+    st.sidebar.markdown("---")
+    st.sidebar.markdown("**ANFIS Agent Online/Continual Learning**")
+    replay_enabled = st.sidebar.checkbox("Enable Experience Replay", value=True)
+    buffer_size = st.sidebar.number_input("Replay Buffer Size", min_value=10, max_value=1000, value=100, step=10)
+    batch_size = st.sidebar.number_input("Replay Batch Size", min_value=1, max_value=128, value=8, step=1)
+    return replay_enabled, buffer_size, batch_size
+
 from src.env.simple_env import SimpleContinuousEnv, SimpleDiscreteEnv
 import json
 import requests
@@ -54,6 +64,15 @@ def initialize_env_and_agents(agent_type, agent_count, n_obstacles):
     agent_types = None
     alpha = gamma = epsilon = n_states = n_actions = mm_img_dim = mm_txt_dim = mm_hidden_dim = mm_n_actions = mm_fusion_type = n_pursuers = n_evaders = 0
     env_type = agent_type  # This may need to be adjusted depending on your sidebar logic
+    # --- ANFIS Experience Replay Controls ---
+    replay_enabled, buffer_size, batch_size = False, 100, 8
+    if agent_type == "ANFIS Agent":
+        # Try to get sidebar settings if running in Streamlit
+        try:
+            from streamlit import session_state as _st
+            replay_enabled, buffer_size, batch_size = _st.get("anfis_replay_enabled", True), _st.get("anfis_buffer_size", 100), _st.get("anfis_batch_size", 8)
+        except Exception:
+            pass
     # Example mapping, adapt as needed:
     if env_type == "Multi-Agent Gridworld":
         env_key = "multiagent_gridworld_v2"
@@ -126,8 +145,17 @@ def initialize_env_and_agents(agent_type, agent_count, n_obstacles):
             n_obstacles=n_obstacles,
         )
     elif env_type == "ANFIS Agent":
-        # For demo: input_dim=2, n_rules=4, lr=0.05
-        agents = [NeuroFuzzyANFISAgent(input_dim=2, n_rules=4, lr=0.05) for _ in range(agent_count)]
+        # Use replay sidebar settings
+        replay_enabled, buffer_size, batch_size = anfis_replay_sidebar()
+        # Store in session_state for access on reset
+        try:
+            st.session_state.anfis_replay_enabled = replay_enabled
+            st.session_state.anfis_buffer_size = buffer_size
+            st.session_state.anfis_batch_size = batch_size
+        except Exception:
+            pass
+        for _ in range(agent_count):
+            agents.append(NeuroFuzzyANFISAgent(input_dim=2, n_rules=4, lr=0.01, buffer_size=buffer_size, replay_enabled=replay_enabled, replay_batch=batch_size))
         env = SimpleContinuousEnv()  # Or another suitable env
     else:
         agents = [
