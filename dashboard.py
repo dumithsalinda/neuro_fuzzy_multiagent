@@ -33,6 +33,88 @@ import importlib
 from src.env.environment_factory import EnvironmentFactory
 from src.core.message_bus import MessageBus
 
+# --- Google Drive Integration ---
+def get_drive(credentials_file):
+    from pydrive2.auth import GoogleAuth
+    from pydrive2.drive import GoogleDrive
+    import os
+    gauth = GoogleAuth()
+    gauth.DEFAULT_SETTINGS['client_config_file'] = credentials_file
+    gauth.LoadCredentialsFile(credentials_file)
+    if gauth.credentials is None:
+        gauth.LocalWebserverAuth()
+    elif gauth.access_token_expired:
+        gauth.Refresh()
+    else:
+        gauth.Authorize()
+    gauth.SaveCredentialsFile(credentials_file)
+    drive = GoogleDrive(gauth)
+    return drive
+
+# --- Collaborative Experiments Panel ---
+def collaborative_experiments_panel():
+    st.sidebar.markdown('---')
+    with st.sidebar.expander('Collaborative Experiments (Google Drive)', expanded=False):
+        st.markdown('**Save or load experiments to Google Drive.**')
+        credentials_file = None
+        if 'drive_credentials' not in st.session_state:
+            cred_file = st.file_uploader('Upload Google client_secrets.json', type='json', key='drive_creds')
+            if cred_file:
+                with open('client_secrets.json', 'wb') as f:
+                    f.write(cred_file.read())
+                st.session_state['drive_credentials'] = 'client_secrets.json'
+        if 'drive_credentials' in st.session_state:
+            credentials_file = st.session_state['drive_credentials']
+            drive = get_drive(credentials_file)
+            # Save experiment
+            if st.button('Save Experiment to Drive'):
+                import pickle
+                import time
+                exp_bytes = pickle.dumps(dict(st.session_state))
+                fname = f"experiment_{int(time.time())}.pkl"
+                file_drive = drive.CreateFile({'title': fname})
+                file_drive.SetContentString(exp_bytes.hex())
+                file_drive.Upload()
+                st.success(f'Experiment uploaded! File ID: {file_drive["id"]}')
+            # Load experiment
+            file_id = st.text_input('Google Drive File ID to Load', '')
+            if st.button('Load Experiment from Drive') and file_id:
+                file_drive = drive.CreateFile({'id': file_id})
+                file_drive.FetchMetadata(fetch_all=True)
+                exp_bytes = bytes.fromhex(file_drive.GetContentString())
+                import pickle
+                exp_data = pickle.loads(exp_bytes)
+                # Restore session (basic demo: update st.session_state)
+                for k, v in exp_data.items():
+                    st.session_state[k] = v
+                st.success('Experiment loaded from Drive!')
+
+collaborative_experiments_panel()
+
+# --- Simple User Authentication ---
+def login_form():
+    st.sidebar.markdown('## Login')
+    if 'login_error' in st.session_state:
+        st.sidebar.error(st.session_state['login_error'])
+    with st.sidebar.form('login_form'):
+        username = st.text_input('Username', key='login_user')
+        password = st.text_input('Password', type='password', key='login_pass')
+        submit = st.form_submit_button('Login')
+    if submit:
+        # For demo: hardcoded user/pass. Replace with real user DB for production.
+        valid_users = {'admin': 'admin123', 'user': 'user123'}
+        if username in valid_users and password == valid_users[username]:
+            st.session_state['logged_in'] = True
+            st.session_state['username'] = username
+            st.session_state.pop('login_error', None)
+        else:
+            st.session_state['logged_in'] = False
+            st.session_state['login_error'] = 'Invalid username or password.'
+    if not st.session_state.get('logged_in', False):
+        st.stop()
+
+login_form()
+
 from src.core.agent import Agent
 from src.core.dqn_agent import DQNAgent
 from src.core.multiagent import MultiAgentSystem

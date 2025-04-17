@@ -10,3 +10,4 @@ torchvision
 openai-whisper
 Pillow
 opencv-python
+pydrive2
