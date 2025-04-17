@@ -1337,6 +1337,75 @@ if st.session_state['experiment_active']:
         st.session_state['experiment_active'] = False
         st.success("Experiment ended.")
 
+# --- Robustness Testing Panel ---
+st.markdown("---")
+st.header("Robustness Testing & Adversarial Analysis")
+if 'robustness' not in st.session_state:
+    st.session_state['robustness'] = {
+        'enabled': False, 'noise_type': 'Gaussian', 'noise_level': 0.1, 'drop_prob': 0.0, 'adv_runs': 10, 'log': []
+    }
+rb = st.session_state['robustness']
+rb['enabled'] = st.checkbox("Enable Noise Injection", value=rb['enabled'])
+rb['noise_type'] = st.selectbox("Noise Type", ["Gaussian", "Uniform"], index=0 if rb['noise_type']=="Gaussian" else 1)
+rb['noise_level'] = st.slider("Noise StdDev/Range", 0.0, 2.0, float(rb['noise_level']), 0.01)
+rb['drop_prob'] = st.slider("Random Drop/Corruption Probability", 0.0, 1.0, float(rb['drop_prob']), 0.01)
+rb['adv_runs'] = st.number_input("Adversarial Batch Episodes", min_value=1, max_value=100, value=int(rb['adv_runs']), step=1)
+run_adv = st.button("Run Adversarial Test Batch")
+
+# Apply perturbation for demonstration (affects only displayed actions, not true agent state)
+perturbed_actions = []
+for i, agent in enumerate(st.session_state.agents):
+    act = getattr(agent, 'last_action', 0.0)
+    obs = getattr(agent, 'last_obs', None)
+    if rb['enabled'] and obs is not None:
+        noise = 0.0
+        if rb['noise_type'] == 'Gaussian':
+            noise = np.random.normal(0, rb['noise_level'], size=np.shape(act))
+        elif rb['noise_type'] == 'Uniform':
+            noise = np.random.uniform(-rb['noise_level'], rb['noise_level'], size=np.shape(act))
+        if np.random.rand() < rb['drop_prob']:
+            act = None
+        else:
+            act = act + noise
+    perturbed_actions.append(act)
+st.write("**Perturbed Agent Actions:**", perturbed_actions)
+
+# Adversarial batch run logging (simulated)
+if run_adv:
+    batch_log = []
+    for run in range(rb['adv_runs']):
+        run_actions = []
+        for agent in st.session_state.agents:
+            act = getattr(agent, 'last_action', 0.0)
+            obs = getattr(agent, 'last_obs', None)
+            if rb['enabled'] and obs is not None:
+                noise = 0.0
+                if rb['noise_type'] == 'Gaussian':
+                    noise = np.random.normal(0, rb['noise_level'], size=np.shape(act))
+                elif rb['noise_type'] == 'Uniform':
+                    noise = np.random.uniform(-rb['noise_level'], rb['noise_level'], size=np.shape(act))
+                if np.random.rand() < rb['drop_prob']:
+                    act = None
+                else:
+                    act = act + noise
+            run_actions.append(act)
+        batch_log.append(run_actions)
+    rb['log'] = batch_log
+    st.success(f"Adversarial batch of {rb['adv_runs']} runs completed.")
+
+# Visualize action distributions from adversarial runs
+if rb.get('log'):
+    import matplotlib.pyplot as plt
+    arr = np.array(rb['log'])
+    fig, ax = plt.subplots(figsize=(6,3))
+    for i in range(arr.shape[1]):
+        ax.hist(arr[:,i][~np.isnan(arr[:,i].astype(float))], bins=20, alpha=0.5, label=f'Agent {i+1}')
+    ax.set_title('Action Distribution Under Perturbation')
+    ax.set_xlabel('Action Value')
+    ax.set_ylabel('Frequency')
+    ax.legend()
+    st.pyplot(fig)
+
 
 # --- Group Structure Visualization ---
 if hasattr(st.session_state, 'agents') and len(st.session_state.agents) > 0 and hasattr(st.session_state.agents[0], 'position'):
