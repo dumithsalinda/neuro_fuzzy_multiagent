@@ -16,7 +16,7 @@ class Agent(OnlineLearnerMixin):
     Now supports online learning from web resources.
     Supports dynamic group membership for self-organization.
     """
-    def __init__(self, model, policy=None):
+    def __init__(self, model, policy=None, bus=None, group=None):
         self.model = model
         self.policy = policy if policy is not None else self.random_policy
         self.last_action = None
@@ -24,7 +24,10 @@ class Agent(OnlineLearnerMixin):
         self.total_reward = 0
         self.message_inbox = []
         self.last_message = None
-        self.group = None  # Group identifier, None if not in a group
+        self.group = group  # Group identifier, None if not in a group
+        self.bus = bus
+        if self.bus is not None:
+            self.bus.register(self, group=group)
 
     def act(self, observation, state=None):
         """
@@ -62,8 +65,31 @@ class Agent(OnlineLearnerMixin):
         self.last_observation = None
         self.total_reward = 0
 
-    def send_message(self, message, recipient):
-        recipient.receive_message(message, sender=self)
+    def register_to_bus(self, bus, group=None):
+        self.bus = bus
+        self.group = group
+        if self.bus is not None:
+            self.bus.register(self, group=group)
+
+    def unregister_from_bus(self):
+        if self.bus is not None:
+            self.bus.unregister(self)
+        self.bus = None
+
+    def send_message(self, message, recipient=None, group=None, broadcast=False):
+        """
+        Send a message to a recipient, group, or all (broadcast).
+        If a MessageBus is attached, use it; else, direct send.
+        """
+        if self.bus is not None:
+            if broadcast:
+                self.bus.broadcast(message, sender=self)
+            elif group is not None:
+                self.bus.groupcast(message, group, sender=self)
+            elif recipient is not None:
+                self.bus.send(message, recipient)
+        elif recipient is not None:
+            recipient.receive_message(message, sender=self)
 
     def receive_message(self, message, sender=None):
         self.message_inbox.append((message, sender))
