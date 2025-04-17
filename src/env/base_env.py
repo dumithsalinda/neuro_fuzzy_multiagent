@@ -4,6 +4,7 @@ class BaseEnvironment(ABC):
     """
     Abstract base class for all environments (simulated, real-world, etc.)
     Defines the interface that all environments must implement.
+    Optional hooks for real-world integration (API, sensor, robot) are provided.
     """
 
     @abstractmethod
@@ -30,6 +31,23 @@ class BaseEnvironment(ABC):
     def get_state(self):
         """Return the full environment state (for logging or advanced agents)."""
         pass
+
+    # --- Real-world integration hooks (optional) ---
+    def connect(self):
+        """Connect to real-world API, robot, or sensor (if applicable)."""
+        raise NotImplementedError("connect() not implemented for this environment.")
+
+    def disconnect(self):
+        """Disconnect from hardware/API (if applicable)."""
+        raise NotImplementedError("disconnect() not implemented for this environment.")
+
+    def send_action_to_hardware(self, action):
+        """Send action to robot or real-world actuator (if applicable)."""
+        raise NotImplementedError("send_action_to_hardware() not implemented for this environment.")
+
+    def read_sensor_data(self):
+        """Read sensor data from hardware/API (if applicable)."""
+        raise NotImplementedError("read_sensor_data() not implemented for this environment.")
 
     @property
     @abstractmethod
