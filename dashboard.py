@@ -1406,6 +1406,68 @@ if rb.get('log'):
     ax.legend()
     st.pyplot(fig)
 
+# --- Batch Experiment Runner ---
+st.markdown("---")
+st.header("Batch Experiment Runner")
+if 'batch_exp' not in st.session_state:
+    st.session_state['batch_exp'] = {'runs': 20, 'metrics': ['reward', 'action_var', 'rule_usage'], 'log': []}
+bexp = st.session_state['batch_exp']
+bexp['runs'] = st.number_input("Number of Runs", min_value=1, max_value=1000, value=int(bexp['runs']), step=1)
+bexp['metrics'] = st.multiselect("Metrics to Track", ['reward', 'action_var', 'rule_usage'], default=bexp['metrics'])
+run_batch = st.button("Run Batch Experiment")
+
+if run_batch:
+    # Simulate batch runs (stub: replace with real env/agent loop)
+    log = []
+    for run in range(bexp['runs']):
+        run_data = {}
+        for i, agent in enumerate(st.session_state.agents):
+            # Simulate reward (random for stub)
+            reward = np.random.normal(1.0, 0.5)
+            # Simulate action variance
+            action = getattr(agent, 'last_action', np.random.normal(0, 1))
+            action_var = np.var([action + np.random.normal(0, 0.1) for _ in range(5)])
+            # Simulate rule usage (random vector)
+            rule_usage = np.random.dirichlet(np.ones(getattr(agent.model, 'n_rules', 3))) if hasattr(agent, 'model') else [0.0]
+            entry = {'run': run, 'agent': i, 'reward': reward, 'action_var': action_var, 'rule_usage': rule_usage}
+            run_data[i] = entry
+        log.extend(run_data.values())
+    bexp['log'] = log
+    st.success(f"Batch experiment of {bexp['runs']} runs completed.")
+
+# Show batch experiment results
+if bexp.get('log'):
+    import pandas as pd
+    df = pd.DataFrame(bexp['log'])
+    st.subheader("Batch Experiment Results Table")
+    st.dataframe(df)
+    # Plot metrics
+    import matplotlib.pyplot as plt
+    if 'reward' in bexp['metrics']:
+        fig, ax = plt.subplots()
+        for i in df['agent'].unique():
+            ax.plot(df[df['agent']==i]['run'], df[df['agent']==i]['reward'], label=f'Agent {i+1}')
+        ax.set_title('Reward Trajectory')
+        ax.set_xlabel('Run')
+        ax.set_ylabel('Reward')
+        ax.legend()
+        st.pyplot(fig)
+    if 'action_var' in bexp['metrics']:
+        fig2, ax2 = plt.subplots()
+        for i in df['agent'].unique():
+            ax2.plot(df[df['agent']==i]['run'], df[df['agent']==i]['action_var'], label=f'Agent {i+1}')
+        ax2.set_title('Action Variance Trajectory')
+        ax2.set_xlabel('Run')
+        ax2.set_ylabel('Action Variance')
+        ax2.legend()
+        st.pyplot(fig2)
+    if 'rule_usage' in bexp['metrics'] and 'rule_usage' in df:
+        st.write('Rule usage (sampled):')
+        st.write(df[['agent','run','rule_usage']].head())
+    # Download
+    csv_batch = df.to_csv(index=False).encode('utf-8')
+    st.download_button('Download Batch Experiment Log as CSV', csv_batch, 'batch_experiment.csv', 'text/csv')
+
 
 # --- Group Structure Visualization ---
 if hasattr(st.session_state, 'agents') and len(st.session_state.agents) > 0 and hasattr(st.session_state.agents[0], 'position'):
