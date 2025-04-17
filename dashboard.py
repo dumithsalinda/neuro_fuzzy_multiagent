@@ -1263,6 +1263,79 @@ if 'interventions' in st.session_state and st.session_state['interventions']:
     st.markdown("---")
     st.header("Human Intervention Log")
     st.table(st.session_state['interventions'])
+    # --- Intervention Analytics ---
+    st.subheader("Intervention Analytics")
+    import pandas as pd
+    df = pd.DataFrame(st.session_state['interventions'])
+    # Count by agent
+    agent_counts = df['agent'].value_counts().sort_index()
+    st.write("**Interventions per Agent:**", agent_counts.to_dict())
+    # Feedback type counts
+    fb_counts = df['feedback'].value_counts()
+    st.write("**Feedback Types:**", fb_counts.to_dict())
+    # Override frequency
+    override_count = (df['override'].astype(str) != '').sum()
+    st.write(f"**Override Frequency:** {override_count}")
+    # Timeline plot
+    import matplotlib.pyplot as plt
+    fig, ax = plt.subplots(figsize=(5,2))
+    ax.plot(df.index, df['agent'], 'o-', label='Agent')
+    ax.set_xlabel('Intervention #')
+    ax.set_ylabel('Agent')
+    ax.set_title('Intervention Timeline')
+    st.pyplot(fig)
+    # Export log
+    csv = df.to_csv(index=False).encode('utf-8')
+    st.download_button('Download Intervention Log as CSV', csv, 'interventions.csv', 'text/csv')
+
+# --- Human-in-the-Loop Experiment UI ---
+st.markdown("---")
+st.header("Human-in-the-Loop Experiment")
+if 'experiment_active' not in st.session_state:
+    st.session_state['experiment_active'] = False
+if st.button('Start Experiment', disabled=st.session_state['experiment_active']):
+    st.session_state['experiment_active'] = True
+    st.session_state['experiment_step'] = 0
+    st.session_state['experiment_log'] = []
+if st.session_state['experiment_active']:
+    step = st.session_state.get('experiment_step', 0)
+    st.write(f"Experiment Step: {step}")
+    # Show agent actions
+    actions = [getattr(agent, 'last_action', None) for agent in st.session_state.agents]
+    st.write("Current agent actions:", actions)
+    # Feedback form
+    with st.form(f"experiment_feedback_{step}"):
+        agent_idx = st.selectbox("Select agent to give feedback", list(range(len(st.session_state.agents))))
+        override = st.text_input("Override action (blank for none)", value="")
+        feedback_type = st.radio("Feedback type", ["None", "+1 (Positive)", "-1 (Negative)"])
+        submit = st.form_submit_button("Send Feedback for Step")
+        if submit:
+            entry = {"step": step, "agent": agent_idx, "obs": str(getattr(st.session_state.agents[agent_idx], 'last_obs', None)), "last_action": getattr(st.session_state.agents[agent_idx], 'last_action', None), "override": override, "feedback": feedback_type}
+            st.session_state['experiment_log'].append(entry)
+            # Apply override/feedback as in main panel
+            agent = st.session_state.agents[agent_idx]
+            if override.strip() != "":
+                try:
+                    agent.last_action = float(override)
+                    st.info(f"Agent {agent_idx+1} action overridden to {override}")
+                except Exception as e:
+                    st.error(f"Invalid override: {e}")
+            if feedback_type == "+1 (Positive)":
+                agent.model.update(getattr(agent, 'last_obs', None), getattr(agent, 'last_action', 0.0), lr=agent.lr)
+            elif feedback_type == "-1 (Negative)":
+                agent.model.update(getattr(agent, 'last_obs', None), -getattr(agent, 'last_action', 0.0), lr=agent.lr)
+            st.session_state['experiment_step'] += 1
+    # Show experiment log
+    if 'experiment_log' in st.session_state and st.session_state['experiment_log']:
+        st.subheader("Experiment Log")
+        st.table(st.session_state['experiment_log'])
+        # Download
+        df_exp = pd.DataFrame(st.session_state['experiment_log'])
+        csv_exp = df_exp.to_csv(index=False).encode('utf-8')
+        st.download_button('Download Experiment Log as CSV', csv_exp, 'experiment_log.csv', 'text/csv')
+    if st.button('End Experiment'):
+        st.session_state['experiment_active'] = False
+        st.success("Experiment ended.")
 
 
 # --- Group Structure Visualization ---
