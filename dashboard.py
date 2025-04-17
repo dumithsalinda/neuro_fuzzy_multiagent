@@ -26,8 +26,11 @@ reward_history = defaultdict(lambda: deque(maxlen=100))
 # Example usage (adapt as needed):
 # env, agents = initialize_env_and_agents(agent_type, agent_count, n_obstacles)
 
-import networkx as nx
+import streamlit as st
 import numpy as np
+import sys
+import importlib
+from src.env.environment_factory import EnvironmentFactory
 
 from src.core.agent import Agent
 from src.core.dqn_agent import DQNAgent
@@ -1175,6 +1178,33 @@ data = [
     for i, agent in enumerate(st.session_state.agents)
 ]
 st.table(data)
+
+# --- Environment Selection Sidebar ---
+if 'env_name' not in st.session_state:
+    st.session_state['env_name'] = 'multiagent_gridworld'
+all_envs = list(EnvironmentFactory._registry.keys())
+env_name = st.sidebar.selectbox("Select Environment (Sim/Real)", all_envs, index=all_envs.index(st.session_state['env_name']) if st.session_state['env_name'] in all_envs else 0)
+st.session_state['env_name'] = env_name
+
+# Auto-connect/disconnect if real-world
+if env_name == 'realworld_api':
+    if 'real_env' not in st.session_state or not getattr(st.session_state['real_env'], 'connected', False):
+        st.session_state['real_env'] = EnvironmentFactory.create(env_name)
+        try:
+            st.session_state['real_env'].connect()
+            st.sidebar.success('Connected to real-world API/robot.')
+        except Exception as e:
+            st.sidebar.error(f'Failed to connect: {e}')
+    else:
+        st.sidebar.info('Real-world environment connected.')
+    st.sidebar.write('Real-world config:', getattr(st.session_state['real_env'], 'config', {}))
+else:
+    if 'real_env' in st.session_state and getattr(st.session_state['real_env'], 'connected', False):
+        try:
+            st.session_state['real_env'].disconnect()
+            st.sidebar.info('Disconnected from real-world environment.')
+        except Exception:
+            pass
 
 # --- ANFIS Explainability Panel & Rule Controls ---
 for i, agent in enumerate(st.session_state.agents):
