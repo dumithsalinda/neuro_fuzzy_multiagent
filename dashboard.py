@@ -1223,6 +1223,33 @@ for i, agent in enumerate(st.session_state.agents):
                 st.info(f"Rule {max_idx} contributed most to the last action (firing strength={agent.model._last_firing_strengths[max_idx]:.3f})")
             st.markdown("---")
             st.subheader("Fuzzy Rule Management")
+            # --- Human Feedback Panel ---
+            st.markdown("---")
+            st.subheader("Human Feedback")
+            if 'interventions' not in st.session_state:
+                st.session_state['interventions'] = []
+            with st.form(f"feedback_form_{i}", clear_on_submit=True):
+                override = st.text_input("Override last action with value (leave blank for no override)", value="")
+                feedback_type = st.radio("Feedback type", ["None", "+1 (Positive)", "-1 (Negative)"])
+                submit_feedback = st.form_submit_button("Send Feedback")
+                if submit_feedback:
+                    entry = {"agent": i, "obs": str(getattr(agent, 'last_obs', None)), "last_action": getattr(agent, 'last_action', None), "override": override, "feedback": feedback_type}
+                    st.session_state['interventions'].append(entry)
+                    st.success("Feedback sent and logged.")
+                    # Apply override if given
+                    if override.strip() != "":
+                        try:
+                            agent.last_action = float(override)
+                            st.info(f"Agent {i+1} action overridden to {override}")
+                        except Exception as e:
+                            st.error(f"Invalid override: {e}")
+                    # Apply feedback (optional: could call agent.observe or custom feedback method)
+                    if feedback_type == "+1 (Positive)":
+                        # Example: reinforce last action
+                        agent.model.update(getattr(agent, 'last_obs', None), getattr(agent, 'last_action', 0.0), lr=agent.lr)
+                    elif feedback_type == "-1 (Negative)":
+                        # Example: punish last action
+                        agent.model.update(getattr(agent, 'last_obs', None), -getattr(agent, 'last_action', 0.0), lr=agent.lr)
             # Experience Replay Settings Display
             if hasattr(agent, 'replay_enabled'):
                 st.markdown(
@@ -1230,6 +1257,13 @@ for i, agent in enumerate(st.session_state.agents):
                     f"Buffer Size: {getattr(agent, 'buffer_size', 'N/A')}, Batch Size: {getattr(agent, 'replay_batch', 'N/A')}"
                 )
             # Add rule controls
+
+# --- Human Intervention Log ---
+if 'interventions' in st.session_state and st.session_state['interventions']:
+    st.markdown("---")
+    st.header("Human Intervention Log")
+    st.table(st.session_state['interventions'])
+
 
 # --- Group Structure Visualization ---
 if hasattr(st.session_state, 'agents') and len(st.session_state.agents) > 0 and hasattr(st.session_state.agents[0], 'position'):
