@@ -7,9 +7,15 @@ except ImportError:
 class NeuroFuzzyANFISAgent:
     """
     Agent wrapper for the ANFISHybrid neuro-fuzzy model.
-    Supports act (forward), observe (online update), and experience replay for continual learning.
+    Supports act (forward), observe (online update), experience replay for continual learning,
+    and meta-learning hooks (e.g., adaptive learning rate, learning-to-learn).
+    
+    meta_update_fn: Optional callback called after each update.
+      Signature: fn(agent, step: int) -> None
+      agent: the NeuroFuzzyANFISAgent instance
+      step: current update step
     """
-    def __init__(self, input_dim, n_rules, lr=0.01, buffer_size=100, replay_enabled=True, replay_batch=8):
+    def __init__(self, input_dim, n_rules, lr=0.01, buffer_size=100, replay_enabled=True, replay_batch=8, meta_update_fn=None):
         self.model = ANFISHybrid(input_dim, n_rules)
         self.lr = lr
         self.last_obs = None
@@ -19,6 +25,9 @@ class NeuroFuzzyANFISAgent:
         self.replay_enabled = replay_enabled
         self.replay_batch = replay_batch
         self.replay_buffer = []
+        # Meta-learning
+        self.meta_update_fn = meta_update_fn
+        self.update_step = 0
 
     def act(self, obs):
         # Forward pass through ANFIS
@@ -37,6 +46,10 @@ class NeuroFuzzyANFISAgent:
         # Experience replay update
         if self.replay_enabled and len(self.replay_buffer) >= self.replay_batch:
             self.replay_update()
+        # Meta-learning hook
+        self.update_step += 1
+        if self.meta_update_fn is not None:
+            self.meta_update_fn(self, self.update_step)
 
     def replay_sample(self):
         idxs = np.random.choice(len(self.replay_buffer), self.replay_batch, replace=False)
