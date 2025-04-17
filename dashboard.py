@@ -1183,6 +1183,44 @@ for i, agent in enumerate(st.session_state.agents):
             st.write("**Rule Weights:**", agent.model.rule_weights)
             st.write("**Centers:**", agent.model.centers)
             st.write("**Widths:**", agent.model.widths)
+            # --- Membership Function Visualization ---
+            st.markdown("---")
+            st.subheader("Fuzzy Rule Visualization")
+            import matplotlib.pyplot as plt
+            x_range = np.linspace(-2, 2, 200)
+            n_rules = agent.model.n_rules
+            input_dim = agent.model.input_dim
+            fig, axs = plt.subplots(input_dim, 1, figsize=(6, 2 * input_dim), squeeze=False)
+            for d in range(input_dim):
+                ax = axs[d, 0]
+                for r in range(n_rules):
+                    c = agent.model.centers[r, d]
+                    w = agent.model.widths[r, d]
+                    mu = np.exp(-((x_range - c) ** 2) / (2 * w ** 2))
+                    ax.plot(x_range, mu, label=f"Rule {r}")
+                ax.set_title(f"Input Dimension {d+1}")
+                ax.set_xlabel("x")
+                ax.set_ylabel("Membership")
+                ax.legend()
+            st.pyplot(fig)
+            # --- Rule Firing Strengths ---
+            if hasattr(agent.model, '_last_firing_strengths'):
+                st.write("**Last Rule Firing Strengths:**", agent.model._last_firing_strengths)
+                # Detailed textual explanation
+                obs = getattr(agent, 'last_obs', None)
+                st.markdown(f"**Last Input:** {np.round(obs, 3) if obs is not None else 'N/A'}")
+                weights = getattr(agent.model, 'rule_weights', None)
+                firings = agent.model._last_firing_strengths
+                if weights is not None:
+                    contributions = weights * firings
+                    st.markdown("**Rule Contributions (weight × firing):**")
+                    for idx, (w, f, c) in enumerate(zip(weights, firings, contributions)):
+                        st.markdown(f"- Rule {idx}: weight={w:.3f}, firing={f:.3f}, contribution={c:.3f}")
+                    ranked = np.argsort(-np.abs(contributions))
+                    st.markdown("**Top Contributing Rules:** " + ", ".join([f"{i} (|contrib|={abs(contributions[i]):.3f})" for i in ranked[:3]]))
+                # Simple summary
+                max_idx = int(np.argmax(agent.model._last_firing_strengths))
+                st.info(f"Rule {max_idx} contributed most to the last action (firing strength={agent.model._last_firing_strengths[max_idx]:.3f})")
             st.markdown("---")
             st.subheader("Fuzzy Rule Management")
             # Experience Replay Settings Display
@@ -1192,6 +1230,45 @@ for i, agent in enumerate(st.session_state.agents):
                     f"Buffer Size: {getattr(agent, 'buffer_size', 'N/A')}, Batch Size: {getattr(agent, 'replay_batch', 'N/A')}"
                 )
             # Add rule controls
+
+# --- Group Structure Visualization ---
+if hasattr(st.session_state, 'agents') and len(st.session_state.agents) > 0 and hasattr(st.session_state.agents[0], 'position'):
+    st.markdown("---")
+    st.header("Agent Group Structure Visualization")
+    agents = st.session_state.agents
+    # Group assignment
+    group_ids = [getattr(agent, 'group', 'ungrouped') for agent in agents]
+    unique_groups = list(set(group_ids))
+    group_colors = {gid: plt.cm.tab10(i % 10) for i, gid in enumerate(unique_groups)}
+    fig, ax = plt.subplots(figsize=(6, 6))
+    for i, agent in enumerate(agents):
+        color = group_colors.get(group_ids[i], 'gray')
+        x, y = agent.position if hasattr(agent, 'position') else (0, 0)
+        marker = '*' if getattr(agent, 'is_leader', False) else 'o'
+        size = 250 if getattr(agent, 'is_leader', False) else 100
+        ax.scatter(x, y, c=[color], marker=marker, s=size, edgecolor='black', label=f"{group_ids[i]}{' (Leader)' if getattr(agent, 'is_leader', False) else ''}")
+        ax.text(x, y + 0.08, f"{i}", ha="center", fontsize=10)
+    # Unique legend
+    handles = []
+    for gid in unique_groups:
+        is_leader = any(getattr(agent, 'is_leader', False) and getattr(agent, 'group', None) == gid for agent in agents)
+        marker = '*' if is_leader else 'o'
+        handles.append(plt.Line2D([0], [0], marker=marker, color='w', label=f"{gid}{' (Leader)' if is_leader else ''}", markerfacecolor=group_colors[gid], markeredgecolor='black', markersize=12 if is_leader else 8))
+    ax.legend(handles=handles, loc='best')
+    ax.set_title("Agent Positions by Group & Leader")
+    ax.set_xlabel("X")
+    ax.set_ylabel("Y")
+    ax.grid(True)
+    st.pyplot(fig)
+    # Group summary table
+    st.subheader("Group Membership Summary")
+    group_table = []
+    for gid in unique_groups:
+        members = [i for i, agent in enumerate(agents) if getattr(agent, 'group', 'ungrouped') == gid]
+        leader = next((i for i in members if getattr(agents[i], 'is_leader', False)), None)
+        group_table.append({"Group": gid, "Members": members, "Leader": leader})
+    st.table(group_table)
+
             with st.form(f"add_rule_form_{i}", clear_on_submit=True):
                 new_center = st.text_input("New Rule Center (comma-separated)", value=",")
                 new_width = st.text_input("New Rule Width (comma-separated)", value="0.5,0.5")
