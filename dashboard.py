@@ -31,6 +31,7 @@ import numpy as np
 import sys
 import importlib
 from src.env.environment_factory import EnvironmentFactory
+from src.core.message_bus import MessageBus
 
 from src.core.agent import Agent
 from src.core.dqn_agent import DQNAgent
@@ -1205,6 +1206,68 @@ else:
             st.sidebar.info('Disconnected from real-world environment.')
         except Exception:
             pass
+
+# --- Agent Communication Visualization Panel ---
+if 'message_bus' not in st.session_state:
+    st.session_state['message_bus'] = MessageBus()
+if 'message_log' not in st.session_state:
+    st.session_state['message_log'] = []
+
+st.sidebar.markdown('---')
+msg_logging = st.sidebar.checkbox('Enable Agent Message Logging', value=True)
+if msg_logging:
+    st.sidebar.info('Message logging is ON. All agent messages will be logged and displayed.')
+else:
+    st.sidebar.info('Message logging is OFF.')
+
+st.sidebar.markdown('**Test Agent Messaging**')
+if st.sidebar.button('Send Test Message (Agent 1 → Agent 2)'):
+    agents = st.session_state.get('agents', [])
+    if len(agents) >= 2:
+        agents[0].send_message({'type': 'test', 'content': 'Hello from Agent 1'}, recipient=agents[1])
+        st.sidebar.success('Test message sent!')
+    else:
+        st.sidebar.warning('Need at least 2 agents for test.')
+
+# Patch agents to use bus and log messages
+for agent in st.session_state.get('agents', []):
+    if getattr(agent, 'bus', None) is not st.session_state['message_bus']:
+        agent.register_to_bus(st.session_state['message_bus'], getattr(agent, 'group', None))
+
+# Patch MessageBus to log messages
+if not hasattr(st.session_state['message_bus'], '_logging_patched'):
+    orig_send = st.session_state['message_bus'].send
+    orig_broadcast = st.session_state['message_bus'].broadcast
+    orig_groupcast = st.session_state['message_bus'].groupcast
+    def log_send(self, message, recipient):
+        if msg_logging:
+            st.session_state['message_log'].append({'from': 'direct', 'sender': str(recipient), 'recipient': str(recipient), 'content': str(message), 'step': st.session_state.get('step', 0)})
+        return orig_send(message, recipient)
+    def log_broadcast(self, message, sender=None):
+        if msg_logging:
+            for agent in self.agents:
+                if agent is not sender:
+                    st.session_state['message_log'].append({'from': 'broadcast', 'sender': str(sender), 'recipient': str(agent), 'content': str(message), 'step': st.session_state.get('step', 0)})
+        return orig_broadcast(message, sender=sender)
+    def log_groupcast(self, message, group, sender=None):
+        if msg_logging:
+            for agent in self.groups.get(group, []):
+                if agent is not sender:
+                    st.session_state['message_log'].append({'from': 'group', 'sender': str(sender), 'recipient': str(agent), 'content': str(message), 'step': st.session_state.get('step', 0)})
+        return orig_groupcast(message, group, sender=sender)
+    st.session_state['message_bus'].send = log_send.__get__(st.session_state['message_bus'])
+    st.session_state['message_bus'].broadcast = log_broadcast.__get__(st.session_state['message_bus'])
+    st.session_state['message_bus'].groupcast = log_groupcast.__get__(st.session_state['message_bus'])
+    st.session_state['message_bus']._logging_patched = True
+
+st.markdown('---')
+st.header('Agent Message Log')
+if st.session_state['message_log']:
+    import pandas as pd
+    df = pd.DataFrame(st.session_state['message_log'])
+    st.dataframe(df.tail(100))
+else:
+    st.info('No messages have been logged yet.')
 
 # --- ANFIS Explainability Panel & Rule Controls ---
 for i, agent in enumerate(st.session_state.agents):
