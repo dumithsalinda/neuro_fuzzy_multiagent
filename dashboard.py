@@ -67,6 +67,7 @@ if env_type == "Gridworld":
         "Tabular Q-Learning",
         "DQN RL",
         "Multi-Modal Fusion Agent",
+        "ANFIS Agent",
     ]
     agent_types = [
         st.sidebar.selectbox(
@@ -1167,13 +1168,46 @@ if hasattr(st.session_state.agents[0], "position"):
 st.header("Agent Knowledge State")
 data = [
     {
-        "Agent": agent.group + ":" + str(i),
+        "Agent": getattr(agent, 'group', 'Agent') + ":" + str(i),
         "Knowledge": str(getattr(agent, "online_knowledge", {})),
         "Law Violations": getattr(agent, "law_violations", 0),
     }
     for i, agent in enumerate(st.session_state.agents)
 ]
 st.table(data)
+
+# --- ANFIS Explainability Panel & Rule Controls ---
+for i, agent in enumerate(st.session_state.agents):
+    if hasattr(agent, 'model') and hasattr(agent.model, 'rule_weights') and hasattr(agent.model, 'centers'):
+        with st.expander(f"ANFIS Agent {i+1} - Explainability & Rule Controls"):
+            st.write("**Rule Weights:**", agent.model.rule_weights)
+            st.write("**Centers:**", agent.model.centers)
+            st.write("**Widths:**", agent.model.widths)
+            st.markdown("---")
+            st.subheader("Fuzzy Rule Management")
+            # Add rule controls
+            with st.form(f"add_rule_form_{i}", clear_on_submit=True):
+                new_center = st.text_input("New Rule Center (comma-separated)", value=",")
+                new_width = st.text_input("New Rule Width (comma-separated)", value="0.5,0.5")
+                new_weight = st.number_input("New Rule Weight", value=0.0, step=0.1, format="%.2f")
+                add_rule_btn = st.form_submit_button("Add Rule")
+                if add_rule_btn:
+                    try:
+                        center = np.array([float(x) for x in new_center.split(",")]).reshape(1, -1)
+                        width = np.array([float(x) for x in new_width.split(",")]).reshape(1, -1)
+                        agent.model.add_rule(center, width, new_weight)
+                        st.success("Rule added.")
+                    except Exception as e:
+                        st.error(f"Failed to add rule: {e}")
+            # Remove rule controls
+            remove_idx = st.number_input(f"Remove Rule Index (0 to {agent.model.n_rules-1})", min_value=0, max_value=max(agent.model.n_rules-1,0), value=0, step=1, key=f"remove_idx_{i}")
+            if st.button(f"Remove Rule {remove_idx}", key=f"remove_btn_{i}"):
+                agent.model.remove_rule(remove_idx)
+                st.success(f"Rule {remove_idx} removed.")
+            # Dynamic rule update
+            if st.button("Dynamic Rule Update", key=f"dyn_rule_btn_{i}"):
+                agent.model.dynamic_rule_update()
+                st.info("Dynamic rule update triggered.")
 
 # RL-specific: Reward plot and Q-table
 if agent_type in ("Tabular Q-Learning", "DQN RL"):

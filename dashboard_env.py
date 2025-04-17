@@ -4,6 +4,7 @@ from src.core.dqn_agent import DQNAgent
 from src.core.multiagent import MultiAgentSystem
 from src.core.neuro_fuzzy import NeuroFuzzyHybrid
 from src.core.tabular_q_agent import TabularQLearningAgent
+from src.core.anfis_agent import NeuroFuzzyANFISAgent
 from src.env.simple_env import SimpleContinuousEnv, SimpleDiscreteEnv
 import json
 import requests
@@ -124,6 +125,10 @@ def initialize_env_and_agents(agent_type, agent_count, n_obstacles):
             n_evaders=n_evaders,
             n_obstacles=n_obstacles,
         )
+    elif env_type == "ANFIS Agent":
+        # For demo: input_dim=2, n_rules=4, lr=0.05
+        agents = [NeuroFuzzyANFISAgent(input_dim=2, n_rules=4, lr=0.05) for _ in range(agent_count)]
+        env = SimpleContinuousEnv()  # Or another suitable env
     else:
         agents = [
             TabularQLearningAgent(
