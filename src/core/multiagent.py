@@ -53,6 +53,31 @@ class MultiAgentSystem:
             self.form_group(f"auto_{group_id}", group_members)
             group_id += 1
 
+    def auto_group_by_som(self, feature_matrix, som_shape=(5, 5), num_iteration=100):
+        """
+        Cluster agents into groups using a Self-Organizing Map (SOM) based on agent feature vectors.
+        Args:
+            feature_matrix: np.ndarray or list of shape (n_agents, n_features)
+            som_shape: tuple, shape of the SOM grid (default (5,5))
+            num_iteration: number of training iterations for SOM
+        Each SOM node becomes a group; agents mapped to the same node are grouped together.
+        """
+        feature_matrix = np.array(feature_matrix)
+        som = AgentFeatureSOM(x=som_shape[0], y=som_shape[1], input_len=feature_matrix.shape[1])
+        som.train(feature_matrix, num_iteration=num_iteration)
+        clusters = som.assign_clusters(feature_matrix)
+        # Map (x, y) SOM nodes to group IDs
+        group_map = {}
+        for idx, cluster in enumerate(clusters):
+            group_key = f"som_{cluster[0]}_{cluster[1]}"
+            if group_key not in group_map:
+                group_map[group_key] = []
+            group_map[group_key].append(idx)
+        # Clear existing groups
+        self.groups = {}
+        for group_id, agent_indices in group_map.items():
+            self.form_group(group_id, agent_indices)
+
     def form_group(self, group_id, agent_indices):
         """
         Create a new group with the specified agents.

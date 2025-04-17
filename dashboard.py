@@ -14,9 +14,10 @@ from collections import defaultdict, deque
 
 import matplotlib.pyplot as plt
 import requests
+
+from dashboard_env import initialize_env_and_agents, realworld_sidebar
+from dashboard_tables import render_group_decisions_log, render_knowledge_table
 from dashboard_viz import plot_group_leader_spatial, plot_som_grid
-from dashboard_tables import render_knowledge_table, render_group_decisions_log
-from dashboard_env import realworld_sidebar, initialize_env_and_agents
 
 # --- RL Reward History ---
 reward_history = defaultdict(lambda: deque(maxlen=100))
@@ -129,7 +130,9 @@ else:
 
 # --- Session State Setup ---
 if "env" not in st.session_state or st.sidebar.button("Reset Environment"):
-    st.session_state.env, st.session_state.agents = initialize_env_and_agents(agent_type, agent_count, n_obstacles)
+    st.session_state.env, st.session_state.agents = initialize_env_and_agents(
+        agent_type, agent_count, n_obstacles
+    )
     st.session_state.obs = (
         st.session_state.env.reset() if st.session_state.env else None
     )
@@ -916,11 +919,72 @@ group_decisions = deque(maxlen=20)
 # --- Streamlit UI ---
 st.title(f"🤖 Multi-Agent System Dashboard ({agent_type})")
 
-tabs = st.tabs(["Simulation", "Analytics"])
+tab_labels = ["Simulation", "Analytics"]
+# Check if there are any MultiModalFusionAgents
+fusion_agents = [
+    a
+    for a in st.session_state.agents
+    if a.__class__.__name__ == "MultiModalFusionAgent"
+]
+if fusion_agents:
+    tab_labels.append("Fusion Agent Explainability")
+tabs = st.tabs(tab_labels)
 
 with tabs[0]:
     run_sim = st.sidebar.button("Step Simulation", key="sidebar_step_sim")
     auto_run = st.sidebar.checkbox("Auto Step (every 2s)")
+    online_learning_enabled = st.sidebar.checkbox("Enable Online Learning for Fusion Agents", value=True)
+
+if fusion_agents and len(tabs) > 2:
+    with tabs[2]:
+        st.header("Fusion Agent Explainability")
+        agent_names = [
+            f"Agent {st.session_state.agents.index(a)}" for a in fusion_agents
+        ]
+        selected_idx = st.selectbox(
+            "Select Fusion Agent",
+            range(len(fusion_agents)),
+            format_func=lambda i: agent_names[i],
+        )
+        agent = fusion_agents[selected_idx]
+        st.write(f"**Selected:** {agent}")
+        # Use a sample observation (random or from session state)
+        obs = None
+        agent_idx = st.session_state.agents.index(agent)
+        if "obs" in st.session_state and st.session_state.obs is not None:
+            # If obs is a list of per-agent obs
+            if (
+                isinstance(st.session_state.obs, list)
+                and len(st.session_state.obs) > agent_idx
+            ):
+                obs = st.session_state.obs[agent_idx]
+            else:
+                obs = st.session_state.obs
+        if obs is None:
+            st.warning("No observation available for this agent.")
+        else:
+            # If obs is a list, assume it's already split per modality
+            if isinstance(obs, list) and all(
+                isinstance(x, (list, tuple, np.ndarray)) for x in obs
+            ):
+                obs_list = obs
+            else:
+                obs_list = [obs]
+            details = agent.get_fusion_details(obs_list)
+            st.subheader("Raw Features (per modality)")
+            st.json(details["raw_features"])
+            if details["fusion_weights"] is not None:
+                st.subheader("Fusion Weights")
+                st.json(details["fusion_weights"])
+            st.subheader("Fused Vector")
+            st.json(details["fused_vector"])
+            st.subheader("Q-values")
+            st.json(details["q_values"])
+            st.subheader("Loss Curve (Online Learning)")
+            if hasattr(agent, "loss_history") and len(agent.loss_history) > 0:
+                st.line_chart(list(agent.loss_history))
+            else:
+                st.warning("No loss history yet for this agent. Run simulation with online learning enabled.")
 
     if "env_states" not in st.session_state:
         st.session_state["env_states"] = [
