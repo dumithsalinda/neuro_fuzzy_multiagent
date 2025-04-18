@@ -1,132 +1,36 @@
 import datetime
 import os
 import pickle
+import time
+from collections import deque, defaultdict
+
+import matplotlib.pyplot as plt
+import networkx as nx
+import numpy as np
+import streamlit as st
+
+from dashboard.main import main
+from dashboard_env import initialize_env_and_agents
+from src.core.agent import Agent
+from src.core.dqn_agent import DQNAgent
+from src.core.message_bus import MessageBus
+from src.core.multiagent import MultiAgentSystem
+from src.core.multimodal_fusion_agent import MultiModalFusionAgent
+from src.core.neuro_fuzzy import NeuroFuzzyHybrid
+from src.core.tabular_q_agent import TabularQLearningAgent
+from src.env.environment_factory import EnvironmentFactory
+from src.env.simple_env import SimpleContinuousEnv, SimpleDiscreteEnv
 
 MODEL_DIR = "models"
 os.makedirs(MODEL_DIR, exist_ok=True)
-import json
 
-import streamlit as st
-
-st.set_page_config(page_title="Multi-Agent System Dashboard", layout="wide")
-import time
-from collections import defaultdict, deque
-
-import matplotlib.pyplot as plt
-import requests
-
-from dashboard_env import initialize_env_and_agents, realworld_sidebar
-from dashboard_tables import render_group_decisions_log, render_knowledge_table
-from dashboard_viz import plot_group_leader_spatial, plot_som_grid
-
-# --- RL Reward History ---
+# Global reward history for agents (used for plotting, analytics)
 reward_history = defaultdict(lambda: deque(maxlen=100))
 
-# --- Environment and Agents Initialization ---
-# Example usage (adapt as needed):
-# env, agents = initialize_env_and_agents(agent_type, agent_count, n_obstacles)
-
-import streamlit as st
-import numpy as np
-import sys
-import importlib
-from src.env.environment_factory import EnvironmentFactory
-from src.core.message_bus import MessageBus
-
-# --- Google Drive Integration ---
-def get_drive(credentials_file):
-    from pydrive2.auth import GoogleAuth
-    from pydrive2.drive import GoogleDrive
-    import os
-    gauth = GoogleAuth()
-    gauth.DEFAULT_SETTINGS['client_config_file'] = credentials_file
-    gauth.LoadCredentialsFile(credentials_file)
-    if gauth.credentials is None:
-        gauth.LocalWebserverAuth()
-    elif gauth.access_token_expired:
-        gauth.Refresh()
-    else:
-        gauth.Authorize()
-    gauth.SaveCredentialsFile(credentials_file)
-    drive = GoogleDrive(gauth)
-    return drive
-
-# --- Collaborative Experiments Panel ---
-def collaborative_experiments_panel():
-    st.sidebar.markdown('---')
-    with st.sidebar.expander('Collaborative Experiments (Google Drive)', expanded=False):
-        st.markdown('**Save or load experiments to Google Drive.**')
-        credentials_file = None
-        if 'drive_credentials' not in st.session_state:
-            cred_file = st.file_uploader('Upload Google client_secrets.json', type='json', key='drive_creds')
-            if cred_file:
-                with open('client_secrets.json', 'wb') as f:
-                    f.write(cred_file.read())
-                st.session_state['drive_credentials'] = 'client_secrets.json'
-        if 'drive_credentials' in st.session_state:
-            credentials_file = st.session_state['drive_credentials']
-            drive = get_drive(credentials_file)
-            # Save experiment
-            if st.button('Save Experiment to Drive'):
-                import pickle
-                import time
-                exp_bytes = pickle.dumps(dict(st.session_state))
-                fname = f"experiment_{int(time.time())}.pkl"
-                file_drive = drive.CreateFile({'title': fname})
-                file_drive.SetContentString(exp_bytes.hex())
-                file_drive.Upload()
-                st.success(f'Experiment uploaded! File ID: {file_drive["id"]}')
-            # Load experiment
-            file_id = st.text_input('Google Drive File ID to Load', '')
-            if st.button('Load Experiment from Drive') and file_id:
-                file_drive = drive.CreateFile({'id': file_id})
-                file_drive.FetchMetadata(fetch_all=True)
-                exp_bytes = bytes.fromhex(file_drive.GetContentString())
-                import pickle
-                exp_data = pickle.loads(exp_bytes)
-                # Restore session (basic demo: update st.session_state)
-                for k, v in exp_data.items():
-                    st.session_state[k] = v
-                st.success('Experiment loaded from Drive!')
-
-collaborative_experiments_panel()
-
-# --- Simple User Authentication ---
-def login_form():
-    st.sidebar.markdown('## Login')
-    if 'login_error' in st.session_state:
-        st.sidebar.error(st.session_state['login_error'])
-    with st.sidebar.form('login_form'):
-        username = st.text_input('Username', key='login_user')
-        password = st.text_input('Password', type='password', key='login_pass')
-        submit = st.form_submit_button('Login')
-    if submit:
-        # For demo: hardcoded user/pass. Replace with real user DB for production.
-        valid_users = {'admin': 'admin123', 'user': 'user123'}
-        if username in valid_users and password == valid_users[username]:
-            st.session_state['logged_in'] = True
-            st.session_state['username'] = username
-            st.session_state.pop('login_error', None)
-        else:
-            st.session_state['logged_in'] = False
-            st.session_state['login_error'] = 'Invalid username or password.'
-    if not st.session_state.get('logged_in', False):
-        st.stop()
-
-login_form()
-
-from src.core.agent import Agent
-from src.core.dqn_agent import DQNAgent
-from src.core.multiagent import MultiAgentSystem
-from src.core.neuro_fuzzy import NeuroFuzzyHybrid
-from src.core.tabular_q_agent import TabularQLearningAgent
-from src.env.simple_env import SimpleContinuousEnv, SimpleDiscreteEnv
+main()
 
 # --- Real-World Integration Sidebar ---
-realworld_sidebar()
 
-# --- Sidebar: Agent Type Selection & Parameter Tuning ---
-from src.env.environment_factory import EnvironmentFactory
 
 # List of registered environments for dynamic selection
 env_choices = [
@@ -237,7 +141,6 @@ def simulate_step():
 
     # Get actions for all agents
     def to_scalar_action(a):
-        import numpy as np
 
         if isinstance(a, np.ndarray):
             return int(a.item()) if a.size == 1 else int(a.flat[0])
@@ -291,8 +194,6 @@ def simulate_step():
     st.session_state.perturbed_obs = perturbed_obs
     actions = []
     import numpy as np
-
-    from src.core.multimodal_fusion_agent import MultiModalFusionAgent
 
     for i, (agent, obs) in enumerate(zip(agents, perturbed_obs)):
         # If agent is MultiModalFusionAgent and obs is not a list, inject random multi-modal input
@@ -446,10 +347,6 @@ with tabs[4]:
 
 # --- Multi-Modal Fusion Agent Demo Tab ---
 with tabs[5]:
-    import numpy as np
-
-    from src.core.multimodal_fusion_agent import MultiModalFusionAgent
-
     st.header("Multi-Modal Fusion Agent Demo")
     st.write("Test the Multi-Modal Fusion Agent with random image and text features.")
     img_dim = st.number_input("Image feature dim", 8, 128, 32)
@@ -1020,10 +917,13 @@ tabs = st.tabs(tab_labels)
 with tabs[0]:
     run_sim = st.sidebar.button("Step Simulation", key="sidebar_step_sim")
     auto_run = st.sidebar.checkbox("Auto Step (every 2s)")
-    online_learning_enabled = st.sidebar.checkbox("Enable Online Learning for Fusion Agents", value=True)
+    online_learning_enabled = st.sidebar.checkbox(
+        "Enable Online Learning for Fusion Agents", value=True
+    )
     # --- SOM Grid Visualization ---
-    if hasattr(system, 'groups'):
+    if hasattr(system, "groups"):
         from dashboard_viz import plot_som_grid
+
         group_ids = list(system.groups.keys())
         group_colors = {gid: plt.cm.tab10(i % 10) for i, gid in enumerate(group_ids)}
         plot_som_grid(group_ids, st.session_state.agents, group_colors)
@@ -1077,7 +977,9 @@ if fusion_agents and len(tabs) > 2:
             if hasattr(agent, "loss_history") and len(agent.loss_history) > 0:
                 st.line_chart(list(agent.loss_history))
             else:
-                st.warning("No loss history yet for this agent. Run simulation with online learning enabled.")
+                st.warning(
+                    "No loss history yet for this agent. Run simulation with online learning enabled."
+                )
 
     if "env_states" not in st.session_state:
         st.session_state["env_states"] = [
@@ -1254,7 +1156,7 @@ if hasattr(st.session_state.agents[0], "position"):
 st.header("Agent Knowledge State")
 data = [
     {
-        "Agent": getattr(agent, 'group', 'Agent') + ":" + str(i),
+        "Agent": getattr(agent, "group", "Agent") + ":" + str(i),
         "Knowledge": str(getattr(agent, "online_knowledge", {})),
         "Law Violations": getattr(agent, "law_violations", 0),
     }
@@ -1263,97 +1165,156 @@ data = [
 st.table(data)
 
 # --- Environment Selection Sidebar ---
-if 'env_name' not in st.session_state:
-    st.session_state['env_name'] = 'multiagent_gridworld'
+if "env_name" not in st.session_state:
+    st.session_state["env_name"] = "multiagent_gridworld"
 all_envs = list(EnvironmentFactory._registry.keys())
-env_name = st.sidebar.selectbox("Select Environment (Sim/Real)", all_envs, index=all_envs.index(st.session_state['env_name']) if st.session_state['env_name'] in all_envs else 0)
-st.session_state['env_name'] = env_name
+env_name = st.sidebar.selectbox(
+    "Select Environment (Sim/Real)",
+    all_envs,
+    index=(
+        all_envs.index(st.session_state["env_name"])
+        if st.session_state["env_name"] in all_envs
+        else 0
+    ),
+)
+st.session_state["env_name"] = env_name
 
 # Auto-connect/disconnect if real-world
-if env_name == 'realworld_api':
-    if 'real_env' not in st.session_state or not getattr(st.session_state['real_env'], 'connected', False):
-        st.session_state['real_env'] = EnvironmentFactory.create(env_name)
+if env_name == "realworld_api":
+    if "real_env" not in st.session_state or not getattr(
+        st.session_state["real_env"], "connected", False
+    ):
+        st.session_state["real_env"] = EnvironmentFactory.create(env_name)
         try:
-            st.session_state['real_env'].connect()
-            st.sidebar.success('Connected to real-world API/robot.')
+            st.session_state["real_env"].connect()
+            st.sidebar.success("Connected to real-world API/robot.")
         except Exception as e:
-            st.sidebar.error(f'Failed to connect: {e}')
+            st.sidebar.error(f"Failed to connect: {e}")
     else:
-        st.sidebar.info('Real-world environment connected.')
-    st.sidebar.write('Real-world config:', getattr(st.session_state['real_env'], 'config', {}))
+        st.sidebar.info("Real-world environment connected.")
+    st.sidebar.write(
+        "Real-world config:", getattr(st.session_state["real_env"], "config", {})
+    )
 else:
-    if 'real_env' in st.session_state and getattr(st.session_state['real_env'], 'connected', False):
+    if "real_env" in st.session_state and getattr(
+        st.session_state["real_env"], "connected", False
+    ):
         try:
-            st.session_state['real_env'].disconnect()
-            st.sidebar.info('Disconnected from real-world environment.')
+            st.session_state["real_env"].disconnect()
+            st.sidebar.info("Disconnected from real-world environment.")
         except Exception:
             pass
 
 # --- Agent Communication Visualization Panel ---
-if 'message_bus' not in st.session_state:
-    st.session_state['message_bus'] = MessageBus()
-if 'message_log' not in st.session_state:
-    st.session_state['message_log'] = []
+if "message_bus" not in st.session_state:
+    st.session_state["message_bus"] = MessageBus()
+if "message_log" not in st.session_state:
+    st.session_state["message_log"] = []
 
-st.sidebar.markdown('---')
-msg_logging = st.sidebar.checkbox('Enable Agent Message Logging', value=True)
+st.sidebar.markdown("---")
+msg_logging = st.sidebar.checkbox("Enable Agent Message Logging", value=True)
 if msg_logging:
-    st.sidebar.info('Message logging is ON. All agent messages will be logged and displayed.')
+    st.sidebar.info(
+        "Message logging is ON. All agent messages will be logged and displayed."
+    )
 else:
-    st.sidebar.info('Message logging is OFF.')
+    st.sidebar.info("Message logging is OFF.")
 
-st.sidebar.markdown('**Test Agent Messaging**')
-if st.sidebar.button('Send Test Message (Agent 1 → Agent 2)'):
-    agents = st.session_state.get('agents', [])
+st.sidebar.markdown("**Test Agent Messaging**")
+if st.sidebar.button("Send Test Message (Agent 1 → Agent 2)"):
+    agents = st.session_state.get("agents", [])
     if len(agents) >= 2:
-        agents[0].send_message({'type': 'test', 'content': 'Hello from Agent 1'}, recipient=agents[1])
-        st.sidebar.success('Test message sent!')
+        agents[0].send_message(
+            {"type": "test", "content": "Hello from Agent 1"}, recipient=agents[1]
+        )
+        st.sidebar.success("Test message sent!")
     else:
-        st.sidebar.warning('Need at least 2 agents for test.')
+        st.sidebar.warning("Need at least 2 agents for test.")
 
 # Patch agents to use bus and log messages
-for agent in st.session_state.get('agents', []):
-    if getattr(agent, 'bus', None) is not st.session_state['message_bus']:
-        agent.register_to_bus(st.session_state['message_bus'], getattr(agent, 'group', None))
+for agent in st.session_state.get("agents", []):
+    if getattr(agent, "bus", None) is not st.session_state["message_bus"]:
+        agent.register_to_bus(
+            st.session_state["message_bus"], getattr(agent, "group", None)
+        )
 
 # Patch MessageBus to log messages
-if not hasattr(st.session_state['message_bus'], '_logging_patched'):
-    orig_send = st.session_state['message_bus'].send
-    orig_broadcast = st.session_state['message_bus'].broadcast
-    orig_groupcast = st.session_state['message_bus'].groupcast
+if not hasattr(st.session_state["message_bus"], "_logging_patched"):
+    orig_send = st.session_state["message_bus"].send
+    orig_broadcast = st.session_state["message_bus"].broadcast
+    orig_groupcast = st.session_state["message_bus"].groupcast
+
     def log_send(self, message, recipient):
         if msg_logging:
-            st.session_state['message_log'].append({'from': 'direct', 'sender': str(recipient), 'recipient': str(recipient), 'content': str(message), 'step': st.session_state.get('step', 0)})
+            st.session_state["message_log"].append(
+                {
+                    "from": "direct",
+                    "sender": str(recipient),
+                    "recipient": str(recipient),
+                    "content": str(message),
+                    "step": st.session_state.get("step", 0),
+                }
+            )
         return orig_send(message, recipient)
+
     def log_broadcast(self, message, sender=None):
         if msg_logging:
             for agent in self.agents:
                 if agent is not sender:
-                    st.session_state['message_log'].append({'from': 'broadcast', 'sender': str(sender), 'recipient': str(agent), 'content': str(message), 'step': st.session_state.get('step', 0)})
+                    st.session_state["message_log"].append(
+                        {
+                            "from": "broadcast",
+                            "sender": str(sender),
+                            "recipient": str(agent),
+                            "content": str(message),
+                            "step": st.session_state.get("step", 0),
+                        }
+                    )
         return orig_broadcast(message, sender=sender)
+
     def log_groupcast(self, message, group, sender=None):
         if msg_logging:
             for agent in self.groups.get(group, []):
                 if agent is not sender:
-                    st.session_state['message_log'].append({'from': 'group', 'sender': str(sender), 'recipient': str(agent), 'content': str(message), 'step': st.session_state.get('step', 0)})
+                    st.session_state["message_log"].append(
+                        {
+                            "from": "group",
+                            "sender": str(sender),
+                            "recipient": str(agent),
+                            "content": str(message),
+                            "step": st.session_state.get("step", 0),
+                        }
+                    )
         return orig_groupcast(message, group, sender=sender)
-    st.session_state['message_bus'].send = log_send.__get__(st.session_state['message_bus'])
-    st.session_state['message_bus'].broadcast = log_broadcast.__get__(st.session_state['message_bus'])
-    st.session_state['message_bus'].groupcast = log_groupcast.__get__(st.session_state['message_bus'])
-    st.session_state['message_bus']._logging_patched = True
 
-st.markdown('---')
-st.header('Agent Message Log')
-if st.session_state['message_log']:
+    st.session_state["message_bus"].send = log_send.__get__(
+        st.session_state["message_bus"]
+    )
+    st.session_state["message_bus"].broadcast = log_broadcast.__get__(
+        st.session_state["message_bus"]
+    )
+    st.session_state["message_bus"].groupcast = log_groupcast.__get__(
+        st.session_state["message_bus"]
+    )
+    st.session_state["message_bus"]._logging_patched = True
+
+st.markdown("---")
+st.header("Agent Message Log")
+if st.session_state["message_log"]:
     import pandas as pd
-    df = pd.DataFrame(st.session_state['message_log'])
+
+    df = pd.DataFrame(st.session_state["message_log"])
     st.dataframe(df.tail(100))
 else:
-    st.info('No messages have been logged yet.')
+    st.info("No messages have been logged yet.")
 
 # --- ANFIS Explainability Panel & Rule Controls ---
 for i, agent in enumerate(st.session_state.agents):
-    if hasattr(agent, 'model') and hasattr(agent.model, 'rule_weights') and hasattr(agent.model, 'centers'):
+    if (
+        hasattr(agent, "model")
+        and hasattr(agent.model, "rule_weights")
+        and hasattr(agent.model, "centers")
+    ):
         with st.expander(f"ANFIS Agent {i+1} - Explainability & Rule Controls"):
             st.write("**Rule Weights:**", agent.model.rule_weights)
             st.write("**Centers:**", agent.model.centers)
@@ -1362,16 +1323,19 @@ for i, agent in enumerate(st.session_state.agents):
             st.markdown("---")
             st.subheader("Fuzzy Rule Visualization")
             import matplotlib.pyplot as plt
+
             x_range = np.linspace(-2, 2, 200)
             n_rules = agent.model.n_rules
             input_dim = agent.model.input_dim
-            fig, axs = plt.subplots(input_dim, 1, figsize=(6, 2 * input_dim), squeeze=False)
+            fig, axs = plt.subplots(
+                input_dim, 1, figsize=(6, 2 * input_dim), squeeze=False
+            )
             for d in range(input_dim):
                 ax = axs[d, 0]
                 for r in range(n_rules):
                     c = agent.model.centers[r, d]
                     w = agent.model.widths[r, d]
-                    mu = np.exp(-((x_range - c) ** 2) / (2 * w ** 2))
+                    mu = np.exp(-((x_range - c) ** 2) / (2 * w**2))
                     ax.plot(x_range, mu, label=f"Rule {r}")
                 ax.set_title(f"Input Dimension {d+1}")
                 ax.set_xlabel("x")
@@ -1379,37 +1343,67 @@ for i, agent in enumerate(st.session_state.agents):
                 ax.legend()
             st.pyplot(fig)
             # --- Rule Firing Strengths ---
-            if hasattr(agent.model, '_last_firing_strengths'):
-                st.write("**Last Rule Firing Strengths:**", agent.model._last_firing_strengths)
+            if hasattr(agent.model, "_last_firing_strengths"):
+                st.write(
+                    "**Last Rule Firing Strengths:**",
+                    agent.model._last_firing_strengths,
+                )
                 # Detailed textual explanation
-                obs = getattr(agent, 'last_obs', None)
-                st.markdown(f"**Last Input:** {np.round(obs, 3) if obs is not None else 'N/A'}")
-                weights = getattr(agent.model, 'rule_weights', None)
+                obs = getattr(agent, "last_obs", None)
+                st.markdown(
+                    f"**Last Input:** {np.round(obs, 3) if obs is not None else 'N/A'}"
+                )
+                weights = getattr(agent.model, "rule_weights", None)
                 firings = agent.model._last_firing_strengths
                 if weights is not None:
                     contributions = weights * firings
                     st.markdown("**Rule Contributions (weight × firing):**")
-                    for idx, (w, f, c) in enumerate(zip(weights, firings, contributions)):
-                        st.markdown(f"- Rule {idx}: weight={w:.3f}, firing={f:.3f}, contribution={c:.3f}")
+                    for idx, (w, f, c) in enumerate(
+                        zip(weights, firings, contributions)
+                    ):
+                        st.markdown(
+                            f"- Rule {idx}: weight={w:.3f}, firing={f:.3f}, contribution={c:.3f}"
+                        )
                     ranked = np.argsort(-np.abs(contributions))
-                    st.markdown("**Top Contributing Rules:** " + ", ".join([f"{i} (|contrib|={abs(contributions[i]):.3f})" for i in ranked[:3]]))
+                    st.markdown(
+                        "**Top Contributing Rules:** "
+                        + ", ".join(
+                            [
+                                f"{i} (|contrib|={abs(contributions[i]):.3f})"
+                                for i in ranked[:3]
+                            ]
+                        )
+                    )
                 # Simple summary
                 max_idx = int(np.argmax(agent.model._last_firing_strengths))
-                st.info(f"Rule {max_idx} contributed most to the last action (firing strength={agent.model._last_firing_strengths[max_idx]:.3f})")
+                st.info(
+                    f"Rule {max_idx} contributed most to the last action (firing strength={agent.model._last_firing_strengths[max_idx]:.3f})"
+                )
             st.markdown("---")
             st.subheader("Fuzzy Rule Management")
             # --- Human Feedback Panel ---
             st.markdown("---")
             st.subheader("Human Feedback")
-            if 'interventions' not in st.session_state:
-                st.session_state['interventions'] = []
+            if "interventions" not in st.session_state:
+                st.session_state["interventions"] = []
             with st.form(f"feedback_form_{i}", clear_on_submit=True):
-                override = st.text_input("Override last action with value (leave blank for no override)", value="")
-                feedback_type = st.radio("Feedback type", ["None", "+1 (Positive)", "-1 (Negative)"])
+                override = st.text_input(
+                    "Override last action with value (leave blank for no override)",
+                    value="",
+                )
+                feedback_type = st.radio(
+                    "Feedback type", ["None", "+1 (Positive)", "-1 (Negative)"]
+                )
                 submit_feedback = st.form_submit_button("Send Feedback")
                 if submit_feedback:
-                    entry = {"agent": i, "obs": str(getattr(agent, 'last_obs', None)), "last_action": getattr(agent, 'last_action', None), "override": override, "feedback": feedback_type}
-                    st.session_state['interventions'].append(entry)
+                    entry = {
+                        "agent": i,
+                        "obs": str(getattr(agent, "last_obs", None)),
+                        "last_action": getattr(agent, "last_action", None),
+                        "override": override,
+                        "feedback": feedback_type,
+                    }
+                    st.session_state["interventions"].append(entry)
                     st.success("Feedback sent and logged.")
                     # Apply override if given
                     if override.strip() != "":
@@ -1421,72 +1415,99 @@ for i, agent in enumerate(st.session_state.agents):
                     # Apply feedback (optional: could call agent.observe or custom feedback method)
                     if feedback_type == "+1 (Positive)":
                         # Example: reinforce last action
-                        agent.model.update(getattr(agent, 'last_obs', None), getattr(agent, 'last_action', 0.0), lr=agent.lr)
+                        agent.model.update(
+                            getattr(agent, "last_obs", None),
+                            getattr(agent, "last_action", 0.0),
+                            lr=agent.lr,
+                        )
                     elif feedback_type == "-1 (Negative)":
                         # Example: punish last action
-                        agent.model.update(getattr(agent, 'last_obs', None), -getattr(agent, 'last_action', 0.0), lr=agent.lr)
+                        agent.model.update(
+                            getattr(agent, "last_obs", None),
+                            -getattr(agent, "last_action", 0.0),
+                            lr=agent.lr,
+                        )
             # Experience Replay Settings Display
-            if hasattr(agent, 'replay_enabled'):
+            if hasattr(agent, "replay_enabled"):
                 st.markdown(
-                    f"**Experience Replay:** {'Enabled' if getattr(agent, 'replay_enabled', False) else 'Disabled'}  "+
-                    f"Buffer Size: {getattr(agent, 'buffer_size', 'N/A')}, Batch Size: {getattr(agent, 'replay_batch', 'N/A')}"
+                    f"**Experience Replay:** {'Enabled' if getattr(agent, 'replay_enabled', False) else 'Disabled'}  "
+                    + f"Buffer Size: {getattr(agent, 'buffer_size', 'N/A')}, Batch Size: {getattr(agent, 'replay_batch', 'N/A')}"
                 )
             # Add rule controls
 
 # --- Human Intervention Log ---
-if 'interventions' in st.session_state and st.session_state['interventions']:
+if "interventions" in st.session_state and st.session_state["interventions"]:
     st.markdown("---")
     st.header("Human Intervention Log")
-    st.table(st.session_state['interventions'])
+    st.table(st.session_state["interventions"])
     # --- Intervention Analytics ---
     st.subheader("Intervention Analytics")
     import pandas as pd
-    df = pd.DataFrame(st.session_state['interventions'])
+
+    df = pd.DataFrame(st.session_state["interventions"])
     # Count by agent
-    agent_counts = df['agent'].value_counts().sort_index()
+    agent_counts = df["agent"].value_counts().sort_index()
     st.write("**Interventions per Agent:**", agent_counts.to_dict())
     # Feedback type counts
-    fb_counts = df['feedback'].value_counts()
+    fb_counts = df["feedback"].value_counts()
     st.write("**Feedback Types:**", fb_counts.to_dict())
     # Override frequency
-    override_count = (df['override'].astype(str) != '').sum()
+    override_count = (df["override"].astype(str) != "").sum()
     st.write(f"**Override Frequency:** {override_count}")
     # Timeline plot
     import matplotlib.pyplot as plt
-    fig, ax = plt.subplots(figsize=(5,2))
-    ax.plot(df.index, df['agent'], 'o-', label='Agent')
-    ax.set_xlabel('Intervention #')
-    ax.set_ylabel('Agent')
-    ax.set_title('Intervention Timeline')
+
+    fig, ax = plt.subplots(figsize=(5, 2))
+    ax.plot(df.index, df["agent"], "o-", label="Agent")
+    ax.set_xlabel("Intervention #")
+    ax.set_ylabel("Agent")
+    ax.set_title("Intervention Timeline")
     st.pyplot(fig)
     # Export log
-    csv = df.to_csv(index=False).encode('utf-8')
-    st.download_button('Download Intervention Log as CSV', csv, 'interventions.csv', 'text/csv')
+    csv = df.to_csv(index=False).encode("utf-8")
+    st.download_button(
+        "Download Intervention Log as CSV", csv, "interventions.csv", "text/csv"
+    )
 
 # --- Human-in-the-Loop Experiment UI ---
 st.markdown("---")
 st.header("Human-in-the-Loop Experiment")
-if 'experiment_active' not in st.session_state:
-    st.session_state['experiment_active'] = False
-if st.button('Start Experiment', disabled=st.session_state['experiment_active']):
-    st.session_state['experiment_active'] = True
-    st.session_state['experiment_step'] = 0
-    st.session_state['experiment_log'] = []
-if st.session_state['experiment_active']:
-    step = st.session_state.get('experiment_step', 0)
+if "experiment_active" not in st.session_state:
+    st.session_state["experiment_active"] = False
+if st.button("Start Experiment", disabled=st.session_state["experiment_active"]):
+    st.session_state["experiment_active"] = True
+    st.session_state["experiment_step"] = 0
+    st.session_state["experiment_log"] = []
+if st.session_state["experiment_active"]:
+    step = st.session_state.get("experiment_step", 0)
     st.write(f"Experiment Step: {step}")
     # Show agent actions
-    actions = [getattr(agent, 'last_action', None) for agent in st.session_state.agents]
+    actions = [getattr(agent, "last_action", None) for agent in st.session_state.agents]
     st.write("Current agent actions:", actions)
     # Feedback form
     with st.form(f"experiment_feedback_{step}"):
-        agent_idx = st.selectbox("Select agent to give feedback", list(range(len(st.session_state.agents))))
+        agent_idx = st.selectbox(
+            "Select agent to give feedback", list(range(len(st.session_state.agents)))
+        )
         override = st.text_input("Override action (blank for none)", value="")
-        feedback_type = st.radio("Feedback type", ["None", "+1 (Positive)", "-1 (Negative)"])
+        feedback_type = st.radio(
+            "Feedback type", ["None", "+1 (Positive)", "-1 (Negative)"]
+        )
         submit = st.form_submit_button("Send Feedback for Step")
         if submit:
-            entry = {"step": step, "agent": agent_idx, "obs": str(getattr(st.session_state.agents[agent_idx], 'last_obs', None)), "last_action": getattr(st.session_state.agents[agent_idx], 'last_action', None), "override": override, "feedback": feedback_type}
-            st.session_state['experiment_log'].append(entry)
+            entry = {
+                "step": step,
+                "agent": agent_idx,
+                "obs": str(
+                    getattr(st.session_state.agents[agent_idx], "last_obs", None)
+                ),
+                "last_action": getattr(
+                    st.session_state.agents[agent_idx], "last_action", None
+                ),
+                "override": override,
+                "feedback": feedback_type,
+            }
+            st.session_state["experiment_log"].append(entry)
             # Apply override/feedback as in main panel
             agent = st.session_state.agents[agent_idx]
             if override.strip() != "":
@@ -1496,49 +1517,80 @@ if st.session_state['experiment_active']:
                 except Exception as e:
                     st.error(f"Invalid override: {e}")
             if feedback_type == "+1 (Positive)":
-                agent.model.update(getattr(agent, 'last_obs', None), getattr(agent, 'last_action', 0.0), lr=agent.lr)
+                agent.model.update(
+                    getattr(agent, "last_obs", None),
+                    getattr(agent, "last_action", 0.0),
+                    lr=agent.lr,
+                )
             elif feedback_type == "-1 (Negative)":
-                agent.model.update(getattr(agent, 'last_obs', None), -getattr(agent, 'last_action', 0.0), lr=agent.lr)
-            st.session_state['experiment_step'] += 1
+                agent.model.update(
+                    getattr(agent, "last_obs", None),
+                    -getattr(agent, "last_action", 0.0),
+                    lr=agent.lr,
+                )
+            st.session_state["experiment_step"] += 1
     # Show experiment log
-    if 'experiment_log' in st.session_state and st.session_state['experiment_log']:
+    if "experiment_log" in st.session_state and st.session_state["experiment_log"]:
         st.subheader("Experiment Log")
-        st.table(st.session_state['experiment_log'])
+        st.table(st.session_state["experiment_log"])
         # Download
-        df_exp = pd.DataFrame(st.session_state['experiment_log'])
-        csv_exp = df_exp.to_csv(index=False).encode('utf-8')
-        st.download_button('Download Experiment Log as CSV', csv_exp, 'experiment_log.csv', 'text/csv')
-    if st.button('End Experiment'):
-        st.session_state['experiment_active'] = False
+        df_exp = pd.DataFrame(st.session_state["experiment_log"])
+        csv_exp = df_exp.to_csv(index=False).encode("utf-8")
+        st.download_button(
+            "Download Experiment Log as CSV", csv_exp, "experiment_log.csv", "text/csv"
+        )
+    if st.button("End Experiment"):
+        st.session_state["experiment_active"] = False
         st.success("Experiment ended.")
 
 # --- Robustness Testing Panel ---
 st.markdown("---")
 st.header("Robustness Testing & Adversarial Analysis")
-if 'robustness' not in st.session_state:
-    st.session_state['robustness'] = {
-        'enabled': False, 'noise_type': 'Gaussian', 'noise_level': 0.1, 'drop_prob': 0.0, 'adv_runs': 10, 'log': []
+if "robustness" not in st.session_state:
+    st.session_state["robustness"] = {
+        "enabled": False,
+        "noise_type": "Gaussian",
+        "noise_level": 0.1,
+        "drop_prob": 0.0,
+        "adv_runs": 10,
+        "log": [],
     }
-rb = st.session_state['robustness']
-rb['enabled'] = st.checkbox("Enable Noise Injection", value=rb['enabled'])
-rb['noise_type'] = st.selectbox("Noise Type", ["Gaussian", "Uniform"], index=0 if rb['noise_type']=="Gaussian" else 1)
-rb['noise_level'] = st.slider("Noise StdDev/Range", 0.0, 2.0, float(rb['noise_level']), 0.01)
-rb['drop_prob'] = st.slider("Random Drop/Corruption Probability", 0.0, 1.0, float(rb['drop_prob']), 0.01)
-rb['adv_runs'] = st.number_input("Adversarial Batch Episodes", min_value=1, max_value=100, value=int(rb['adv_runs']), step=1)
+rb = st.session_state["robustness"]
+rb["enabled"] = st.checkbox("Enable Noise Injection", value=rb["enabled"])
+rb["noise_type"] = st.selectbox(
+    "Noise Type",
+    ["Gaussian", "Uniform"],
+    index=0 if rb["noise_type"] == "Gaussian" else 1,
+)
+rb["noise_level"] = st.slider(
+    "Noise StdDev/Range", 0.0, 2.0, float(rb["noise_level"]), 0.01
+)
+rb["drop_prob"] = st.slider(
+    "Random Drop/Corruption Probability", 0.0, 1.0, float(rb["drop_prob"]), 0.01
+)
+rb["adv_runs"] = st.number_input(
+    "Adversarial Batch Episodes",
+    min_value=1,
+    max_value=100,
+    value=int(rb["adv_runs"]),
+    step=1,
+)
 run_adv = st.button("Run Adversarial Test Batch")
 
 # Apply perturbation for demonstration (affects only displayed actions, not true agent state)
 perturbed_actions = []
 for i, agent in enumerate(st.session_state.agents):
-    act = getattr(agent, 'last_action', 0.0)
-    obs = getattr(agent, 'last_obs', None)
-    if rb['enabled'] and obs is not None:
+    act = getattr(agent, "last_action", 0.0)
+    obs = getattr(agent, "last_obs", None)
+    if rb["enabled"] and obs is not None:
         noise = 0.0
-        if rb['noise_type'] == 'Gaussian':
-            noise = np.random.normal(0, rb['noise_level'], size=np.shape(act))
-        elif rb['noise_type'] == 'Uniform':
-            noise = np.random.uniform(-rb['noise_level'], rb['noise_level'], size=np.shape(act))
-        if np.random.rand() < rb['drop_prob']:
+        if rb["noise_type"] == "Gaussian":
+            noise = np.random.normal(0, rb["noise_level"], size=np.shape(act))
+        elif rb["noise_type"] == "Uniform":
+            noise = np.random.uniform(
+                -rb["noise_level"], rb["noise_level"], size=np.shape(act)
+            )
+        if np.random.rand() < rb["drop_prob"]:
             act = None
         else:
             act = act + noise
@@ -1548,126 +1600,193 @@ st.write("**Perturbed Agent Actions:**", perturbed_actions)
 # Adversarial batch run logging (simulated)
 if run_adv:
     batch_log = []
-    for run in range(rb['adv_runs']):
+    for run in range(rb["adv_runs"]):
         run_actions = []
         for agent in st.session_state.agents:
-            act = getattr(agent, 'last_action', 0.0)
-            obs = getattr(agent, 'last_obs', None)
-            if rb['enabled'] and obs is not None:
+            act = getattr(agent, "last_action", 0.0)
+            obs = getattr(agent, "last_obs", None)
+            if rb["enabled"] and obs is not None:
                 noise = 0.0
-                if rb['noise_type'] == 'Gaussian':
-                    noise = np.random.normal(0, rb['noise_level'], size=np.shape(act))
-                elif rb['noise_type'] == 'Uniform':
-                    noise = np.random.uniform(-rb['noise_level'], rb['noise_level'], size=np.shape(act))
-                if np.random.rand() < rb['drop_prob']:
+                if rb["noise_type"] == "Gaussian":
+                    noise = np.random.normal(0, rb["noise_level"], size=np.shape(act))
+                elif rb["noise_type"] == "Uniform":
+                    noise = np.random.uniform(
+                        -rb["noise_level"], rb["noise_level"], size=np.shape(act)
+                    )
+                if np.random.rand() < rb["drop_prob"]:
                     act = None
                 else:
                     act = act + noise
             run_actions.append(act)
         batch_log.append(run_actions)
-    rb['log'] = batch_log
+    rb["log"] = batch_log
     st.success(f"Adversarial batch of {rb['adv_runs']} runs completed.")
 
 # Visualize action distributions from adversarial runs
-if rb.get('log'):
+if rb.get("log"):
     import matplotlib.pyplot as plt
-    arr = np.array(rb['log'])
-    fig, ax = plt.subplots(figsize=(6,3))
+
+    arr = np.array(rb["log"])
+    fig, ax = plt.subplots(figsize=(6, 3))
     for i in range(arr.shape[1]):
-        ax.hist(arr[:,i][~np.isnan(arr[:,i].astype(float))], bins=20, alpha=0.5, label=f'Agent {i+1}')
-    ax.set_title('Action Distribution Under Perturbation')
-    ax.set_xlabel('Action Value')
-    ax.set_ylabel('Frequency')
+        ax.hist(
+            arr[:, i][~np.isnan(arr[:, i].astype(float))],
+            bins=20,
+            alpha=0.5,
+            label=f"Agent {i+1}",
+        )
+    ax.set_title("Action Distribution Under Perturbation")
+    ax.set_xlabel("Action Value")
+    ax.set_ylabel("Frequency")
     ax.legend()
     st.pyplot(fig)
 
 # --- Batch Experiment Runner ---
 st.markdown("---")
 st.header("Batch Experiment Runner")
-if 'batch_exp' not in st.session_state:
-    st.session_state['batch_exp'] = {'runs': 20, 'metrics': ['reward', 'action_var', 'rule_usage'], 'log': []}
-bexp = st.session_state['batch_exp']
-bexp['runs'] = st.number_input("Number of Runs", min_value=1, max_value=1000, value=int(bexp['runs']), step=1)
-bexp['metrics'] = st.multiselect("Metrics to Track", ['reward', 'action_var', 'rule_usage'], default=bexp['metrics'])
+if "batch_exp" not in st.session_state:
+    st.session_state["batch_exp"] = {
+        "runs": 20,
+        "metrics": ["reward", "action_var", "rule_usage"],
+        "log": [],
+    }
+bexp = st.session_state["batch_exp"]
+bexp["runs"] = st.number_input(
+    "Number of Runs", min_value=1, max_value=1000, value=int(bexp["runs"]), step=1
+)
+bexp["metrics"] = st.multiselect(
+    "Metrics to Track", ["reward", "action_var", "rule_usage"], default=bexp["metrics"]
+)
 run_batch = st.button("Run Batch Experiment")
 
 if run_batch:
     # Simulate batch runs (stub: replace with real env/agent loop)
     log = []
-    for run in range(bexp['runs']):
+    for run in range(bexp["runs"]):
         run_data = {}
         for i, agent in enumerate(st.session_state.agents):
             # Simulate reward (random for stub)
             reward = np.random.normal(1.0, 0.5)
             # Simulate action variance
-            action = getattr(agent, 'last_action', np.random.normal(0, 1))
+            action = getattr(agent, "last_action", np.random.normal(0, 1))
             action_var = np.var([action + np.random.normal(0, 0.1) for _ in range(5)])
             # Simulate rule usage (random vector)
-            rule_usage = np.random.dirichlet(np.ones(getattr(agent.model, 'n_rules', 3))) if hasattr(agent, 'model') else [0.0]
-            entry = {'run': run, 'agent': i, 'reward': reward, 'action_var': action_var, 'rule_usage': rule_usage}
+            rule_usage = (
+                np.random.dirichlet(np.ones(getattr(agent.model, "n_rules", 3)))
+                if hasattr(agent, "model")
+                else [0.0]
+            )
+            entry = {
+                "run": run,
+                "agent": i,
+                "reward": reward,
+                "action_var": action_var,
+                "rule_usage": rule_usage,
+            }
             run_data[i] = entry
         log.extend(run_data.values())
-    bexp['log'] = log
+    bexp["log"] = log
     st.success(f"Batch experiment of {bexp['runs']} runs completed.")
 
 # Show batch experiment results
-if bexp.get('log'):
+if bexp.get("log"):
     import pandas as pd
-    df = pd.DataFrame(bexp['log'])
+
+    df = pd.DataFrame(bexp["log"])
     st.subheader("Batch Experiment Results Table")
     st.dataframe(df)
     # Plot metrics
     import matplotlib.pyplot as plt
-    if 'reward' in bexp['metrics']:
+
+    if "reward" in bexp["metrics"]:
         fig, ax = plt.subplots()
-        for i in df['agent'].unique():
-            ax.plot(df[df['agent']==i]['run'], df[df['agent']==i]['reward'], label=f'Agent {i+1}')
-        ax.set_title('Reward Trajectory')
-        ax.set_xlabel('Run')
-        ax.set_ylabel('Reward')
+        for i in df["agent"].unique():
+            ax.plot(
+                df[df["agent"] == i]["run"],
+                df[df["agent"] == i]["reward"],
+                label=f"Agent {i+1}",
+            )
+        ax.set_title("Reward Trajectory")
+        ax.set_xlabel("Run")
+        ax.set_ylabel("Reward")
         ax.legend()
         st.pyplot(fig)
-    if 'action_var' in bexp['metrics']:
+    if "action_var" in bexp["metrics"]:
         fig2, ax2 = plt.subplots()
-        for i in df['agent'].unique():
-            ax2.plot(df[df['agent']==i]['run'], df[df['agent']==i]['action_var'], label=f'Agent {i+1}')
-        ax2.set_title('Action Variance Trajectory')
-        ax2.set_xlabel('Run')
-        ax2.set_ylabel('Action Variance')
+        for i in df["agent"].unique():
+            ax2.plot(
+                df[df["agent"] == i]["run"],
+                df[df["agent"] == i]["action_var"],
+                label=f"Agent {i+1}",
+            )
+        ax2.set_title("Action Variance Trajectory")
+        ax2.set_xlabel("Run")
+        ax2.set_ylabel("Action Variance")
         ax2.legend()
         st.pyplot(fig2)
-    if 'rule_usage' in bexp['metrics'] and 'rule_usage' in df:
-        st.write('Rule usage (sampled):')
-        st.write(df[['agent','run','rule_usage']].head())
+    if "rule_usage" in bexp["metrics"] and "rule_usage" in df:
+        st.write("Rule usage (sampled):")
+        st.write(df[["agent", "run", "rule_usage"]].head())
     # Download
-    csv_batch = df.to_csv(index=False).encode('utf-8')
-    st.download_button('Download Batch Experiment Log as CSV', csv_batch, 'batch_experiment.csv', 'text/csv')
+    csv_batch = df.to_csv(index=False).encode("utf-8")
+    st.download_button(
+        "Download Batch Experiment Log as CSV",
+        csv_batch,
+        "batch_experiment.csv",
+        "text/csv",
+    )
 
 
 # --- Group Structure Visualization ---
-if hasattr(st.session_state, 'agents') and len(st.session_state.agents) > 0 and hasattr(st.session_state.agents[0], 'position'):
+if (
+    hasattr(st.session_state, "agents")
+    and len(st.session_state.agents) > 0
+    and hasattr(st.session_state.agents[0], "position")
+):
     st.markdown("---")
     st.header("Agent Group Structure Visualization")
     agents = st.session_state.agents
     # Group assignment
-    group_ids = [getattr(agent, 'group', 'ungrouped') for agent in agents]
+    group_ids = [getattr(agent, "group", "ungrouped") for agent in agents]
     unique_groups = list(set(group_ids))
     group_colors = {gid: plt.cm.tab10(i % 10) for i, gid in enumerate(unique_groups)}
     fig, ax = plt.subplots(figsize=(6, 6))
     for i, agent in enumerate(agents):
-        color = group_colors.get(group_ids[i], 'gray')
-        x, y = agent.position if hasattr(agent, 'position') else (0, 0)
-        marker = '*' if getattr(agent, 'is_leader', False) else 'o'
-        size = 250 if getattr(agent, 'is_leader', False) else 100
-        ax.scatter(x, y, c=[color], marker=marker, s=size, edgecolor='black', label=f"{group_ids[i]}{' (Leader)' if getattr(agent, 'is_leader', False) else ''}")
+        color = group_colors.get(group_ids[i], "gray")
+        x, y = agent.position if hasattr(agent, "position") else (0, 0)
+        marker = "*" if getattr(agent, "is_leader", False) else "o"
+        size = 250 if getattr(agent, "is_leader", False) else 100
+        ax.scatter(
+            x,
+            y,
+            c=[color],
+            marker=marker,
+            s=size,
+            edgecolor="black",
+            label=f"{group_ids[i]}{' (Leader)' if getattr(agent, 'is_leader', False) else ''}",
+        )
         ax.text(x, y + 0.08, f"{i}", ha="center", fontsize=10)
     # Unique legend
     handles = []
     for gid in unique_groups:
-        is_leader = any(getattr(agent, 'is_leader', False) and getattr(agent, 'group', None) == gid for agent in agents)
-        marker = '*' if is_leader else 'o'
-        handles.append(plt.Line2D([0], [0], marker=marker, color='w', label=f"{gid}{' (Leader)' if is_leader else ''}", markerfacecolor=group_colors[gid], markeredgecolor='black', markersize=12 if is_leader else 8))
-    ax.legend(handles=handles, loc='best')
+        is_leader = any(
+            getattr(agent, "is_leader", False) and getattr(agent, "group", None) == gid
+            for agent in agents
+        )
+        marker = "*" if is_leader else "o"
+        handles.append(
+            plt.Line2D(
+                [0],
+                [0],
+                marker=marker,
+                color="w",
+                label=f"{gid}{' (Leader)' if is_leader else ''}",
+                markerfacecolor=group_colors[gid],
+                markeredgecolor="black",
+                markersize=12 if is_leader else 8,
+            )
+        )
+    ax.legend(handles=handles, loc="best")
     ax.set_title("Agent Positions by Group & Leader")
     ax.set_xlabel("X")
     ax.set_ylabel("Y")
@@ -1677,26 +1796,45 @@ if hasattr(st.session_state, 'agents') and len(st.session_state.agents) > 0 and 
     st.subheader("Group Membership Summary")
     group_table = []
     for gid in unique_groups:
-        members = [i for i, agent in enumerate(agents) if getattr(agent, 'group', 'ungrouped') == gid]
-        leader = next((i for i in members if getattr(agents[i], 'is_leader', False)), None)
+        members = [
+            i
+            for i, agent in enumerate(agents)
+            if getattr(agent, "group", "ungrouped") == gid
+        ]
+        leader = next(
+            (i for i in members if getattr(agents[i], "is_leader", False)), None
+        )
         group_table.append({"Group": gid, "Members": members, "Leader": leader})
     st.table(group_table)
 
-            with st.form(f"add_rule_form_{i}", clear_on_submit=True):
-                new_center = st.text_input("New Rule Center (comma-separated)", value=",")
-                new_width = st.text_input("New Rule Width (comma-separated)", value="0.5,0.5")
-                new_weight = st.number_input("New Rule Weight", value=0.0, step=0.1, format="%.2f")
-                add_rule_btn = st.form_submit_button("Add Rule")
-                if add_rule_btn:
-                    try:
-                        center = np.array([float(x) for x in new_center.split(",")]).reshape(1, -1)
-                        width = np.array([float(x) for x in new_width.split(",")]).reshape(1, -1)
-                        agent.model.add_rule(center, width, new_weight)
-                        st.success("Rule added.")
-                    except Exception as e:
-                        st.error(f"Failed to add rule: {e}")
+    with st.form(f"add_rule_form_{i}", clear_on_submit=True):
+        new_center = st.text_input("New Rule Center (comma-separated)", value=",")
+        new_width = st.text_input("New Rule Width (comma-separated)", value="0.5,0.5")
+        new_weight = st.number_input(
+            "New Rule Weight", value=0.0, step=0.1, format="%.2f"
+        )
+        add_rule_btn = st.form_submit_button("Add Rule")
+        if add_rule_btn:
+            try:
+                center = np.array([float(x) for x in new_center.split(",")]).reshape(
+                    1, -1
+                )
+                width = np.array([float(x) for x in new_width.split(",")]).reshape(
+                    1, -1
+                )
+                agent.model.add_rule(center, width, new_weight)
+                st.success("Rule added.")
+            except Exception as e:
+                st.error(f"Failed to add rule: {e}")
             # Remove rule controls
-            remove_idx = st.number_input(f"Remove Rule Index (0 to {agent.model.n_rules-1})", min_value=0, max_value=max(agent.model.n_rules-1,0), value=0, step=1, key=f"remove_idx_{i}")
+            remove_idx = st.number_input(
+                f"Remove Rule Index (0 to {agent.model.n_rules-1})",
+                min_value=0,
+                max_value=max(agent.model.n_rules - 1, 0),
+                value=0,
+                step=1,
+                key=f"remove_idx_{i}",
+            )
             if st.button(f"Remove Rule {remove_idx}", key=f"remove_btn_{i}"):
                 agent.model.remove_rule(remove_idx)
                 st.success(f"Rule {remove_idx} removed.")
