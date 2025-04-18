@@ -63,10 +63,11 @@ class MultiAgentSystem:
             num_iteration: number of training iterations for SOM
         Each SOM node becomes a group; agents mapped to the same node are grouped together.
         """
+        from src.core.som_cluster import SOMClusterer
         feature_matrix = np.array(feature_matrix)
-        som = AgentFeatureSOM(x=som_shape[0], y=som_shape[1], input_len=feature_matrix.shape[1])
-        som.train(feature_matrix, num_iteration=num_iteration)
-        clusters = som.assign_clusters(feature_matrix)
+        som = SOMClusterer(input_dim=feature_matrix.shape[1], som_shape=som_shape, num_iteration=num_iteration)
+        som.fit(feature_matrix)
+        clusters = som.predict(feature_matrix)
         # Map (x, y) SOM nodes to group IDs
         group_map = {}
         for idx, cluster in enumerate(clusters):
@@ -82,16 +83,39 @@ class MultiAgentSystem:
     def form_group(self, group_id, agent_indices):
         """
         Create a new group with the specified agents. Also create a group-specific module (rules/subnetwork).
+        Calls add_group_module for dynamic module creation.
         """
         self.groups[group_id] = set(agent_indices)
         for idx in agent_indices:
             self.agents[idx].group = group_id
         # --- Dynamic module/rule/subnetwork creation ---
-        # For demonstration, use a dummy rule list and subnetwork placeholder
-        self.group_modules[group_id] = {
-            'rules': [f"rule_{group_id}_1", f"rule_{group_id}_2"],
-            'subnetwork': f"subnet_{group_id}"
-        }
+        self.add_group_module(group_id)
+
+    def add_group_module(self, group_id, module=None):
+        """
+        Dynamically create and register a group-specific module (rules, subnetworks, etc).
+        If module is None, creates a default dummy module.
+        """
+        if module is None:
+            module = {
+                'rules': [f"rule_{group_id}_1", f"rule_{group_id}_2"],
+                'subnetwork': f"subnet_{group_id}"
+            }
+        self.group_modules[group_id] = module
+
+    def remove_group_module(self, group_id):
+        """
+        Remove a group-specific module at runtime.
+        """
+        if group_id in self.group_modules:
+            del self.group_modules[group_id]
+
+    def get_group_module(self, group_id):
+        """
+        Retrieve the module (rules, subnetworks, etc) for a group.
+        Returns None if not present.
+        """
+        return self.group_modules.get(group_id, None)
 
     def join_group(self, agent_idx, group_id):
         """
@@ -122,8 +146,7 @@ class MultiAgentSystem:
                 self.agents[idx].group = None
             del self.groups[group_id]
         # --- Dynamic module/rule/subnetwork removal ---
-        if group_id in self.group_modules:
-            del self.group_modules[group_id]
+        self.remove_group_module(group_id)
 
     """
     Manages a group of agents and facilitates collaboration/communication.
