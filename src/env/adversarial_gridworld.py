@@ -55,13 +55,42 @@ class AdversarialGridworldEnv(BaseEnvironment):
 
     def _get_obs(self):
         # Each agent observes its own position, all other agent positions, target, and obstacles
-        # For simplicity, observation is a flat vector
-        pursuer_obs = [np.array(list(pos) + sum(self.evader_positions, ()) + list(self.target)) for pos in self.pursuer_positions]
-        evader_obs = [np.array(list(pos) + sum(self.pursuer_positions, ()) + list(self.target)) for pos in self.evader_positions]
+        # For simplicity, observation is a flat vector (all lists)
+        pursuer_obs = [
+            np.array(
+                list(pos)
+                + [coord for epos in self.evader_positions for coord in epos]
+                + list(self.target)
+                + [coord for obs in self.obstacles for coord in obs]
+            )
+            for pos in self.pursuer_positions
+        ]
+        evader_obs = [
+            np.array(
+                list(pos)
+                + [coord for ppos in self.pursuer_positions for coord in ppos]
+                + list(self.target)
+                + [coord for obs in self.obstacles for coord in obs]
+            )
+            for pos in self.evader_positions
+        ]
         return pursuer_obs + evader_obs
+
+    def extract_features(self, state=None):
+        import numpy as np
+        if state is None:
+            state = self.get_observation()
+        # state is a list of arrays (one per agent)
+        return [np.array(s) for s in state]
+
 
     def get_observation(self):
         return self._get_obs()
+
+    def perceive(self):
+        return self.get_observation()
+
+
 
     def get_state(self):
         return {

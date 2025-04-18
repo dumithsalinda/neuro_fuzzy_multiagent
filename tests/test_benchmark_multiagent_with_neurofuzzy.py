@@ -11,8 +11,8 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 import numpy as np
 import pytest
 from src.core.agent import Agent, NeuroFuzzyAgent
-from environment.abstraction import SimpleEnvironment
-from environment.transfer_learning import FeatureExtractor
+from src.environment.abstraction import SimpleEnvironment
+from src.environment.transfer_learning import FeatureExtractor
 
 def test_benchmark_with_neurofuzzy_agent():
     np.random.seed(2025)

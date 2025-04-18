@@ -31,6 +31,17 @@ class MultiAgentResourceEnv(BaseEnvironment):
     def get_observation(self):
         return self._get_obs()
 
+    def perceive(self):
+        return self.get_observation()
+
+    def extract_features(self, state=None):
+        import numpy as np
+        if state is None:
+            state = self.get_observation()
+        # state is a list of arrays (one per agent)
+        return [np.array(s) for s in state]
+
+
     def get_state(self):
         return {
             "agent_positions": self.agent_positions,

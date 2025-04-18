@@ -1,7 +1,7 @@
 import pytest
-from core.agent import Agent
-from core.multiagent import MultiAgentSystem
-from core.laws import register_law, clear_laws, LawViolation
+from src.core.agent import Agent
+from src.core.multiagent import MultiAgentSystem
+from src.core.laws import register_law, clear_laws, LawViolation
 
 class DummyAgent(Agent):
     def __init__(self):
@@ -33,7 +33,7 @@ def test_knowledge_sharing_blocked_by_law():
 
 def test_multiagent_broadcast_knowledge_and_aggregation():
     # Only register group law for numeric actions, not for knowledge sharing
-    from core.laws import clear_laws
+    from src.core.laws import clear_laws
     clear_laws('group')
     a1 = DummyAgent()
     a2 = DummyAgent()

@@ -10,8 +10,8 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 
 import numpy as np
 from src.core.agent import Agent
-from environment.abstraction import SimpleEnvironment
-from environment.transfer_learning import FeatureExtractor
+from src.environment.abstraction import SimpleEnvironment
+from src.environment.transfer_learning import FeatureExtractor
 from src.laws import clear_laws
 
 def test_multiagent_simulation_runs():

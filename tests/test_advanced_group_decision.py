@@ -1,8 +1,8 @@
 import numpy as np
 import pytest
-from core.multiagent import MultiAgentSystem
-from core.agent import Agent
-from core.laws import clear_laws, register_law, LawViolation
+from src.core.multiagent import MultiAgentSystem
+from src.core.agent import Agent
+from src.core.laws import clear_laws, register_law, LawViolation
 
 def test_group_decision_mean():
     agents = [Agent(model=None) for _ in range(3)]

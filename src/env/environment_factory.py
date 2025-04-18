@@ -22,6 +22,7 @@ from .simple_env import SimpleDiscreteEnv, SimpleContinuousEnv
 from .adversarial_gridworld import AdversarialGridworldEnv
 from .multiagent_resource import MultiAgentResourceEnv
 from .realworld_api_env import RealWorldAPIEnv
+from src.environment.abstraction import NoisyEnvironment, SimpleEnvironment
 
 EnvironmentFactory.register("multiagent_gridworld", MultiAgentGridworldEnv)
 EnvironmentFactory.register("multiagent_gridworld_v2", MultiAgentGridworldEnv2)
@@ -30,3 +31,5 @@ EnvironmentFactory.register("simple_continuous", SimpleContinuousEnv)
 EnvironmentFactory.register("adversarial_gridworld", AdversarialGridworldEnv)
 EnvironmentFactory.register("multiagent_resource", MultiAgentResourceEnv)
 EnvironmentFactory.register("realworld_api", RealWorldAPIEnv)
+EnvironmentFactory.register("noisy", NoisyEnvironment)
+EnvironmentFactory.register("simple_abstract", SimpleEnvironment)

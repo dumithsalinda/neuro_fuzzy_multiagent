@@ -29,6 +29,15 @@ class SimpleDiscreteEnv(BaseEnvironment):
     def get_observation(self):
         return self.state
 
+    def perceive(self):
+        return self.get_observation()
+
+    def extract_features(self, state=None):
+        import numpy as np
+        if state is None:
+            state = self.get_observation()
+        return np.array(state)
+
     def get_state(self):
         return {"state": self.state}
 
@@ -70,6 +79,15 @@ class SimpleContinuousEnv(BaseEnvironment):
 
     def get_observation(self):
         return self.state.copy()
+
+    def perceive(self):
+        return self.get_observation()
+
+    def extract_features(self, state=None):
+        import numpy as np
+        if state is None:
+            state = self.get_observation()
+        return np.array(state)
 
     def get_state(self):
         return {"state": self.state.copy(), "goal": self.goal.copy()}

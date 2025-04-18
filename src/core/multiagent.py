@@ -165,7 +165,7 @@ class MultiAgentSystem:
         actions = self.step_all(observations, states)
         import numpy as np
 
-        from core.laws import enforce_laws
+        from src.core.laws import enforce_laws
 
         result = None
         if method == "mean":
@@ -207,7 +207,7 @@ class MultiAgentSystem:
         - 'group-only': share within sender's group
         - 'recipient-list': share with specified recipients
         """
-        from core.laws import LawViolation, enforce_laws
+        from src.core.laws import LawViolation, enforce_laws
 
         privacy = (
             knowledge.get("privacy", "public")

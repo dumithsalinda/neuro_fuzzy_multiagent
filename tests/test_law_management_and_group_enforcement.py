@@ -1,8 +1,8 @@
 import numpy as np
 import pytest
-from core.laws import register_law, remove_law, clear_laws, list_laws, enforce_laws, LawViolation
-from core.multiagent import MultiAgentSystem
-from core.agent import Agent
+from src.core.laws import register_law, remove_law, clear_laws, list_laws, enforce_laws, LawViolation
+from src.core.multiagent import MultiAgentSystem
+from src.core.agent import Agent
 
 def test_register_and_list_laws():
     clear_laws('group')

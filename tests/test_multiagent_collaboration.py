@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
-from core.agent import Agent
-from core.multiagent import MultiAgentSystem
+from src.core.agent import Agent
+from src.core.multiagent import MultiAgentSystem
 
 class DummyAgent(Agent):
     def __init__(self, model=None):

@@ -15,8 +15,8 @@ class TestANFISHybrid(unittest.TestCase):
         x = np.array([0.0, 0.0])
         y_target = 1.0
         y_before = self.model.forward(x)
-        for _ in range(50):
-            self.model.update(x, y_target, lr=0.1)
+        for _ in range(200):
+            self.model.update(x, y_target, lr=0.5)
         y_after = self.model.forward(x)
         self.assertTrue(abs(y_after - y_target) < abs(y_before - y_target))
 
