@@ -51,14 +51,12 @@ def simulation_controls():
     Simulation controls tab.
     """
     st.header("Simulation Controls")
-    st.session_state["n_steps"] = st.number_input(
+    st.number_input(
         "Steps to Run", min_value=1, max_value=1000, value=10, step=1, key="n_steps"
     )
-    st.session_state["run_n_steps"] = st.button("Run N Steps")
-    st.session_state["auto_run"] = st.checkbox(
-        "Auto-Run Simulation", value=False, key="auto_run"
-    )
-    st.session_state["pause_run"] = st.button("Pause Auto-Run")
+    st.button("Run N Steps", key="run_n_steps")
+    st.checkbox("Auto-Run Simulation", value=False, key="auto_run")
+    st.button("Pause Auto-Run", key="pause_run")
     # Place simulation logic and visualization here
     # Example: render_agent_positions, simulate_step, etc.
     # (Add your simulation panel code here)
@@ -288,30 +286,36 @@ def collaboration():
     Collaboration tab.
     """
     st.header("Google Sheets Collaboration")
-    gsheet_key = st.file_uploader(
-        "Upload Google Service Account Key (JSON)", type=["json"], key="gsheet_key"
+    gsheet_key_collab = st.file_uploader(
+        "Upload Google Service Account Key (JSON)",
+        type=["json"],
+        key="gsheet_key_collab",
     )
-    spreadsheet_id = st.text_input("Google Spreadsheet ID", key="gsheet_spreadsheet_id")
-    worksheet_name = st.text_input(
-        "Worksheet Name", value="Sheet1", key="gsheet_worksheet_name"
+    spreadsheet_id_collab = st.text_input(
+        "Google Spreadsheet ID", key="gsheet_spreadsheet_id_collab"
     )
-    auto_sync = st.checkbox(
-        "Enable Auto-Sync with Google Sheets", value=False, key="gsheet_auto_sync"
+    worksheet_name_collab = st.text_input(
+        "Worksheet Name", value="Sheet1", key="gsheet_worksheet_name_collab"
     )
-    sync_interval = st.number_input(
+    auto_sync_dashboard_collab = st.checkbox(
+        "Enable Auto-Sync with Google Sheets",
+        value=False,
+        key="gsheet_auto_sync_dashboard_collab",
+    )
+    sync_interval_dashboard_collab = st.number_input(
         "Auto-Sync Interval (seconds)",
         min_value=5,
         max_value=600,
         value=60,
         step=5,
-        key="gsheet_sync_interval",
+        key="gsheet_sync_interval_dashboard_collab",
     )
     col_sync1, col_sync2 = st.columns(2)
-    if gsheet_key is not None:
+    if gsheet_key_collab is not None:
         # Save uploaded key to a temp file
         import tempfile
 
-        key_bytes = gsheet_key.read()
+        key_bytes = gsheet_key_collab.read()
         with tempfile.NamedTemporaryFile(delete=False, suffix=".json") as tmp:
             tmp.write(key_bytes)
             json_keyfile_path = tmp.name
@@ -342,14 +346,20 @@ def collaboration():
 
         with col_sync1:
             if st.button("Sync Log to Google Sheets"):
-                if spreadsheet_id and worksheet_name:
-                    df_log = pd.DataFrame(st.session_state.get("intervention_log", []))
-                    write_df_to_sheet(gc, spreadsheet_id, worksheet_name, df_log)
+                if spreadsheet_id_collab and worksheet_name_collab:
+                    df_log = pd.DataFrame(
+                        st.session_state.get("intervention_log", [])
+                    )
+                    write_df_to_sheet(
+                        gc, spreadsheet_id_collab, worksheet_name_collab, df_log
+                    )
                     st.success("Log synced to Google Sheets!")
         with col_sync2:
             if st.button("Load Log from Google Sheets"):
-                if spreadsheet_id and worksheet_name:
-                    df_gsheet = read_sheet_to_df(gc, spreadsheet_id, worksheet_name)
+                if spreadsheet_id_collab and worksheet_name_collab:
+                    df_gsheet = read_sheet_to_df(
+                        gc, spreadsheet_id_collab, worksheet_name_collab
+                    )
                     # Merge logs
                     merged_log = merge_logs(
                         st.session_state.get("intervention_log", []),
@@ -360,12 +370,14 @@ def collaboration():
         # --- Auto-sync logic ---
         import time
 
-        if auto_sync and spreadsheet_id and worksheet_name:
-            last_sync = st.session_state.get("gsheet_last_sync", 0)
+        if auto_sync_dashboard_collab and spreadsheet_id_collab and worksheet_name_collab:
+            last_sync = st.session_state.get("gsheet_last_sync_dashboard_collab", 0)
             now = time.time()
-            if now - last_sync > sync_interval:
+            if now - last_sync > sync_interval_dashboard_collab:
                 # Pull remote log and merge
-                df_gsheet = read_sheet_to_df(gc, spreadsheet_id, worksheet_name)
+                df_gsheet = read_sheet_to_df(
+                    gc, spreadsheet_id_collab, worksheet_name_collab
+                )
                 merged_log = merge_logs(
                     st.session_state.get("intervention_log", []),
                     df_gsheet.to_dict(orient="records"),
@@ -373,8 +385,10 @@ def collaboration():
                 st.session_state["intervention_log"] = merged_log
                 # Push merged log
                 df_log = pd.DataFrame(st.session_state["intervention_log"])
-                write_df_to_sheet(gc, spreadsheet_id, worksheet_name, df_log)
-                st.session_state["gsheet_last_sync"] = now
+                write_df_to_sheet(
+                    gc, spreadsheet_id_collab, worksheet_name_collab, df_log
+                )
+                st.session_state["gsheet_last_sync_dashboard_collab"] = now
                 st.info("Auto-synced intervention log with Google Sheets.")
 
 
@@ -397,20 +411,21 @@ def main():
         # --- Group Policy Controls ---
         st.sidebar.markdown("---")
         st.sidebar.header("Group Policy Controls")
-        st.session_state["enable_group_knowledge"] = st.sidebar.checkbox(
+        st.sidebar.checkbox(
             "Enable Group Knowledge Sharing",
             value=st.session_state.get("enable_group_knowledge", False),
             key="enable_group_knowledge",
         )
-        st.session_state["collective_mode"] = st.sidebar.selectbox(
+        st.sidebar.selectbox(
             "Collective Action Mode",
-            ["individual", "leader", "vote"],
-            index=0,
+            ["None", "Voting", "Consensus", "Leader"],
+            index=["None", "Voting", "Consensus", "Leader"].index(
+                st.session_state.get("collective_mode", "None")
+            ),
             key="collective_mode",
         )
-        st.session_state["share_now"] = st.sidebar.button("Share Group Knowledge Now")
-        # --- Distributed Execution Control ---
-        st.session_state["distributed_execution"] = st.sidebar.checkbox(
+        st.sidebar.button("Share Group Knowledge Now", key="share_now")
+        st.sidebar.checkbox(
             "Distributed Agent Execution",
             value=st.session_state.get("distributed_execution", False),
             key="distributed_execution",
@@ -442,187 +457,38 @@ def main():
         with tabs[6]:
             settings()
 
-
-if __name__ == "__main__":
-    main()
-    st.write(
-        f"Simulation Running: {'Yes' if st.session_state.get('sim_running', False) else 'No'}"
-    )
-    # Handle batch and auto-run logic
-    if st.session_state.get("run_n_steps", False):
-        for _ in range(st.session_state.get("n_steps", 1)):
-            simulate_step()
-    if st.session_state.get("auto_run", False) and not st.session_state.get(
-        "sim_running", False
-    ):
-        st.session_state["sim_running"] = True
-    if st.session_state.get("pause_run", False):
-        st.session_state["sim_running"] = False
-    # Auto-run loop
-    import time
-
-    if st.session_state.get("sim_running", False) and st.session_state.get(
-        "auto_run", False
-    ):
-        simulate_step()
-        time.sleep(0.5)
-        st.experimental_rerun()
-    # --- Human Intervention Panel ---
-    st.markdown("---")
-    st.header("Human Intervention & Override")
-    user_name = st.text_input("Your Name or Email (for attribution)", key="user_name")
-    agents = st.session_state.get("agents", [])
-    mas = st.session_state.get("multiagent_system")
-    if agents and mas:
-        import json
-
-        import pandas as pd
-
-        # Prepare agent info table
-        agent_data = []
-        for idx, agent in enumerate(agents):
-            agent_data.append(
-                {
-                    "Agent": idx,
-                    "Group": getattr(agent, "group", None),
-                    "LastAction": getattr(agent, "last_action", None),
-                }
-            )
-            df = pd.DataFrame(agent_data)
-            st.subheader("Batch Edit Agent Groups")
-            edited_df = st.data_editor(
-                df, num_rows="dynamic", use_container_width=True, key="edit_agent_table"
-            )
-            if st.button("Apply Group Edits"):
-                for _, row in edited_df.iterrows():
-                    idx = int(row["Agent"])
-                    new_group = row["Group"]
-                    if new_group != getattr(agents[idx], "group", None):
-                        old_group = getattr(agents[idx], "group", None)
-                        mas.leave_group(idx)
-                        mas.form_group(new_group, [idx])
-                        # Log
-                        log_entry = {
-                            "time": str(pd.Timestamp.now()),
-                            "agent": idx,
-                            "move_group": {"from": old_group, "to": new_group},
-                            "user": user_name,
-                        }
-                        if "intervention_log" not in st.session_state:
-                            st.session_state["intervention_log"] = []
-                        st.session_state["intervention_log"].append(log_entry)
-                st.success("Batch group edits applied.")
-            st.subheader("Override Agent Action or Group (Single)")
-            col1, col2, col3 = st.columns(3)
-            with col1:
-                agent_idx = st.number_input(
-                    "Agent Index",
-                    min_value=0,
-                    max_value=len(agents) - 1,
-                    value=0,
-                    step=1,
-                    key="intervene_agent_idx",
-                )
-            with col2:
-                new_action = st.text_input(
-                    "Override Action (optional)", key="intervene_action"
-                )
-            with col3:
-                new_group = st.text_input(
-                    "Move to Group (optional)", key="intervene_group"
-                )
-            if st.button("Apply Intervention"):
-                log_entry = {
-                    "time": str(pd.Timestamp.now()),
-                    "agent": agent_idx,
-                    "user": user_name,
-                }
-                if new_action:
-                    agents[agent_idx].last_action = new_action
-                    log_entry["override_action"] = new_action
-                if new_group:
-                    old_group = getattr(agents[agent_idx], "group", None)
-                    mas.leave_group(agent_idx)
-                    mas.form_group(new_group, [agent_idx])
-                    log_entry["move_group"] = {"from": old_group, "to": new_group}
-                # Log intervention
-                if "intervention_log" not in st.session_state:
-                    st.session_state["intervention_log"] = []
-                st.session_state["intervention_log"].append(log_entry)
-                st.success(f"Intervention applied to Agent {agent_idx}.")
-            # --- Group Module Editing ---
-            st.subheader("Edit Group Modules (Rules/Parameters)")
-            if mas.group_modules:
-                for group_id, module in mas.group_modules.items():
-                    st.markdown(f"**Group {group_id} Module:**")
-                    module_json = st.text_area(
-                        f"Edit Module for Group {group_id}",
-                        json.dumps(module, indent=2),
-                        key=f"edit_module_{group_id}",
-                    )
-                    if st.button(
-                        f"Apply Module Edit to Group {group_id}",
-                        key=f"apply_module_{group_id}",
-                    ):
-                        try:
-                            new_module = json.loads(module_json)
-                            mas.group_modules[group_id] = new_module
-                            log_entry = {
-                                "time": str(pd.Timestamp.now()),
-                                "group": group_id,
-                                "edit_module": True,
-                                "user": user_name,
-                            }
-                            if "intervention_log" not in st.session_state:
-                                st.session_state["intervention_log"] = []
-                            st.session_state["intervention_log"].append(log_entry)
-                            st.success(f"Module for Group {group_id} updated.")
-                        except Exception as e:
-                            st.error(f"Invalid JSON: {e}")
-            # Display intervention log
-            st.subheader("Intervention Log")
-            if (
-                "intervention_log" in st.session_state
-                and st.session_state["intervention_log"]
-            ):
-                st.json(st.session_state["intervention_log"])
-        # --- Intervention Timeline & Analytics ---
-        st.markdown("---")
-        st.header("Intervention Timeline & Analytics")
-        intervention_log = st.session_state.get("intervention_log", [])
-        import json
-
-        import matplotlib.pyplot as plt
-        import pandas as pd
-
         # --- Google Sheets Integration Controls ---
         st.markdown("**Google Sheets Collaboration**")
-        gsheet_key = st.file_uploader(
-            "Upload Google Service Account Key (JSON)", type=["json"], key="gsheet_key"
+        gsheet_key_dashboard = st.file_uploader(
+            "Upload Google Service Account Key (JSON)",
+            type=["json"],
+            key="gsheet_key_dashboard",
         )
-        spreadsheet_id = st.text_input(
-            "Google Spreadsheet ID", key="gsheet_spreadsheet_id"
+        spreadsheet_id_dashboard = st.text_input(
+            "Google Spreadsheet ID", key="gsheet_spreadsheet_id_dashboard"
         )
-        worksheet_name = st.text_input(
-            "Worksheet Name", value="Sheet1", key="gsheet_worksheet_name"
+        worksheet_name_dashboard = st.text_input(
+            "Worksheet Name", value="Sheet1", key="gsheet_worksheet_name_dashboard"
         )
-        auto_sync = st.checkbox(
-            "Enable Auto-Sync with Google Sheets", value=False, key="gsheet_auto_sync"
+        auto_sync_dashboard_dashboard = st.checkbox(
+            "Enable Auto-Sync with Google Sheets",
+            value=False,
+            key="gsheet_auto_sync_dashboard_dashboard",
         )
-        sync_interval = st.number_input(
+        sync_interval_dashboard_dashboard = st.number_input(
             "Auto-Sync Interval (seconds)",
             min_value=5,
             max_value=600,
             value=60,
             step=5,
-            key="gsheet_sync_interval",
+            key="gsheet_sync_interval_dashboard_dashboard",
         )
         col_sync1, col_sync2 = st.columns(2)
-        if gsheet_key is not None:
+        if gsheet_key_dashboard is not None:
             # Save uploaded key to a temp file
             import tempfile
 
-            key_bytes = gsheet_key.read()
+            key_bytes = gsheet_key_dashboard.read()
             with tempfile.NamedTemporaryFile(delete=False, suffix=".json") as tmp:
                 tmp.write(key_bytes)
                 json_keyfile_path = tmp.name
@@ -653,14 +519,16 @@ if __name__ == "__main__":
 
             with col_sync1:
                 if st.button("Sync Log to Google Sheets"):
-                    if spreadsheet_id and worksheet_name:
-                        df_log = pd.DataFrame(intervention_log)
-                        write_df_to_sheet(gc, spreadsheet_id, worksheet_name, df_log)
+                    if spreadsheet_id_dashboard and worksheet_name_dashboard:
+                        df_log = pd.DataFrame(
+                            st.session_state.get("intervention_log", [])
+                        )
+                        write_df_to_sheet(gc, spreadsheet_id_dashboard, worksheet_name_dashboard, df_log)
                         st.success("Log synced to Google Sheets!")
             with col_sync2:
                 if st.button("Load Log from Google Sheets"):
-                    if spreadsheet_id and worksheet_name:
-                        df_gsheet = read_sheet_to_df(gc, spreadsheet_id, worksheet_name)
+                    if spreadsheet_id_dashboard and worksheet_name_dashboard:
+                        df_gsheet = read_sheet_to_df(gc, spreadsheet_id_dashboard, worksheet_name_dashboard)
                         # Merge logs
                         merged_log = merge_logs(
                             st.session_state.get("intervention_log", []),
@@ -671,12 +539,12 @@ if __name__ == "__main__":
             # --- Auto-sync logic ---
             import time
 
-            if auto_sync and spreadsheet_id and worksheet_name:
-                last_sync = st.session_state.get("gsheet_last_sync", 0)
+            if auto_sync_dashboard and spreadsheet_id_dashboard and worksheet_name_dashboard:
+                last_sync = st.session_state.get("gsheet_last_sync_dashboard", 0)
                 now = time.time()
-                if now - last_sync > sync_interval:
+                if now - last_sync > sync_interval_dashboard:
                     # Pull remote log and merge
-                    df_gsheet = read_sheet_to_df(gc, spreadsheet_id, worksheet_name)
+                    df_gsheet = read_sheet_to_df(gc, spreadsheet_id_dashboard, worksheet_name_dashboard)
                     merged_log = merge_logs(
                         st.session_state.get("intervention_log", []),
                         df_gsheet.to_dict(orient="records"),
@@ -684,14 +552,14 @@ if __name__ == "__main__":
                     st.session_state["intervention_log"] = merged_log
                     # Push merged log
                     df_log = pd.DataFrame(st.session_state["intervention_log"])
-                    write_df_to_sheet(gc, spreadsheet_id, worksheet_name, df_log)
-                    st.session_state["gsheet_last_sync"] = now
+                    write_df_to_sheet(gc, spreadsheet_id_dashboard, worksheet_name_dashboard, df_log)
+                    st.session_state["gsheet_last_sync_dashboard"] = now
                     st.info("Auto-synced intervention log with Google Sheets.")
         # --- Timeline & Analytics ---
-        if intervention_log:
+        if st.session_state.get("intervention_log", []):
             # Timeline table
             st.subheader("Intervention Timeline")
-            df_log = pd.DataFrame(intervention_log)
+            df_log = pd.DataFrame(st.session_state["intervention_log"])
             st.dataframe(df_log)
             # Analytics
             st.subheader("Intervention Analytics")
