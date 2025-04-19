@@ -45,11 +45,53 @@ Supports agents that take multiple modalities (e.g., text, image) as input and u
    ```sh
    pip install -r requirements.txt
    ```
-2. Run the API server:
+2. Run the dashboard:
+   ```sh
+   streamlit run dashboard/main.py
+   ```
+3. (Optional) Run the API server:
    ```sh
    uvicorn agent_api:app --reload
    ```
-3. Send requests as above to `/observe/multimodal`.
+4. Access the dashboard at http://localhost:8501
+
+---
+
+## Docker Usage
+
+Build and run the dashboard in a container:
+
+```sh
+# Build the Docker image
+sudo docker build -t neuro-fuzzy-multiagent .
+
+# Run the dashboard on port 8501
+sudo docker run -p 8501:8501 neuro-fuzzy-multiagent
+```
+
+---
+
+## Dashboard & Google Sheets Walkthrough
+
+- **Simulation & Batch Experiments:**
+  - Run single or batch experiments, set agent counts, seeds, and steps.
+  - View analytics, export results as CSV/JSON.
+- **Google Sheets Integration:**
+  - Upload your Google service account key (JSON), enter Spreadsheet ID and Worksheet name.
+  - Sync intervention logs to/from Google Sheets for collaborative editing.
+- **Explainability & Playback:**
+  - Inspect fuzzy rules, group structure, and agent decisions.
+  - Use scenario playback to step through and analyze episodes interactively.
+
+---
+
+## Troubleshooting & FAQ
+
+- **Google Sheets Errors:** Ensure your service account has access to the target spreadsheet and the JSON key is valid.
+- **Docker Issues:** Make sure Docker is installed and running, and ports are not in use.
+- **Missing Dependencies:** Double-check `requirements.txt` for all needed Python packages.
+- **Streamlit/Matplotlib/NetworkX errors:** Install missing packages with `pip install ...` or rebuild the Docker image.
+- **Performance:** Enable "Fast Mode" in the dashboard for large-scale experiments.
 
 ---
 
