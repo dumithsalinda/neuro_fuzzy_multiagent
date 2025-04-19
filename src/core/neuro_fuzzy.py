@@ -35,6 +35,60 @@ class NeuroFuzzyHybrid:
             "chosen_action": action
         }
 
+    def add_rule(self, antecedents, consequent, as_core=False):
+        """
+        Add a fuzzy rule to the system at runtime.
+        antecedents: list of (input_index, FuzzySet)
+        consequent: output value or class label
+        as_core: if True, add as core rule; otherwise, as dynamic rule
+        """
+        from .fuzzy_system import FuzzyRule
+        rule = FuzzyRule(antecedents, consequent)
+        self.fis.add_rule(rule, as_core=as_core)
+
+    def prune_rule(self, rule_idx, from_core=False):
+        """
+        Remove a fuzzy rule by index (from core or dynamic rules).
+        """
+        if from_core:
+            if 0 <= rule_idx < len(self.fis.core_rules):
+                del self.fis.core_rules[rule_idx]
+        else:
+            if 0 <= rule_idx < len(self.fis.dynamic_rules):
+                del self.fis.dynamic_rules[rule_idx]
+        self.fis.rules = self.fis.core_rules + self.fis.dynamic_rules
+
+    def list_rules(self):
+        """
+        Return a summary of all fuzzy rules (core + dynamic).
+        """
+        summaries = []
+        for i, rule in enumerate(self.fis.core_rules):
+            summaries.append({"type": "core", "index": i, "antecedents": rule.antecedents, "consequent": rule.consequent})
+        for i, rule in enumerate(self.fis.dynamic_rules):
+            summaries.append({"type": "dynamic", "index": i, "antecedents": rule.antecedents, "consequent": rule.consequent})
+        return summaries
+
+    def set_learning_rate(self, lr):
+        """
+        Set learning rate for the neural network and (if supported) the FIS.
+        """
+        if hasattr(self.nn, 'learning_rate'):
+            self.nn.learning_rate = lr
+        if hasattr(self.fis, 'learning_rate'):
+            self.fis.learning_rate = lr
+
+    def get_learning_rate(self):
+        """
+        Get learning rate from the neural network (and/or FIS).
+        """
+        if hasattr(self.nn, 'learning_rate'):
+            return self.nn.learning_rate
+        elif hasattr(self.fis, 'learning_rate'):
+            return self.fis.learning_rate
+        else:
+            return None
+
     """
     Adaptive Neuro-Fuzzy Inference System (ANFIS)-like hybrid model.
     nn_config['input_dim'] should match the feature vector dimension for the agent's input type (e.g., 768 for BERT, 512 for ResNet18).

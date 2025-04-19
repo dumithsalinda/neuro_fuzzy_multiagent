@@ -206,3 +206,24 @@ class NeuroFuzzyAgent(Agent):
         """
         if hasattr(self.model, 'self_organize'):
             self.model.self_organize(mutation_rate=mutation_rate, tune_fuzzy=tune_fuzzy, rule_change=rule_change)
+
+    # --- Rule Evolution and Meta-Learning Integration ---
+    def add_rule(self, antecedents, consequent, as_core=False):
+        """Add a fuzzy rule to this agent's model at runtime."""
+        self.model.add_rule(antecedents, consequent, as_core=as_core)
+
+    def prune_rule(self, rule_idx, from_core=False):
+        """Remove a fuzzy rule by index from this agent's model."""
+        self.model.prune_rule(rule_idx, from_core=from_core)
+
+    def list_rules(self):
+        """Return a summary of all fuzzy rules in this agent's model."""
+        return self.model.list_rules()
+
+    def set_learning_rate(self, lr):
+        """Set learning rate for this agent's model."""
+        self.model.set_learning_rate(lr)
+
+    def get_learning_rate(self):
+        """Get learning rate for this agent's model."""
+        return self.model.get_learning_rate()
