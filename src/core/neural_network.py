@@ -29,6 +29,7 @@ class FeedforwardNeuralNetwork:
         self.b1 = np.zeros(hidden_dim)
         self.W2 = np.random.randn(hidden_dim, output_dim) * 0.1
         self.b2 = np.zeros(output_dim)
+        self.learning_rate = 0.01  # Default public learning rate
 
     def forward(self, x):
         """Forward pass."""

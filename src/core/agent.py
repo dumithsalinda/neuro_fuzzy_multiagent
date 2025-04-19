@@ -242,11 +242,26 @@ class NeuroFuzzyAgent(Agent):
     Supports modular self-organization of fuzzy rules, membership functions, and neural network weights.
     Supports runtime mode switching between neural, fuzzy, and hybrid inference.
     """
-    def __init__(self, nn_config, fis_config, policy=None):
+    def __init__(self, nn_config, fis_config, policy=None, meta_controller=None):
         model = NeuroFuzzyHybrid(nn_config, fis_config)
         if policy is None:
             policy = lambda obs, model: model.forward(obs)
         super().__init__(model, policy)
+        # Embedded meta-controller (agent-local)
+        if meta_controller is None:
+            from .meta_controller import MetaController
+            self.meta_controller = MetaController()
+        else:
+            self.meta_controller = meta_controller
+
+    def meta_adapt(self, data=None, new_lr=None):
+        """
+        Perform local meta-adaptation: tune fuzzy rules and/or learning rate.
+        """
+        if data is not None:
+            self.meta_controller.tune_fuzzy_rules(self, data)
+        if new_lr is not None:
+            self.meta_controller.tune_learning_rate(self, new_lr)
 
     def set_mode(self, mode, hybrid_weight=None):
         """Set the inference mode for this agent's neuro-fuzzy model."""
@@ -290,5 +305,7 @@ class NeuroFuzzyAgent(Agent):
         self.model.set_learning_rate(lr)
 
     def get_learning_rate(self):
-        """Get learning rate for this agent's model."""
-        return self.model.get_learning_rate()
+        """Get learning rate for this agent's model (neural net)."""
+        if hasattr(self.model.nn, 'learning_rate'):
+            return self.model.nn.learning_rate
+        return None
