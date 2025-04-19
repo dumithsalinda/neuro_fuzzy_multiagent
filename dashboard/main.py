@@ -2,7 +2,7 @@ import streamlit as st
 from dashboard.login import login_form
 from dashboard.collab import collaborative_experiments_panel
 from dashboard.simulation import simulate_step, som_group_agents, run_batch_experiments
-from dashboard.visualization import render_agent_positions, render_group_modules, render_group_knowledge
+from dashboard.visualization import render_agent_positions, render_group_modules, render_group_knowledge, render_som_grid_with_agents, render_group_analytics
 
 def merge_logs(local_log, remote_log):
     # Merge by unique (time, agent, group, user) tuple
@@ -97,10 +97,9 @@ def main():
                     st.line_chart(df_batch.set_index("experiment")["group_stability"])
                 # Advanced metrics
                 st.markdown("**Advanced Metrics**")
-            if "intervention_count" in df_batch.columns:
-                st.bar_chart(df_batch.set_index("experiment")["intervention_count"])
-            # Export advanced analytics
-            if batch_results is not None:
+                if "intervention_count" in df_batch.columns:
+                    st.bar_chart(df_batch.set_index("experiment")["intervention_count"])
+                # Export advanced analytics
                 st.download_button(
                     label="Download Advanced Analytics (CSV)",
                     data=df_batch.to_csv(index=False),
@@ -329,6 +328,7 @@ def main():
         st.subheader("Interactive Scenario Playback")
         episode_memory = st.session_state.get("episode_memory", [])
         if episode_memory:
+            max_step = len(episode_memory) - 1
             # Playback controls
             playback_step = st.number_input("Playback Step", min_value=0, max_value=max_step if max_step >= 0 else 0, value=0, step=1, key="playback_step")
             col_play, col_pause, col_prev, col_next = st.columns(4)
