@@ -12,6 +12,7 @@ Pillow
 opencv-python
 pydrive2
 MiniSom
+ray
 gspread
 google-auth
 pytest

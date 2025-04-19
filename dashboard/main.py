@@ -30,6 +30,9 @@ def main():
         share_now = st.sidebar.button("Share Group Knowledge Now")
         st.session_state["enable_group_knowledge"] = enable_group_knowledge
         st.session_state["collective_mode"] = collective_mode
+        # --- Distributed Execution Control ---
+        distributed_execution = st.sidebar.checkbox("Distributed Agent Execution", value=False, key="distributed_execution")
+        st.session_state["distributed_execution"] = distributed_execution
         # --- Simulation Controls ---
         st.markdown("---")
         st.header("Simulation Controls")

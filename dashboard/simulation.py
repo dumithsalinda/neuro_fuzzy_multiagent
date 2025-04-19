@@ -1,7 +1,7 @@
 import streamlit as st
-
 from src.core.multiagent import MultiAgentSystem
 from src.core.som_cluster import SOMClusterer
+from src.core.distributed_agent_executor import run_agents_distributed
 import numpy as np
 import streamlit as st
 
@@ -45,16 +45,24 @@ def simulate_step():
     collective_mode = st.session_state.get("collective_mode", "individual")
     actions = []
     agent_rules = []
+    # --- Distributed agent execution toggle ---
+    distributed_mode = st.session_state.get("distributed_execution", False)
     if collective_mode == "individual":
-        for agent, o in zip(agents, obs):
-            action = agent.act(o)
-            actions.append(action)
-            # Try to get rule/attention info if available
-            rule = getattr(agent, "last_rule", None)
-            agent_rules.append(rule)
+        if distributed_mode:
+            # Distributed execution using Ray
+            actions = run_agents_distributed(agents, obs)
+            agent_rules = [getattr(agent, "last_rule", None) for agent in agents]
+        else:
+            for agent, o in zip(agents, obs):
+                action = agent.act(o)
+                actions.append(action)
+                # Try to get rule/attention info if available
+                rule = getattr(agent, "last_rule", None)
+                agent_rules.append(rule)
     else:
         actions = mas.collective_action_selection(obs, mode=collective_mode)
         agent_rules = [None] * len(agents)
+# To enable distributed execution, set st.session_state["distributed_execution"] = True in your Streamlit sidebar or controls.
     # Apply actions to environment (example, adapt as needed)
     env = st.session_state.get("env")
     if env is not None:
