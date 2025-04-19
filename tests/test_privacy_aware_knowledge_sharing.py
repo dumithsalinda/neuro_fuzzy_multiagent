@@ -2,13 +2,7 @@ import pytest
 from src.core.agent import Agent
 from src.core.multiagent import MultiAgentSystem
 
-class DummyAgent(Agent):
-    def __init__(self, group=None):
-        super().__init__(model=None)
-        self.knowledge_received = []
-        self.group = group
-    def integrate_online_knowledge(self, knowledge):
-        self.knowledge_received.append(knowledge)
+from tests.dummy_agent import DummyAgent
 
 def test_public_knowledge_sharing():
     a1 = DummyAgent()

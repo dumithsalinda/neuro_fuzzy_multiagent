@@ -15,6 +15,23 @@ from .neural_network import FeedforwardNeuralNetwork
 from .fuzzy_system import FuzzyInferenceSystem
 
 class NeuroFuzzyHybrid:
+    def update_nn_config(self, nn_config):
+        """
+        Update the neural network configuration at runtime.
+        This will re-instantiate the FeedforwardNeuralNetwork with the new config.
+        """
+        self.nn = FeedforwardNeuralNetwork(**nn_config)
+
+    def update_fis_config(self, fis_config):
+        """
+        Update the fuzzy inference system configuration at runtime.
+        If dynamic rule generation keys are present, regenerate rules.
+        """
+        if fis_config is not None and all(k in fis_config for k in ('X', 'y', 'fuzzy_sets_per_input')):
+            self.fis.dynamic_rule_generation(
+                fis_config['X'], fis_config['y'], fis_config['fuzzy_sets_per_input']
+            )
+
     def __init__(self, nn_config, fis_config=None):
         self.nn = FeedforwardNeuralNetwork(**nn_config)
         self.fis = FuzzyInferenceSystem()

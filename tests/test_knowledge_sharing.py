@@ -3,12 +3,7 @@ from src.core.agent import Agent
 from src.core.multiagent import MultiAgentSystem
 from src.core.laws import register_law, clear_laws, LawViolation
 
-class DummyAgent(Agent):
-    def __init__(self):
-        super().__init__(model=None)
-        self.knowledge_received = []
-    def integrate_online_knowledge(self, knowledge):
-        self.knowledge_received.append(knowledge)
+from tests.dummy_agent import DummyAgent
 
 def test_agent_knowledge_sharing_and_receiving():
     clear_laws('knowledge')

@@ -56,7 +56,68 @@ neuro_fuzzy_multiagent/
 
 ---
 
-## 4. Key Workflows
+## 4. Dynamic Agent Management & Hot-Reloading
+
+### Runtime Agent Addition, Removal, and Configuration Reload
+
+This system supports **plug-and-play agent architecture** with dynamic agent management and hot-reloading of agent configurations. Agents can be added, removed, or reconfigured at runtime without restarting the system.
+
+#### Main APIs:
+- **AgentManager** (`src/core/agent_manager.py`):
+    - `add_agent(config, group=None)`: Add an agent at runtime using a YAML/JSON/dict config.
+    - `remove_agent(agent)`: Remove an agent from the system.
+    - `reload_agent_config(agent, config_or_path)`: Reload an agent's configuration from file or dict at runtime.
+- **NeuroFuzzyAgent** (`src/core/agent.py`):
+    - `reload_config(config_or_path)`: Reload this agent's configuration in place.
+
+#### Example Usage
+```python
+from src.core.agent_manager import AgentManager
+from src.core.message_bus import MessageBus
+
+bus = MessageBus()
+manager = AgentManager(bus=bus)
+
+# Add agent from config dict or YAML/JSON file
+config = {
+    'agent_type': 'NeuroFuzzyAgent',
+    'nn_config': {'input_dim': 2, 'hidden_dim': 4, 'output_dim': 1},
+    'fis_config': None,
+    'meta_controller': {},
+    'universal_fuzzy_layer': None
+}
+agent = manager.add_agent(config)
+
+# Hot-reload agent config at runtime
+new_config_path = 'path/to/new_config.yaml'  # or pass a dict
+manager.reload_agent_config(agent, new_config_path)
+
+# Remove agent
+manager.remove_agent(agent)
+```
+
+#### Example YAML Agent Config
+```yaml
+agent_type: NeuroFuzzyAgent
+nn_config:
+  input_dim: 3
+  hidden_dim: 6
+  output_dim: 2
+fis_config: null
+meta_controller: {}
+universal_fuzzy_layer: null
+```
+
+#### Notes & Best Practices
+- Supported config formats: YAML, JSON, or Python dict.
+- Only keys present in the config will be updated; missing keys retain their previous values.
+- For neural network changes, the model is re-instantiated with new parameters.
+- For fuzzy system changes, rules are regenerated if the required keys are present.
+- Avoid changing the agent type at runtime; create a new agent instead.
+
+---
+
+## 5. Key Workflows
 
 ### Evolving Fuzzy Rule Bases & Adaptive Hybrid Learning
 

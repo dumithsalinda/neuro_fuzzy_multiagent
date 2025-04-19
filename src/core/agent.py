@@ -6,11 +6,12 @@ Supports integration with neuro-fuzzy models, transfer learning, and various env
 """
 
 import numpy as np
-from .neuro_fuzzy import NeuroFuzzyHybrid
-from .laws import enforce_laws
-from .online_learning import OnlineLearnerMixin
 
+from .laws import enforce_laws
+from .neuro_fuzzy import NeuroFuzzyHybrid
+from .online_learning import OnlineLearnerMixin
 from .universal_fuzzy_layer import UniversalFuzzyLayer
+
 
 class Agent(OnlineLearnerMixin):
     """
@@ -18,7 +19,9 @@ class Agent(OnlineLearnerMixin):
     Now supports online learning from web resources.
     Supports dynamic group membership for self-organization.
     Supports plug-and-play fuzzy logic via UniversalFuzzyLayer.
+    Implements a standardized communication API (send_message, receive_message).
     """
+
     def __init__(self, model, policy=None, bus=None, group=None):
         self.model = model
         self.policy = policy if policy is not None else self.random_policy
@@ -30,8 +33,42 @@ class Agent(OnlineLearnerMixin):
         self.group = group  # Group identifier, None if not in a group
         self.bus = bus
         self._fuzzy_layer = None
+        self.knowledge_received = []  # Stores received knowledge
         if self.bus is not None:
             self.bus.register(self, group=group)
+
+    # --- Standardized Agent Communication API ---
+    def send_message(self, message, recipient=None, group=None, broadcast=False):
+        """
+        Send a message to a recipient, group, or broadcast to all via the message bus if present.
+        """
+        if self.bus is not None:
+            if broadcast:
+                self.bus.broadcast(message, sender=self)
+            elif group is not None:
+                self.bus.groupcast(message, group, sender=self)
+            elif recipient is not None:
+                self.bus.send(message, recipient)
+        elif recipient is not None:
+            recipient.receive_message(message, sender=self)
+
+    def receive_message(self, message, sender=None):
+        """
+        Receive a message and append it to the agent's inbox. If the message is knowledge, process it.
+        """
+        self.message_inbox.append((message, sender))
+        self.last_message = (message, sender)
+        if isinstance(message, dict) and message.get('type') == 'knowledge':
+            knowledge = message.get('content')
+            self.knowledge_received.append(knowledge)
+            self.receive_knowledge(knowledge, sender=sender)
+
+    def receive_knowledge(self, knowledge, sender=None):
+        """
+        Default handler for received knowledge. Appends (knowledge, sender) to self.knowledge_received.
+        Override in subclasses for custom processing.
+        """
+        self.knowledge_received.append(knowledge)
 
     # --- Universal Fuzzy Layer Plug-and-Play ---
     def attach_fuzzy_layer(self, fuzzy_layer):
@@ -77,35 +114,67 @@ class Agent(OnlineLearnerMixin):
             return self._fuzzy_layer.list_rules()
         raise AttributeError("No fuzzy layer attached.")
 
-    def share_knowledge(self):
+    def get_knowledge(self):
         """
         Return a generic representation of the agent's knowledge (Q-table, weights, rules, etc.).
         Override in subclasses for specific agent types.
         """
-        if hasattr(self.model, 'get_knowledge'):
+        if hasattr(self.model, "get_knowledge"):
             return self.model.get_knowledge()
         return None
 
-    def share_knowledge(self):
+    def share_knowledge(self, knowledge, system=None, group=None, recipients=None):
         """
-        Return a generic representation of the agent's knowledge (Q-table, weights, rules, etc.).
-        Override in subclasses for specific agent types.
+        Share knowledge with other agents, respecting privacy policies.
+        knowledge: dict with optional 'privacy' key (public, private, group-only, recipient-list)
+        system: MultiAgentSystem instance
+        group: optional group label (for group-only privacy)
+        recipients: optional list of agent instances (for recipient-list privacy)
+        Enforces knowledge laws before sharing.
         """
-        if hasattr(self.model, 'get_knowledge'):
-            return self.model.get_knowledge()
-        return None
+        from .laws import LawViolation, enforce_laws
 
-        self.model = model
-        self.policy = policy if policy is not None else self.random_policy
-        self.last_action = None
-        self.last_observation = None
-        self.total_reward = 0
-        self.message_inbox = []
-        self.last_message = None
-        self.group = group  # Group identifier, None if not in a group
-        self.bus = bus
-        if self.bus is not None:
-            self.bus.register(self, group=group)
+        privacy = (
+            knowledge.get("privacy", "public")
+            if isinstance(knowledge, dict)
+            else "public"
+        )
+        try:
+            enforce_laws(knowledge, state=None, category="knowledge")
+            if system is None:
+                return
+            # Determine recipients
+            if privacy == "private":
+                return  # Do not share
+            elif privacy == "public":
+                system.broadcast(
+                    {"type": "knowledge", "content": knowledge}, sender=self
+                )
+            elif privacy == "group-only" and group is not None:
+                system.broadcast(
+                    {
+                        "type": "knowledge",
+                        "content": knowledge,
+                        "privacy": "group-only",
+                        "group": group,
+                    },
+                    sender=self,
+                    group=group,
+                )
+            elif privacy == "recipient-list" and recipients is not None:
+                for agent in recipients:
+                    if agent is not self:
+                        agent.receive_message(
+                            {
+                                "type": "knowledge",
+                                "content": knowledge,
+                                "privacy": "recipient-list",
+                                "recipients": recipients,
+                            },
+                            sender=self,
+                        )
+        except LawViolation as e:
+            print(f"[Agent] Knowledge sharing blocked by law: {e}")
 
     def act(self, observation, state=None):
         """
@@ -154,69 +223,6 @@ class Agent(OnlineLearnerMixin):
             self.bus.unregister(self)
         self.bus = None
 
-    def send_message(self, message, recipient=None, group=None, broadcast=False):
-        """
-        Send a message to a recipient, group, or all (broadcast).
-        If a MessageBus is attached, use it; else, direct send.
-        """
-        if self.bus is not None:
-            if broadcast:
-                self.bus.broadcast(message, sender=self)
-            elif group is not None:
-                self.bus.groupcast(message, group, sender=self)
-            elif recipient is not None:
-                self.bus.send(message, recipient)
-        elif recipient is not None:
-            recipient.receive_message(message, sender=self)
-
-    def receive_message(self, message, sender=None):
-        self.message_inbox.append((message, sender))
-        self.last_message = message
-
-    def share_knowledge(self, knowledge, system=None, group=None, recipients=None):
-        """
-        Share knowledge with other agents, respecting privacy policies.
-        knowledge: dict with optional 'privacy' key (public, private, group-only, recipient-list)
-        system: MultiAgentSystem instance
-        group: optional group label (for group-only privacy)
-        recipients: optional list of agent instances (for recipient-list privacy)
-        Enforces knowledge laws before sharing.
-        """
-        from .laws import enforce_laws, LawViolation
-        privacy = knowledge.get('privacy', 'public') if isinstance(knowledge, dict) else 'public'
-        try:
-            enforce_laws(knowledge, state=None, category='knowledge')
-            if system is None:
-                return
-            # Determine recipients
-            if privacy == 'private':
-                return  # Do not share
-            elif privacy == 'public':
-                system.broadcast({'type': 'knowledge', 'content': knowledge}, sender=self)
-            elif privacy == 'group-only' and group is not None:
-                system.broadcast({'type': 'knowledge', 'content': knowledge, 'privacy': 'group-only', 'group': group}, sender=self, group=group)
-            elif privacy == 'recipient-list' and recipients is not None:
-                for agent in recipients:
-                    if agent is not self:
-                        agent.receive_message({'type': 'knowledge', 'content': knowledge, 'privacy': 'recipient-list', 'recipients': recipients}, sender=self)
-        except LawViolation as e:
-            print(f"[Agent] Knowledge sharing blocked by law: {e}")
-
-    def receive_message(self, message, sender=None):
-        """
-        Receive a message from another agent (for collaboration protocols).
-        Handles knowledge sharing if message type is 'knowledge'.
-        Enforces knowledge laws before integrating shared knowledge.
-        """
-        if isinstance(message, dict) and message.get('type') == 'knowledge':
-            from .laws import enforce_laws, LawViolation
-            try:
-                enforce_laws(message['content'], state=None, category='knowledge')
-                self.integrate_online_knowledge(message['content'])
-            except LawViolation as e:
-                print(f"[Agent] Received knowledge blocked by law: {e}")
-        else:
-            self.last_message = (message, sender)
 
     @staticmethod
     def random_policy(observation, model):
@@ -224,6 +230,7 @@ class Agent(OnlineLearnerMixin):
         Example random policy for demonstration/testing.
         """
         import numpy as np
+
         return np.random.uniform(-1, 1, size=np.shape(observation))
 
     def integrate_online_knowledge(self, knowledge):
@@ -231,10 +238,11 @@ class Agent(OnlineLearnerMixin):
         Default: try to update policy/model if possible, else store as attribute.
         Override for custom knowledge/model/rule updates.
         """
-        if hasattr(self.model, 'update_from_knowledge'):
+        if hasattr(self.model, "update_from_knowledge"):
             self.model.update_from_knowledge(knowledge)
         else:
             self.online_knowledge = knowledge
+
 
 class NeuroFuzzyAgent(Agent):
     """
@@ -242,7 +250,15 @@ class NeuroFuzzyAgent(Agent):
     Supports modular self-organization of fuzzy rules, membership functions, and neural network weights.
     Supports runtime mode switching between neural, fuzzy, and hybrid inference.
     """
-    def __init__(self, nn_config, fis_config, policy=None, meta_controller=None):
+
+    def __init__(
+        self,
+        nn_config,
+        fis_config,
+        policy=None,
+        meta_controller=None,
+        universal_fuzzy_layer=None,
+    ):
         model = NeuroFuzzyHybrid(nn_config, fis_config)
         if policy is None:
             policy = lambda obs, model: model.forward(obs)
@@ -250,9 +266,47 @@ class NeuroFuzzyAgent(Agent):
         # Embedded meta-controller (agent-local)
         if meta_controller is None:
             from .meta_controller import MetaController
+
             self.meta_controller = MetaController()
+
+    def reload_config(self, config_or_path):
+        """
+        Reload agent configuration from a dict or YAML/JSON file at runtime.
+        Updates nn_config, fis_config, meta_controller, universal_fuzzy_layer.
+        """
+        import json
+        import os
+
+        import yaml
+
+        if isinstance(config_or_path, str):
+            if config_or_path.endswith(".yaml") or config_or_path.endswith(".yml"):
+                with open(config_or_path, "r") as f:
+                    config = yaml.safe_load(f)
+            elif config_or_path.endswith(".json"):
+                with open(config_or_path, "r") as f:
+                    config = json.load(f)
+            else:
+                raise ValueError("Config file must be .yaml, .yml, or .json")
         else:
-            self.meta_controller = meta_controller
+            config = config_or_path
+        # Update configs
+        nn_config = config.get("nn_config", None)
+        fis_config = config.get("fis_config", None)
+        meta_cfg = config.get("meta_controller", None)
+        fuzzy_cfg = config.get("universal_fuzzy_layer", None)
+        if nn_config:
+            self.model.update_nn_config(nn_config)
+        if fis_config:
+            self.model.update_fis_config(fis_config)
+        if meta_cfg is not None:
+            from .meta_controller import MetaController
+
+            self.meta_controller = MetaController(**meta_cfg) if meta_cfg else None
+        if fuzzy_cfg is not None:
+            from .universal_fuzzy_layer import UniversalFuzzyLayer
+
+            self._fuzzy_layer = UniversalFuzzyLayer(**fuzzy_cfg) if fuzzy_cfg else None
 
     def meta_adapt(self, data=None, new_lr=None):
         """
@@ -273,7 +327,9 @@ class NeuroFuzzyAgent(Agent):
 
     def evolve_rules(self, recent_inputs=None, min_avg_activation=0.01):
         """Prune dynamic fuzzy rules with low average firing strength."""
-        return self.model.evolve_rules(recent_inputs=recent_inputs, min_avg_activation=min_avg_activation)
+        return self.model.evolve_rules(
+            recent_inputs=recent_inputs, min_avg_activation=min_avg_activation
+        )
 
     def auto_switch_mode(self, error_history, thresholds=None):
         """Adaptively switch mode based on recent error history."""
@@ -284,8 +340,12 @@ class NeuroFuzzyAgent(Agent):
         Trigger self-organization in the underlying neuro-fuzzy hybrid model.
         This adapts neural weights, tunes fuzzy sets, and adds/removes rules.
         """
-        if hasattr(self.model, 'self_organize'):
-            self.model.self_organize(mutation_rate=mutation_rate, tune_fuzzy=tune_fuzzy, rule_change=rule_change)
+        if hasattr(self.model, "self_organize"):
+            self.model.self_organize(
+                mutation_rate=mutation_rate,
+                tune_fuzzy=tune_fuzzy,
+                rule_change=rule_change,
+            )
 
     # --- Rule Evolution and Meta-Learning Integration ---
     def add_rule(self, antecedents, consequent, as_core=False):
@@ -306,6 +366,6 @@ class NeuroFuzzyAgent(Agent):
 
     def get_learning_rate(self):
         """Get learning rate for this agent's model (neural net)."""
-        if hasattr(self.model.nn, 'learning_rate'):
+        if hasattr(self.model.nn, "learning_rate"):
             return self.model.nn.learning_rate
         return None
