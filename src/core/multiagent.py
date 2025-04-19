@@ -14,6 +14,64 @@ class MultiAgentSystem:
         self.group_leaders = {}  # group_id -> agent index
         self.group_modules = {}  # group_id -> group-specific module (rules/subnetwork)
 
+    def share_group_knowledge(self, mode='average'):
+        """
+        For each group, aggregate and distribute knowledge among group members.
+        mode: 'average' (default), 'copy_leader', or custom.
+        """
+        for group_id, members in self.groups.items():
+            if not members:
+                continue
+            knowledge_list = [self.agents[idx].share_knowledge() for idx in members]
+            # Filter out None
+            knowledge_list = [k for k in knowledge_list if k is not None]
+            if not knowledge_list:
+                continue
+            # Simple average if possible, else copy leader's knowledge
+            if mode == 'average' and isinstance(knowledge_list[0], (np.ndarray, list)):
+                avg_knowledge = np.mean(knowledge_list, axis=0)
+                for idx in members:
+                    self.agents[idx].integrate_online_knowledge(avg_knowledge)
+            elif mode == 'copy_leader':
+                leader_idx = self.group_leaders.get(group_id, list(members)[0])
+                leader_knowledge = self.agents[leader_idx].share_knowledge()
+                for idx in members:
+                    self.agents[idx].integrate_online_knowledge(leader_knowledge)
+            # Extend with more aggregation modes as needed
+
+    def collective_action_selection(self, observations, mode='leader'):
+        """
+        For each group, select actions collectively for all members.
+        mode: 'leader' (all follow leader), 'vote' (majority), or custom.
+        observations: list of observation vectors, one per agent.
+        Returns: list of actions (grouped or individual as per mode)
+        """
+        actions = [None] * len(self.agents)
+        for group_id, members in self.groups.items():
+            if not members:
+                continue
+            if mode == 'leader':
+                leader_idx = self.group_leaders.get(group_id, list(members)[0])
+                leader_obs = observations[leader_idx]
+                leader_action = self.agents[leader_idx].act(leader_obs)
+                for idx in members:
+                    actions[idx] = leader_action
+            elif mode == 'vote':
+                group_obs = [observations[idx] for idx in members]
+                group_actions = [self.agents[idx].act(obs) for idx, obs in zip(members, group_obs)]
+                # Majority vote
+                from collections import Counter
+                most_common = Counter(group_actions).most_common(1)[0][0]
+                for idx in members:
+                    actions[idx] = most_common
+            # Extend with more collective modes as needed
+        return actions
+
+        self.agents = agents
+        self.groups = {}  # group_id -> set of agent indices
+        self.group_leaders = {}  # group_id -> agent index
+        self.group_modules = {}  # group_id -> group-specific module (rules/subnetwork)
+
     def elect_leaders(self):
         """
         Elect a leader for each group (default: agent with lowest index in group).

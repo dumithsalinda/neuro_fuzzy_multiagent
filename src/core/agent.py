@@ -29,6 +29,36 @@ class Agent(OnlineLearnerMixin):
         if self.bus is not None:
             self.bus.register(self, group=group)
 
+    def share_knowledge(self):
+        """
+        Return a generic representation of the agent's knowledge (Q-table, weights, rules, etc.).
+        Override in subclasses for specific agent types.
+        """
+        if hasattr(self.model, 'get_knowledge'):
+            return self.model.get_knowledge()
+        return None
+
+    def share_knowledge(self):
+        """
+        Return a generic representation of the agent's knowledge (Q-table, weights, rules, etc.).
+        Override in subclasses for specific agent types.
+        """
+        if hasattr(self.model, 'get_knowledge'):
+            return self.model.get_knowledge()
+        return None
+
+        self.model = model
+        self.policy = policy if policy is not None else self.random_policy
+        self.last_action = None
+        self.last_observation = None
+        self.total_reward = 0
+        self.message_inbox = []
+        self.last_message = None
+        self.group = group  # Group identifier, None if not in a group
+        self.bus = bus
+        if self.bus is not None:
+            self.bus.register(self, group=group)
+
     def act(self, observation, state=None):
         """
         Select an action based on the current observation, enforcing unbreakable laws.
