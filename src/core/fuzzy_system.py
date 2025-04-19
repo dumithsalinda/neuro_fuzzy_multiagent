@@ -80,12 +80,78 @@ class FuzzyInferenceSystem:
     """
     Fuzzy inference system with dynamic rule generation and evaluation.
     Manages fuzzy rules and computes outputs via fuzzy logic reasoning.
+    Supports immutable core rules and append-only dynamic rules for safety.
     """
-    def __init__(self):
+    def __init__(self, core_rules=None):
         """
-        Initialize an empty fuzzy inference system.
+        Initialize the fuzzy inference system.
+        core_rules: list of FuzzyRule, immutable base rule set (optional)
         """
-        self.rules = []
+        self.core_rules = core_rules if core_rules is not None else []
+        self.dynamic_rules = []  # rules from feedback/robustness
+        self.rules = self.core_rules + self.dynamic_rules
+
+    def _is_duplicate_of_core(self, new_rule):
+        for rule in self.core_rules:
+            if ([(i, fs.name) for i, fs in rule.antecedents] == [(i, fs.name) for i, fs in new_rule.antecedents]) and rule.consequent == new_rule.consequent:
+                return True
+        return False
+
+    def add_rule_from_feedback(self, antecedent_values, consequent, fuzzy_sets_per_input):
+        """
+        Add a fuzzy rule based on human feedback.
+        Does NOT override core rules. Warns if duplicate.
+        """
+        antecedents = []
+        for i, val in enumerate(antecedent_values):
+            sets = fuzzy_sets_per_input[i]
+            memberships = [fs.membership(val) for fs in sets]
+            idx = int(np.argmax(memberships))
+            antecedents.append((i, sets[idx]))
+        rule = FuzzyRule(antecedents, consequent)
+        if self._is_duplicate_of_core(rule):
+            print("[Warning] Attempted to add a rule that duplicates an immutable core rule. Ignoring.")
+            return False
+        self.dynamic_rules.append(rule)
+        self.rules = self.core_rules + self.dynamic_rules
+        return True
+
+    def add_rule(self, rule, as_core=False):
+        """
+        Add a fuzzy rule to the system.
+        If as_core=True, adds to immutable core rules. Otherwise, to dynamic rules.
+        """
+        if as_core:
+            self.core_rules.append(rule)
+        else:
+            if self._is_duplicate_of_core(rule):
+                print("[Warning] Attempted to add a rule that duplicates an immutable core rule. Ignoring.")
+                return False
+            self.dynamic_rules.append(rule)
+        self.rules = self.core_rules + self.dynamic_rules
+        return True
+
+    def get_core_rules(self):
+        return self.core_rules
+
+    def get_dynamic_rules(self):
+        return self.dynamic_rules
+
+    def add_rule_from_feedback(self, antecedent_values, consequent, fuzzy_sets_per_input):
+        """
+        Add a fuzzy rule based on human feedback.
+        antecedent_values: list of floats (input values for the rule antecedents)
+        consequent: float or int (desired output/action)
+        fuzzy_sets_per_input: list of lists of FuzzySet for each input feature
+        """
+        antecedents = []
+        for i, val in enumerate(antecedent_values):
+            sets = fuzzy_sets_per_input[i]
+            memberships = [fs.membership(val) for fs in sets]
+            idx = int(np.argmax(memberships))
+            antecedents.append((i, sets[idx]))
+        rule = FuzzyRule(antecedents, consequent)
+        self.add_rule(rule)
 
     def add_rule(self, rule):
         """

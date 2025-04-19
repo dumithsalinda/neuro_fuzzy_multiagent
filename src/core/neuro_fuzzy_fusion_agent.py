@@ -84,3 +84,12 @@ class NeuroFuzzyFusionAgent:
     def set_fusion_alpha(self, alpha):
         """Set the neural/fuzzy fusion ratio (0=fuzzy only, 1=neural only)."""
         self.fusion_alpha = float(alpha)
+
+    def add_fuzzy_rule_from_feedback(self, antecedent_values, consequent, fuzzy_sets_per_input):
+        """
+        Add a fuzzy rule based on human feedback.
+        antecedent_values: list of floats (input values for the rule antecedents)
+        consequent: float or int (desired output/action)
+        fuzzy_sets_per_input: list of lists of FuzzySet for each input feature
+        """
+        self.fuzzy_system.add_rule_from_feedback(antecedent_values, consequent, fuzzy_sets_per_input)

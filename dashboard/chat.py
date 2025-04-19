@@ -56,5 +56,25 @@ def handle_agent_command(cmd, agent):
         return "<br>".join([f"Rule {i}: Antecedents: {r.antecedents}, Consequent: {r.consequent}" for i, r in enumerate(rules)])
     if cmd.startswith("feedback"):
         feedback = cmd[len("feedback"):].strip()
-        return f"Feedback received: '{feedback}' (not yet used for learning)"
+        if feedback.startswith("rule") and "obs=" in feedback and "action=" in feedback:
+            # Example: feedback rule obs=[0.1,0.2,0.3,0.4,0.5,0.6,0.7] action=2
+            import re
+            obs_match = re.search(r"obs=\[(.*?)\]", feedback)
+            action_match = re.search(r"action=([0-9]+)", feedback)
+            if obs_match and action_match:
+                obs_str = obs_match.group(1)
+                obs_vals = [float(x.strip()) for x in obs_str.split(",") if x.strip()]
+                action_val = int(action_match.group(1))
+                # Demo fuzzy sets: for each input, Low/High sets
+                from src.core.fuzzy_system import FuzzySet
+                fuzzy_sets_per_input = [[FuzzySet('Low', [0, 1]), FuzzySet('High', [1, 1])] for _ in obs_vals]
+                agent.add_fuzzy_rule_from_feedback(obs_vals, action_val, fuzzy_sets_per_input)
+                # Show updated rules
+                rules = getattr(agent.fuzzy_system, 'rules', [])
+                rules_str = "<br>".join([f"Rule {i}: Antecedents: {r.antecedents}, Consequent: {r.consequent}" for i, r in enumerate(rules)])
+                return f"Fuzzy rule added for obs={obs_vals}, action={action_val}<br>Updated Fuzzy Rules:<br>{rules_str}"
+            else:
+                return "Usage: feedback rule obs=[x1,...,xN] action=X"
+        else:
+            return f"Feedback received: '{feedback}' (not yet used for learning)"
     return "Unknown command. Type 'help' for options."

@@ -9,6 +9,9 @@ class DummyFuzzySystem:
     def infer(self, obs_list):
         # Return a constant or deterministic vector for testing
         return np.ones(self.output_dim) * 2.0
+    def evaluate(self, obs_vector):
+        # Return a constant vector for compatibility with agent.act
+        return np.ones(self.output_dim) * 2.0
     def explain_inference(self, obs_list):
         return {'output': self.infer(obs_list), 'rules': ['dummy_rule']}
 

@@ -73,7 +73,31 @@ while True:
         continue
     if user_input.startswith("feedback"):
         feedback = user_input[len("feedback"):].strip()
-        print(f"Feedback received: '{feedback}' (not yet used for learning)")
+        if feedback.startswith("rule") and "obs=" in feedback and "action=" in feedback:
+            # Example: feedback rule obs=[0.1,0.2,0.3,0.4,0.5,0.6,0.7] action=2
+            import re
+            obs_match = re.search(r"obs=\[(.*?)\]", feedback)
+            action_match = re.search(r"action=([0-9]+)", feedback)
+            if obs_match and action_match:
+                obs_str = obs_match.group(1)
+                obs_vals = [float(x.strip()) for x in obs_str.split(",") if x.strip()]
+                action_val = int(action_match.group(1))
+                # Assume two modalities: obs[0:4], obs[4:7]
+                obs_modalities = [obs_vals[:4], obs_vals[4:]]
+                # Demo fuzzy sets: for each input, Low/High sets
+                from src.core.fuzzy_system import FuzzySet
+                fuzzy_sets_per_input = [[FuzzySet('Low', [0, 1]), FuzzySet('High', [1, 1])] for _ in obs_vals]
+                agent.add_fuzzy_rule_from_feedback(obs_vals, action_val, fuzzy_sets_per_input)
+                print(f"Fuzzy rule added for obs={obs_vals}, action={action_val}")
+                # Show updated rules
+                rules = getattr(agent.fuzzy_system, 'rules', [])
+                print("Updated Fuzzy Rules:")
+                for i, rule in enumerate(rules):
+                    print(f"  Rule {i}: Antecedents: {rule.antecedents}, Consequent: {rule.consequent}")
+            else:
+                print("Usage: feedback rule obs=[x1,...,xN] action=X")
+        else:
+            print(f"Feedback received: '{feedback}' (not yet used for learning)")
         continue
     print("Unknown command. Type 'help' for options.")
 
