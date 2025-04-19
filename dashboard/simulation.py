@@ -58,3 +58,67 @@ def simulate_step():
         for i, agent in enumerate(agents):
             agent.observe(rewards[i])
     st.session_state["step"] = st.session_state.get("step", 0) + 1
+
+def run_batch_experiments(n_experiments, agent_counts_list, seeds_list, n_steps, fast_mode=True):
+    """
+    Run multiple experiments in batch/parallel with varying agent counts and seeds.
+    Returns a list of summary dicts for each experiment.
+    Calculates advanced metrics: diversity, group_stability, intervention_count.
+    If fast_mode is True, skips unnecessary UI/plotting for higher speed.
+    """
+    import numpy as np
+    from src.core.agent import Agent
+    from src.core.multiagent import MultiAgentSystem
+    import random
+    results = []
+    exp_id = 0
+    for agent_count in agent_counts_list:
+        for seed in seeds_list:
+            exp_id += 1
+            np.random.seed(seed)
+            random.seed(seed)
+            # Create agents and MAS
+            agents = [Agent(model=None) for _ in range(agent_count)]
+            mas = MultiAgentSystem(agents)
+            # Dummy env: each step returns random reward per agent
+            rewards_history = []
+            group_history = []
+            intervention_count = 0
+            obs = [np.zeros(2) for _ in range(agent_count)]
+            for step in range(n_steps):
+                # (Replace with real env/logic as needed)
+                actions = [0 for _ in agents]
+                rewards = np.random.uniform(0, 1, size=agent_count)
+                rewards_history.append(np.mean(rewards))
+                # Simulate agent observation update
+                for i, agent in enumerate(agents):
+                    agent.last_observation = obs[i]
+                    agent.observe(rewards[i])
+                # Simulate group assignment and interventions
+                group_labels = np.random.randint(0, max(1, agent_count // 10), size=agent_count)
+                group_history.append(group_labels)
+                if np.random.rand() < 0.05:
+                    intervention_count += 1
+            # Diversity: mean number of unique groups per step
+            diversity = float(np.mean([len(set(g)) for g in group_history])) if group_history else 0.0
+            # Group stability: mean fraction of agents that stayed in the same group as previous step
+            group_stability = 0.0
+            if len(group_history) > 1:
+                stabilities = []
+                for prev, curr in zip(group_history[:-1], group_history[1:]):
+                    stabilities.append(np.mean(np.array(prev) == np.array(curr)))
+                group_stability = float(np.mean(stabilities))
+            result = {
+                "experiment": exp_id,
+                "agent_count": agent_count,
+                "seed": seed,
+                "mean_reward": float(np.mean(rewards_history)),
+                "max_reward": float(np.max(rewards_history)),
+                "min_reward": float(np.min(rewards_history)),
+                "std_reward": float(np.std(rewards_history)),
+                "diversity": diversity,
+                "group_stability": group_stability,
+                "intervention_count": intervention_count,
+            }
+            results.append(result)
+    return results

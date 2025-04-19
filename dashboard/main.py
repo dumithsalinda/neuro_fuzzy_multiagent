@@ -20,13 +20,67 @@ def main():
         # --- Simulation Controls ---
         st.markdown("---")
         st.header("Simulation Controls")
-        from dashboard.simulation import simulate_step, som_group_agents
+        from dashboard.simulation import simulate_step, som_group_agents, run_batch_experiments
         from dashboard.visualization import render_agent_positions, render_group_modules, render_group_knowledge
         # Batch controls
         n_steps = st.number_input("Steps to Run", min_value=1, max_value=1000, value=10, step=1, key="n_steps")
         run_n_steps = st.button("Run N Steps")
         auto_run = st.checkbox("Auto-Run Simulation", value=False, key="auto_run")
         pause_run = st.button("Pause Auto-Run")
+        # --- Batch/Parallel Experiment Controls ---
+        st.markdown("---")
+        st.header("Batch/Parallel Experiments")
+        n_experiments = st.number_input("Number of Experiments", min_value=1, max_value=100, value=5, step=1, key="n_experiments")
+        agent_counts = st.text_input("Agent Counts (comma-separated)", value="10,50,100", key="batch_agent_counts")
+        seeds = st.text_input("Seeds (comma-separated)", value="42,43,44,45,46", key="batch_seeds")
+        fast_mode = st.checkbox("Fast Mode (Optimize for Large Scale, Minimal UI)", value=True, key="fast_mode")
+        run_batch = st.button("Run Batch Experiments")
+        batch_results = st.session_state.get("batch_results", None)
+        if run_batch:
+            agent_counts_list = [int(x.strip()) for x in agent_counts.split(",") if x.strip().isdigit()]
+            seeds_list = [int(x.strip()) for x in seeds.split(",") if x.strip().isdigit()]
+            st.session_state["batch_results"] = run_batch_experiments(n_experiments, agent_counts_list, seeds_list, n_steps, fast_mode)
+            st.success("Batch experiments completed.")
+            batch_results = st.session_state["batch_results"]
+        if batch_results:
+            import pandas as pd
+            import json
+            st.subheader("Batch Results Table")
+            df_batch = pd.DataFrame(batch_results)
+            st.dataframe(df_batch)
+            st.download_button(
+                label="Download Batch Results as CSV",
+                data=df_batch.to_csv(index=False),
+                file_name="batch_results.csv",
+                mime="text/csv"
+            )
+            st.download_button(
+                label="Download Batch Results as JSON",
+                data=json.dumps(batch_results, indent=2),
+                file_name="batch_results.json",
+                mime="application/json"
+            )
+            # Advanced analytics/visualization
+            st.subheader("Batch Analytics & Visualization")
+            if "mean_reward" in df_batch.columns:
+                st.line_chart(df_batch.set_index("experiment")["mean_reward"])
+            if "max_reward" in df_batch.columns:
+                st.line_chart(df_batch.set_index("experiment")["max_reward"])
+            # Advanced metrics
+            st.markdown("**Advanced Metrics**")
+            if "diversity" in df_batch.columns:
+                st.line_chart(df_batch.set_index("experiment")["diversity"])
+            if "group_stability" in df_batch.columns:
+                st.line_chart(df_batch.set_index("experiment")["group_stability"])
+            if "intervention_count" in df_batch.columns:
+                st.bar_chart(df_batch.set_index("experiment")["intervention_count"])
+            # Export advanced analytics
+            st.download_button(
+                label="Download Advanced Analytics (CSV)",
+                data=df_batch.to_csv(index=False),
+                file_name="batch_advanced_analytics.csv",
+                mime="text/csv"
+            )
         # Simulation progress/status
         st.write(f"Current Step: {st.session_state.get('step', 0)}")
         st.write(f"Simulation Running: {'Yes' if st.session_state.get('sim_running', False) else 'No'}")
