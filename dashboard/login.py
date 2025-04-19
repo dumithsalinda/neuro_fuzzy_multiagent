@@ -11,10 +11,10 @@ def login_form():
             if username == "admin" and password == "password":
                 st.session_state["authenticated"] = True
                 st.success("Login successful!")
-                st.experimental_rerun()
+                st.rerun()
             else:
                 st.error("Invalid username or password.")
     if st.session_state.get("authenticated"):
         if st.button("Logout"):
             st.session_state["authenticated"] = False
-            st.experimental_rerun()
+            st.rerun()

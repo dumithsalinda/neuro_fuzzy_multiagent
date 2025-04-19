@@ -93,7 +93,7 @@ def render_group_analytics(mas, reward_history=None):
         # Average reward
         avg_reward = None
         if reward_history:
-            rewards = [np.mean(reward_history.get(idx, [])) for idx in members]
+            rewards = [np.mean(reward_history.get(idx, [])) if len(reward_history.get(idx, [])) > 0 else 0.0 for idx in members]
             avg_reward = np.mean(rewards) if rewards else None
         # Group size
         size = len(members)
@@ -103,11 +103,13 @@ def render_group_analytics(mas, reward_history=None):
         if len(obs) > 1:
             obs = np.stack(obs)
             dists = np.linalg.norm(obs[:, None, :] - obs[None, :, :], axis=-1)
-            cohesion = 1.0 / (1.0 + np.mean(dists))  # Higher = more cohesive
+            mean_dist = np.mean(dists) if dists.size > 0 else 0.0
+            cohesion = 1.0 / (1.0 + mean_dist)  # Higher = more cohesive
         # Diversity: variance of observations
         diversity = None
         if len(obs) > 1:
-            diversity = float(np.mean(np.var(obs, axis=0)))
+            var = np.var(obs, axis=0)
+            diversity = float(np.mean(var)) if var.size > 0 else 0.0
         data.append({
             'Group': group_id,
             'Size': size,

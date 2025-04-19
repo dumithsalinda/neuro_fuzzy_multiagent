@@ -1,7 +1,20 @@
 import streamlit as st
 from dashboard.login import login_form
 from dashboard.collab import collaborative_experiments_panel
-# (Other imports for sidebar, layout, simulation, etc. will be added in the next steps)
+from dashboard.simulation import simulate_step, som_group_agents, run_batch_experiments
+from dashboard.visualization import render_agent_positions, render_group_modules, render_group_knowledge
+
+def merge_logs(local_log, remote_log):
+    # Merge by unique (time, agent, group, user) tuple
+    seen = set()
+    merged = []
+    for entry in local_log + remote_log:
+        key = (entry.get('time'), entry.get('agent'), entry.get('group', None), entry.get('user', None))
+        if key not in seen:
+            merged.append(entry)
+            seen.add(key)
+    merged.sort(key=lambda x: x.get('time', ''))
+    return merged
 
 def main():
     st.set_page_config(page_title="Multi-Agent System Dashboard", layout="wide")
@@ -20,8 +33,6 @@ def main():
         # --- Simulation Controls ---
         st.markdown("---")
         st.header("Simulation Controls")
-        from dashboard.simulation import simulate_step, som_group_agents, run_batch_experiments
-        from dashboard.visualization import render_agent_positions, render_group_modules, render_group_knowledge
         # Batch controls
         n_steps = st.number_input("Steps to Run", min_value=1, max_value=1000, value=10, step=1, key="n_steps")
         run_n_steps = st.button("Run N Steps")
@@ -284,22 +295,11 @@ def main():
                 nx.draw(G, pos, with_labels=True, node_color=[G.nodes[n].get('group', 0) for n in G.nodes], cmap=plt.cm.Set3, ax=ax)
                 st.pyplot(fig)
             except Exception as e:
-                st.info("(NetworkX/Matplotlib required for group visualization)")
-            st.subheader("Action & State Traceback")
-        episode_memory = st.session_state.get("episode_memory", [])
-        max_step = len(episode_memory) - 1
-        agent_idx = st.number_input("Select Agent Index for Traceback", min_value=0, max_value=len(mas.agents)-1, value=0, step=1, key="trace_agent_idx")
-        step_idx = st.number_input("Select Step for Traceback", min_value=0, max_value=max_step if max_step >= 0 else 0, value=0, step=1, key="trace_step_idx")
-        if episode_memory and 0 <= step_idx <= max_step:
-            agent_data = next((item for item in episode_memory[step_idx] if item["agent"] == agent_idx), None)
-            if agent_data:
-                st.json(agent_data)
-            else:
-                st.info(f"No data for Agent {agent_idx} at Step {step_idx}.")
+                st.info(f"(NetworkX/Matplotlib required for group visualization) {e}")
         else:
             st.info("No episode memory available yet.")
-
         st.subheader("Interactive Scenario Playback")
+        episode_memory = st.session_state.get("episode_memory", [])
         if episode_memory:
             # Playback controls
             playback_step = st.number_input("Playback Step", min_value=0, max_value=max_step if max_step >= 0 else 0, value=0, step=1, key="playback_step")
@@ -334,33 +334,32 @@ def main():
             )
         else:
             st.info("No episode memory available yet.")
-                for t in type_counts:
-                    if t in entry:
-                        type_counts[t] += 1
-            st.write("**Intervention Counts by Type:**", type_counts)
-            # Analytics: interventions over time
-{{ ... }}
-                df_log['time'] = pd.to_datetime(df_log['time'])
-                df_log = df_log.sort_values('time')
-                df_log['count'] = 1
-                df_log['cumulative'] = df_log['count'].cumsum()
-                plt.figure(figsize=(6,3))
-                plt.plot(df_log['time'], df_log['cumulative'], marker='o')
-                plt.xlabel('Time')
-                plt.ylabel('Cumulative Interventions')
-                plt.title('Interventions Over Time')
-                st.pyplot(plt)
-        else:
-            st.info("No interventions have been logged yet.")
         # --- SOM Grouping Section ---
         st.markdown("---")
         st.header("Dynamic Agent Grouping (SOM)")
         if st.button("Re-cluster Agents using SOM"):
             som_group_agents()
-        # Show agent positions and group assignments if available
         agents = st.session_state.get("agents", [])
-        mas = st.session_state.get("multiagent_system")
-        som = None
+        som = getattr(mas, 'last_som', None) if mas and hasattr(mas, 'last_som') else None
+        if agents and mas:
+            positions = [getattr(agent, 'position', None) for agent in agents]
+            render_agent_positions(positions, agents)
+            render_group_modules(mas.group_modules)
+            # Show group-level knowledge if enabled
+            if enable_group_knowledge or share_now:
+                render_group_knowledge(mas)
+            # --- SOM Grid Visualization ---
+            try:
+                if som is not None:
+                    render_som_grid_with_agents(mas, som)
+            except Exception as e:
+                st.info(f"SOM grid visualization unavailable: {e}")
+            # --- Group Analytics ---
+            try:
+                reward_history = getattr(st.session_state.get('simulation', None), 'reward_history', None)
+                render_group_analytics(mas, reward_history=reward_history)
+            except Exception as e:
+                st.info(f"Group analytics unavailable: {e}")
         if hasattr(mas, 'last_som'):
             som = mas.last_som
         if agents and mas:

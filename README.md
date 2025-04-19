@@ -95,6 +95,16 @@ sudo docker run -p 8501:8501 neuro-fuzzy-multiagent
 
 ---
 
+## Running Tests
+
+To run all tests (requires pytest):
+
+```sh
+pytest tests/
+```
+
+All dashboard and core functions are covered by the test suite. If you encounter any errors, see the test output for details and troubleshooting.
+
 ## Example Usage
 ```python
 from core.agent import Agent
@@ -120,12 +130,6 @@ except LawViolation as e:
 # Share knowledge (public)
 knowledge = {'rule': 'IF x > 0 THEN y = 1', 'privacy': 'public'}
 agents[0].share_knowledge(knowledge, system=system)
-```
-
-## Running Tests
-To run all tests:
-```sh
-PYTHONPATH=src pytest --disable-warnings -q
 ```
 
 ## Extensibility

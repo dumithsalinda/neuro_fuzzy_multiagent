@@ -29,7 +29,7 @@ class MultiAgentSystem:
                 continue
             # Simple average if possible, else copy leader's knowledge
             if mode == 'average' and isinstance(knowledge_list[0], (np.ndarray, list)):
-                avg_knowledge = np.mean(knowledge_list, axis=0)
+                avg_knowledge = np.mean(knowledge_list, axis=0) if len(knowledge_list) > 0 else knowledge_list
                 for idx in members:
                     self.agents[idx].integrate_online_knowledge(avg_knowledge)
             elif mode == 'copy_leader':
@@ -261,7 +261,11 @@ class MultiAgentSystem:
             # Assume actions are 1D discrete values
             from scipy.stats import mode
 
-            result = mode(np.array(actions), axis=0).mode[0]
+            mode_result = mode(np.array(actions), axis=0, keepdims=False).mode
+            if isinstance(mode_result, np.ndarray):
+                result = mode_result[0] if mode_result.size > 0 else None
+            else:
+                result = mode_result
         elif method == "custom":
             if custom_fn is None:
                 raise ValueError("custom_fn must be provided for custom aggregation.")
