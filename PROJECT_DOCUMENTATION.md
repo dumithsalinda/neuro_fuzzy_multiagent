@@ -1,0 +1,151 @@
+# Neuro-Fuzzy Multi-Agent System: Project Documentation
+
+## 1. Project Overview
+
+This project is a modular framework for designing, training, and deploying **neuro-fuzzy multi-agent systems**. It integrates neural networks, fuzzy logic, and human feedback to enable robust, explainable, and collaborative AI agents. The system supports multi-modal input (vision, audio, text, sensors), distributed/cloud execution, real-time dashboard visualization, and advanced robustness/safety features.
+
+---
+
+## 2. Directory Structure & Key Components
+
+```
+neuro_fuzzy_multiagent/
+├── core/                # Legacy core logic (minimal, now superseded by src/core)
+├── dashboard/           # Streamlit dashboard UI and supporting modules
+├── examples/            # Example/demo scripts for various use-cases
+├── internet_learning/   # Modules for web/video knowledge integration
+├── models/              # (Empty) Placeholder for model files
+├── multiagent/          # Collaboration and environment logic
+├── src/                 # Main source code: agents, fuzzy logic, envs, etc.
+│   └── core/            # Core neuro-fuzzy agent, system, wrappers
+├── tests/               # Comprehensive test suite for all modules
+├── README.md            # Project overview and quickstart
+├── ROADMAP.md           # Development roadmap and milestones
+├── requirements.txt     # Python dependencies
+├── Dockerfile           # Containerization support
+├── ...                  # Utility scripts and configs
+```
+
+---
+
+## 3. Main Modules & Their Roles
+
+### A. src/core/
+- **neuro_fuzzy_fusion_agent.py:**  Implements the NeuroFuzzyFusionAgent, combining neural and fuzzy logic for multi-modal input and decision-making.
+- **fuzzy_system.py:**  Fuzzy inference system, supporting immutable core rules, append-only dynamic rules, and human-in-the-loop updates.
+- **robustness_wrappers.py:**  Observation noise, action perturbation, and runtime safety monitoring wrappers for robustness and safety.
+- **Other files:**  Utilities for federated aggregation, fuzzy logic primitives, etc.
+
+### B. dashboard/
+- **main.py:**  The entry-point for the Streamlit dashboard. Provides agent selection, simulation, analytics, chat, and experiment control.
+- **visualization.py:**  Visualizations for agent positions, SOM grids, group analytics, and knowledge.
+- **simulation.py:**  Batch/parallel experiment logic, simulation step execution, and group clustering.
+- **chat.py:**  Human-agent chat interface, feedback, and explainability.
+- **collab.py, google_sheets.py:**  Collaboration features, experiment sharing, and Google Sheets integration.
+- **sidebar.py, layout.py, intervention.py:**  UI controls and layout helpers.
+
+### C. examples/
+- Contains ready-to-run demo scripts for agent learning, multiagent RL, transfer learning, and simulation.
+
+### D. tests/
+- Extensive test suite covering all major modules, agent behaviors, dashboard features, and robustness.
+
+### E. Other Directories
+- **internet_learning/**: Integrates web/video knowledge for agent learning.
+- **multiagent/**: Collaboration and environment abstractions.
+
+---
+
+## 4. Key Workflows
+
+### A. Agent Setup & Training
+- Agents are instantiated via the dashboard or scripts.
+- Supports multi-modal input (vision, audio, text, etc.).
+- Training can be neural (deep RL), fuzzy (rule-based), or neuro-fuzzy (fusion).
+- Human feedback can add/adjust fuzzy rules (dynamic, never overwriting core rules).
+
+### B. Dashboard Usage
+- Streamlit-based UI for:
+  - Agent selection and configuration
+  - Real-time simulation and visualization (positions, groups, SOM grid)
+  - Batch/parallel experiments with analytics and downloads
+  - Human-agent chat, feedback, and explainability
+  - Intervention logging and knowledge sharing
+
+### C. Robustness & Safety
+- Wrappers for adding noise/adversarial perturbations to observations/actions.
+- Runtime safety monitoring with constraint violation logging.
+- Dashboard toggles and analytics for robustness features.
+
+### D. Distributed/Cloud Execution
+- Ray-based scripts and configs for scaling agents across clusters.
+- Dockerfile and deployment scripts for reproducibility.
+
+---
+
+## 5. Dependencies & Running the Project
+
+- **Python 3.8+** (see `requirements.txt`)
+- **Major dependencies:**  `numpy`, `torch`, `streamlit`, `matplotlib`, `seaborn`, `pandas`, `gspread`, `pytest`, `networkx`, `scikit-learn`, etc.
+- **To run the dashboard:**
+  ```sh
+  pip install -r requirements.txt
+  streamlit run dashboard/main.py
+  ```
+- **To run tests:**
+  ```sh
+  pytest
+  ```
+- **To run examples:**
+  ```sh
+  python examples/demo_multiagent_rl.py
+  ```
+
+---
+
+## 6. Extensibility & Customization
+
+- **Agents:**  Add new agent types in `src/core/`, register in dashboard.
+- **Fuzzy Rules:**  Extend fuzzy logic and rule management in `fuzzy_system.py`.
+- **Human Feedback:**  Customize chat and feedback parsing in `dashboard/chat.py`.
+- **Robustness:**  Add new wrappers in `robustness_wrappers.py`.
+- **Distributed Execution:**  Modify Ray configs and scripts as needed.
+- **Visualization:**  Add new analytics/plots in `dashboard/visualization.py`.
+
+---
+
+## 7. Testing & CI
+
+- All modules and features are covered by tests in `tests/`.
+- Tests include agent logic, dashboard flows, robustness, and integration.
+- Use `pytest` for local testing and CI/CD pipelines.
+
+---
+
+## 8. Roadmap & Future Work
+
+- See `ROADMAP.md` for planned features:
+  - Advanced multi-modal fusion
+  - Cloud scaling and distributed learning
+  - Enhanced human-agent collaboration
+  - Real-world integration and deployment
+  - More robust and explainable AI features
+
+---
+
+## Appendix: Key Files (Quick Reference)
+
+| Path                                 | Purpose/Description                                 |
+|---------------------------------------|-----------------------------------------------------|
+| src/core/neuro_fuzzy_fusion_agent.py  | Main neuro-fuzzy agent logic                        |
+| src/core/fuzzy_system.py              | Fuzzy inference and rule management                 |
+| src/core/robustness_wrappers.py       | Robustness and safety wrappers                      |
+| dashboard/main.py                     | Streamlit dashboard entry point                     |
+| dashboard/visualization.py            | Agent/group/SOM visualizations                      |
+| dashboard/simulation.py               | Simulation and experiment logic                     |
+| dashboard/chat.py                     | Human-agent chat and feedback                       |
+| examples/                             | Example/demo scripts                                |
+| tests/                                | Test suite                                          |
+| requirements.txt                      | Python dependencies                                 |
+| Dockerfile                            | Containerization                                    |
+| ROADMAP.md                            | Project roadmap and milestones                      |
