@@ -10,11 +10,14 @@ from .neuro_fuzzy import NeuroFuzzyHybrid
 from .laws import enforce_laws
 from .online_learning import OnlineLearnerMixin
 
+from .universal_fuzzy_layer import UniversalFuzzyLayer
+
 class Agent(OnlineLearnerMixin):
     """
     Generic agent that interacts with an environment using a model and policy.
     Now supports online learning from web resources.
     Supports dynamic group membership for self-organization.
+    Supports plug-and-play fuzzy logic via UniversalFuzzyLayer.
     """
     def __init__(self, model, policy=None, bus=None, group=None):
         self.model = model
@@ -26,8 +29,53 @@ class Agent(OnlineLearnerMixin):
         self.last_message = None
         self.group = group  # Group identifier, None if not in a group
         self.bus = bus
+        self._fuzzy_layer = None
         if self.bus is not None:
             self.bus.register(self, group=group)
+
+    # --- Universal Fuzzy Layer Plug-and-Play ---
+    def attach_fuzzy_layer(self, fuzzy_layer):
+        """Attach a UniversalFuzzyLayer to this agent."""
+        assert isinstance(fuzzy_layer, UniversalFuzzyLayer)
+        self._fuzzy_layer = fuzzy_layer
+
+    def detach_fuzzy_layer(self):
+        """Detach the fuzzy layer from this agent."""
+        self._fuzzy_layer = None
+
+    def has_fuzzy_layer(self):
+        """Return True if a fuzzy layer is attached."""
+        return self._fuzzy_layer is not None
+
+    def fuzzy_evaluate(self, x):
+        """Evaluate the fuzzy layer on input x (if attached)."""
+        if self._fuzzy_layer:
+            return self._fuzzy_layer.evaluate(x)
+        raise AttributeError("No fuzzy layer attached.")
+
+    def fuzzy_explain(self, x):
+        """Explain the fuzzy inference for input x (if attached)."""
+        if self._fuzzy_layer:
+            return self._fuzzy_layer.explain(x)
+        raise AttributeError("No fuzzy layer attached.")
+
+    def fuzzy_add_rule(self, antecedents, consequent, as_core=False):
+        """Add a fuzzy rule to the agent's fuzzy layer (if attached)."""
+        if self._fuzzy_layer:
+            return self._fuzzy_layer.add_rule(antecedents, consequent, as_core=as_core)
+        raise AttributeError("No fuzzy layer attached.")
+
+    def fuzzy_prune_rule(self, rule_idx, from_core=False):
+        """Remove a fuzzy rule by index from the agent's fuzzy layer (if attached)."""
+        if self._fuzzy_layer:
+            return self._fuzzy_layer.prune_rule(rule_idx, from_core=from_core)
+        raise AttributeError("No fuzzy layer attached.")
+
+    def fuzzy_list_rules(self):
+        """Return a summary of all fuzzy rules in the agent's fuzzy layer (if attached)."""
+        if self._fuzzy_layer:
+            return self._fuzzy_layer.list_rules()
+        raise AttributeError("No fuzzy layer attached.")
 
     def share_knowledge(self):
         """
