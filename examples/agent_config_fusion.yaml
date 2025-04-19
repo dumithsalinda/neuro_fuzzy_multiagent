@@ -1,0 +1,8 @@
+agent_type: NeuroFuzzyFusionAgent
+input_dims: [8, 4]
+hidden_dim: 16
+output_dim: 3
+fusion_type: concat
+fuzzy_config: null
+fusion_alpha: 0.7
+device: cpu

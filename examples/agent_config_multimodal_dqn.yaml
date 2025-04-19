@@ -1,0 +1,6 @@
+agent_type: MultiModalDQNAgent
+input_dims: [16, 8]
+action_dim: 5
+alpha: 0.001
+gamma: 0.99
+epsilon: 0.15

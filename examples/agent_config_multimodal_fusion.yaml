@@ -1,0 +1,7 @@
+agent_type: MultiModalFusionAgent
+input_dims: [12, 6]
+hidden_dim: 32
+output_dim: 4
+fusion_type: attention
+lr: 0.001
+gamma: 0.97

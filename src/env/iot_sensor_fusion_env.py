@@ -85,3 +85,7 @@ class IoTSensorFusionEnv(BaseEnvironment):
         # Stub for real sensor reading
         return 0.0
 
+    def _compute_reward(self):
+        # Placeholder: -1 per step per agent
+        return -1 * self.n_agents
+

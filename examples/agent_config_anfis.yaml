@@ -1,0 +1,7 @@
+agent_type: NeuroFuzzyANFISAgent
+input_dim: 6
+n_rules: 8
+lr: 0.01
+buffer_size: 200
+replay_enabled: true
+replay_batch: 16

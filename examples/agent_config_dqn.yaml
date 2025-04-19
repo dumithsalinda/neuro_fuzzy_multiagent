@@ -1,0 +1,6 @@
+agent_type: DQNAgent
+state_dim: 10
+action_dim: 4
+alpha: 0.001
+gamma: 0.98
+epsilon: 0.2
