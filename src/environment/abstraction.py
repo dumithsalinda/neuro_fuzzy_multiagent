@@ -10,20 +10,25 @@ These abstractions support transfer learning, feature extraction, and robust age
 """
 
 import numpy as np
+
 from src.env.base_env import BaseEnvironment
+
 
 class NoisyEnvironment(BaseEnvironment):
     """
     Environment with a random state vector plus Gaussian noise.
     Useful for simulating domain shift and testing transfer learning robustness.
     """
+
     def __init__(self, dim=3, noise_std=0.5):
         self.dim = dim
         self.noise_std = noise_std
         self.state = np.zeros(dim)
 
     def reset(self):
-        self.state = np.random.randn(self.dim) + np.random.normal(0, self.noise_std, self.dim)
+        self.state = np.random.randn(self.dim) + np.random.normal(
+            0, self.noise_std, self.dim
+        )
         return self.get_observation()
 
     def step(self, action):
@@ -55,11 +60,13 @@ class NoisyEnvironment(BaseEnvironment):
             state = self.state
         return np.array(state)
 
+
 class SimpleEnvironment(BaseEnvironment):
     """
     A simple toy environment with a random state vector.
     Useful for basic testing or as a source domain for transfer learning.
     """
+
     def __init__(self, dim=3):
         self.dim = dim
         self.state = np.zeros(dim)
@@ -108,6 +115,7 @@ class SimpleEnvironment(BaseEnvironment):
     noise_std : float
         Standard deviation of the Gaussian noise added to the state.
     """
+
     def __init__(self, dim=3, noise_std=0.5):
         """
         Initialize a NoisyEnvironment.
@@ -122,6 +130,7 @@ class SimpleEnvironment(BaseEnvironment):
         self.dim = dim
         self.noise_std = noise_std
         self.state = np.zeros(dim)
+
     def reset(self):
         """
         Reset the environment state with Gaussian noise.
@@ -131,8 +140,11 @@ class SimpleEnvironment(BaseEnvironment):
         np.ndarray
             The new noisy state vector.
         """
-        self.state = np.random.randn(self.dim) + np.random.normal(0, self.noise_std, self.dim)
+        self.state = np.random.randn(self.dim) + np.random.normal(
+            0, self.noise_std, self.dim
+        )
         return self.state
+
     def step(self, action):
         """
         Apply an action and add Gaussian noise.
@@ -148,9 +160,11 @@ class SimpleEnvironment(BaseEnvironment):
         """
         self.state += action + np.random.normal(0, self.noise_std, self.dim)
         return self.state
+
     def perceive(self):
         """Return the current (noisy) state."""
         return self.state
+
     def extract_features(self, state=None):
         """
         Extract features from the state (identity mapping).
@@ -168,6 +182,7 @@ class SimpleEnvironment(BaseEnvironment):
             state = self.state
         return np.array(state)
 
+
 class SimpleEnvironment(BaseEnvironment):
     """
     A simple toy environment with a random state vector.
@@ -178,6 +193,7 @@ class SimpleEnvironment(BaseEnvironment):
     dim : int
         Dimensionality of the state vector.
     """
+
     def __init__(self, dim=3):
         """
         Initialize a SimpleEnvironment.
@@ -189,6 +205,7 @@ class SimpleEnvironment(BaseEnvironment):
         """
         self.dim = dim
         self.state = np.zeros(dim)
+
     def reset(self):
         """
         Reset the environment state to a random vector.

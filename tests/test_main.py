@@ -14,7 +14,6 @@ def test_main_authenticated_runs_dashboard():
     st.session_state.clear()
     st.session_state["authenticated"] = True
     with patch("dashboard.main.st", st), \
-         patch("dashboard.main.collaborative_experiments_panel"), \
          patch("dashboard.main.simulate_step"), \
          patch("dashboard.main.som_group_agents"), \
          patch("dashboard.main.run_batch_experiments", return_value=[]), \

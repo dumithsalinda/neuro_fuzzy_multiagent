@@ -4,6 +4,9 @@ validate_env.py
 Utility for validating that an environment class or instance implements the required BaseEnvironment API and behaves correctly.
 """
 import inspect
+import sys
+import os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
 from src.env.base_env import BaseEnvironment
 
 def validate_environment(env_cls_or_instance, verbose=True):

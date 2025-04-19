@@ -16,12 +16,13 @@ class EnvironmentFactory:
         return cls._registry[name](**kwargs)
 
 # Example registration (add others as needed)
-from .multiagent_gridworld_env import MultiAgentGridworldEnv
-from .multiagent_gridworld import MultiAgentGridworldEnv as MultiAgentGridworldEnv2
-from .simple_env import SimpleDiscreteEnv, SimpleContinuousEnv
-from .adversarial_gridworld import AdversarialGridworldEnv
-from .multiagent_resource import MultiAgentResourceEnv
-from .realworld_api_env import RealWorldAPIEnv
+from src.env.multiagent_gridworld_env import MultiAgentGridworldEnv
+from src.env.multiagent_gridworld import MultiAgentGridworldEnv as MultiAgentGridworldEnv2
+from src.env.simple_env import SimpleDiscreteEnv, SimpleContinuousEnv
+from src.env.adversarial_gridworld import AdversarialGridworldEnv
+from src.env.multiagent_resource import MultiAgentResourceEnv
+from src.env.realworld_api_env import RealWorldAPIEnv
+from src.env.iot_sensor_fusion_env import IoTSensorFusionEnv
 from src.environment.abstraction import NoisyEnvironment, SimpleEnvironment
 
 EnvironmentFactory.register("multiagent_gridworld", MultiAgentGridworldEnv)
@@ -31,5 +32,6 @@ EnvironmentFactory.register("simple_continuous", SimpleContinuousEnv)
 EnvironmentFactory.register("adversarial_gridworld", AdversarialGridworldEnv)
 EnvironmentFactory.register("multiagent_resource", MultiAgentResourceEnv)
 EnvironmentFactory.register("realworld_api", RealWorldAPIEnv)
+EnvironmentFactory.register("iot_sensor_fusion", IoTSensorFusionEnv)
 EnvironmentFactory.register("noisy", NoisyEnvironment)
 EnvironmentFactory.register("simple_abstract", SimpleEnvironment)
