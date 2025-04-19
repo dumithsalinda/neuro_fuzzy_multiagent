@@ -15,6 +15,66 @@ from .neural_network import FeedforwardNeuralNetwork
 from .fuzzy_system import FuzzyInferenceSystem
 
 class NeuroFuzzyHybrid:
+    def __init__(self, nn_config, fis_config=None):
+        self.nn = FeedforwardNeuralNetwork(**nn_config)
+        self.fis = FuzzyInferenceSystem()
+        self.mode = 'hybrid'  # 'neural', 'fuzzy', or 'hybrid'
+        self.hybrid_weight = 0.5  # Default: equal weighting
+        # Optionally generate rules if info provided
+        if fis_config is not None:
+            if all(k in fis_config for k in ('X', 'y', 'fuzzy_sets_per_input')):
+                self.fis.dynamic_rule_generation(
+                    fis_config['X'], fis_config['y'], fis_config['fuzzy_sets_per_input']
+                )
+
+    def set_mode(self, mode, hybrid_weight=None):
+        """
+        Set the inference mode. mode: 'neural', 'fuzzy', or 'hybrid'.
+        If 'hybrid', hybrid_weight sets the neural/fuzzy blend (0.0-1.0).
+        """
+        assert mode in ('neural', 'fuzzy', 'hybrid')
+        self.mode = mode
+        if hybrid_weight is not None:
+            assert 0.0 <= hybrid_weight <= 1.0
+            self.hybrid_weight = hybrid_weight
+
+    def get_mode(self):
+        """Return the current inference mode."""
+        return self.mode
+
+    def infer(self, x):
+        """
+        Inference according to the current mode.
+        - 'neural': direct NN(x)
+        - 'fuzzy': direct FIS(x)
+        - 'hybrid': weighted sum of NN(x) and FIS(x)
+        """
+        # Defensive: ensure mode and hybrid_weight always present
+        if not hasattr(self, 'mode'):
+            self.mode = 'hybrid'
+        if not hasattr(self, 'hybrid_weight'):
+            self.hybrid_weight = 0.5
+        if self.mode == 'neural':
+            return self.nn.forward(x)
+        elif self.mode == 'fuzzy':
+            return self.fis.evaluate(x)
+        elif self.mode == 'hybrid':
+            fuzzy_out = self.fis.evaluate(x)
+            nn_out = self.nn.forward(x)
+            # Ensure both are arrays for weighted sum
+            fuzzy_arr = np.asarray(fuzzy_out)
+            nn_arr = np.asarray(nn_out)
+            # Broadcast/reshape if needed
+            if fuzzy_arr.shape != nn_arr.shape:
+                if fuzzy_arr.size == 1:
+                    fuzzy_arr = np.full_like(nn_arr, fuzzy_arr)
+                elif nn_arr.size == 1:
+                    nn_arr = np.full_like(fuzzy_arr, nn_arr)
+            hybrid_weight = self.hybrid_weight
+            return hybrid_weight * nn_arr + (1 - hybrid_weight) * fuzzy_arr
+        else:
+            raise ValueError(f"Unknown mode: {self.mode}")
+
     def explain_action(self, x):
         # Fuzzy rule activations
         rule_activations = []
@@ -26,7 +86,6 @@ class NeuroFuzzyHybrid:
                 rule_activations.append(activation)
         # Neural net output
         nn_out = self.nn.forward(x)
-        # Chosen action (argmax of neural net output)
         import numpy as np
         action = int(np.argmax(nn_out)) if hasattr(nn_out, "__len__") and len(nn_out) > 1 else float(nn_out)
         return {
@@ -34,6 +93,12 @@ class NeuroFuzzyHybrid:
             "nn_output": nn_out.tolist() if hasattr(nn_out, "tolist") else nn_out,
             "chosen_action": action
         }
+
+    def forward(self, x):
+        """
+        Forward pass (default: uses current mode).
+        """
+        return self.infer(x)
 
     def add_rule(self, antecedents, consequent, as_core=False):
         """
@@ -122,32 +187,6 @@ class NeuroFuzzyHybrid:
             self.nn.backward(x, y, lr=lr)
         # Optionally update fuzzy rules in future
 
-    def forward(self, x):
-        """
-        Forward pass through fuzzy system and neural network.
-
-        Parameters
-        ----------
-        x : np.ndarray
-            Input feature vector.
-        Returns
-        -------
-        np.ndarray
-            Output of the neural network after fuzzy inference.
-        """
-        fuzzy_out = self.fis.evaluate(x)
-        # Ensure input to NN is 1D array
-        if np.isscalar(fuzzy_out):
-            fuzzy_out = np.array([fuzzy_out])
-        nn_out = self.nn.forward(fuzzy_out)
-        arr = np.asarray(nn_out)
-        if arr.shape == (1, 1):
-            return arr.flatten()
-        if arr.shape == (1,):
-            return arr
-        if arr.ndim == 0:
-            return arr.reshape(1)
-        return arr
 
 
     def backward(self, x, y, lr=0.01):

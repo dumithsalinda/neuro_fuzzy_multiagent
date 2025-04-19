@@ -240,12 +240,21 @@ class NeuroFuzzyAgent(Agent):
     """
     Agent that uses a NeuroFuzzyHybrid model to select actions.
     Supports modular self-organization of fuzzy rules, membership functions, and neural network weights.
+    Supports runtime mode switching between neural, fuzzy, and hybrid inference.
     """
     def __init__(self, nn_config, fis_config, policy=None):
         model = NeuroFuzzyHybrid(nn_config, fis_config)
         if policy is None:
             policy = lambda obs, model: model.forward(obs)
         super().__init__(model, policy)
+
+    def set_mode(self, mode, hybrid_weight=None):
+        """Set the inference mode for this agent's neuro-fuzzy model."""
+        self.model.set_mode(mode, hybrid_weight=hybrid_weight)
+
+    def get_mode(self):
+        """Get the current inference mode for this agent's neuro-fuzzy model."""
+        return self.model.get_mode()
 
     def self_organize(self, mutation_rate=0.01, tune_fuzzy=True, rule_change=True):
         """
