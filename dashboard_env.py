@@ -115,6 +115,19 @@ def initialize_env_and_agents(agent_type, agent_count, n_obstacles):
                         fusion_type=mm_fusion_type,
                     )
                 )
+            elif ag_type == "Neuro-Fuzzy Fusion":
+                from src.core.neuro_fuzzy_fusion_agent import NeuroFuzzyFusionAgent
+                # Example default: 2 modalities, hidden_dim=8, output_dim=4, fusion_type='concat'
+                agents.append(
+                    NeuroFuzzyFusionAgent(
+                        input_dims=[4, 4],
+                        hidden_dim=8,
+                        output_dim=4,
+                        fusion_type='concat',
+                        fuzzy_config=None,
+                        fusion_alpha=0.5
+                    )
+                )
             else:
                 agents.append(
                     TabularQLearningAgent(

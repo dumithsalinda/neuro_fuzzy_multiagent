@@ -4,7 +4,7 @@ def render_sidebar():
     st.sidebar.title("Environment & Agent Controls")
     agent_type = st.sidebar.selectbox(
         "Agent Type",
-        ["Tabular Q-Learning", "DQN RL", "Neuro-Fuzzy", "ANFIS Agent"],
+        ["Tabular Q-Learning", "DQN RL", "Neuro-Fuzzy", "Neuro-Fuzzy Fusion", "ANFIS Agent"],
         index=0,
     )
     agent_count = st.sidebar.slider("Number of Agents", 1, 10, 3)

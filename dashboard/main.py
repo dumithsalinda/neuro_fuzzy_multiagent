@@ -28,73 +28,98 @@ def main():
         enable_group_knowledge = st.sidebar.checkbox("Enable Group Knowledge Sharing", value=False, key="enable_group_knowledge")
         collective_mode = st.sidebar.selectbox("Collective Action Mode", ["individual", "leader", "vote"], index=0, key="collective_mode")
         share_now = st.sidebar.button("Share Group Knowledge Now")
-        st.session_state["enable_group_knowledge"] = enable_group_knowledge
-        st.session_state["collective_mode"] = collective_mode
+        # st.session_state["enable_group_knowledge"] = enable_group_knowledge  # Removed to fix StreamlitAPIException
+        # st.session_state["collective_mode"] = collective_mode  # Removed to fix StreamlitAPIException
         # --- Distributed Execution Control ---
         distributed_execution = st.sidebar.checkbox("Distributed Agent Execution", value=False, key="distributed_execution")
-        st.session_state["distributed_execution"] = distributed_execution
-        # --- Simulation Controls ---
-        st.markdown("---")
-        st.header("Simulation Controls")
-        # Batch controls
-        n_steps = st.number_input("Steps to Run", min_value=1, max_value=1000, value=10, step=1, key="n_steps")
-        run_n_steps = st.button("Run N Steps")
-        auto_run = st.checkbox("Auto-Run Simulation", value=False, key="auto_run")
-        pause_run = st.button("Pause Auto-Run")
-        # --- Batch/Parallel Experiment Controls ---
-        st.markdown("---")
-        st.header("Batch/Parallel Experiments")
-        n_experiments = st.number_input("Number of Experiments", min_value=1, max_value=100, value=5, step=1, key="n_experiments")
-        agent_counts = st.text_input("Agent Counts (comma-separated)", value="10,50,100", key="batch_agent_counts")
-        seeds = st.text_input("Seeds (comma-separated)", value="42,43,44,45,46", key="batch_seeds")
-        fast_mode = st.checkbox("Fast Mode (Optimize for Large Scale, Minimal UI)", value=True, key="fast_mode")
-        run_batch = st.button("Run Batch Experiments")
-        batch_results = st.session_state.get("batch_results", None)
-        if run_batch:
-            agent_counts_list = [int(x.strip()) for x in agent_counts.split(",") if x.strip().isdigit()]
-            seeds_list = [int(x.strip()) for x in seeds.split(",") if x.strip().isdigit()]
-            st.session_state["batch_results"] = run_batch_experiments(n_experiments, agent_counts_list, seeds_list, n_steps, fast_mode)
-            st.success("Batch experiments completed.")
-            batch_results = st.session_state["batch_results"]
-        if batch_results:
-            import pandas as pd
-            import json
-            st.subheader("Batch Results Table")
-            df_batch = pd.DataFrame(batch_results)
-            st.dataframe(df_batch)
-            st.download_button(
-                label="Download Batch Results as CSV",
-                data=df_batch.to_csv(index=False),
-                file_name="batch_results.csv",
-                mime="text/csv"
-            )
-            st.download_button(
-                label="Download Batch Results as JSON",
-                data=json.dumps(batch_results, indent=2),
-                file_name="batch_results.json",
-                mime="application/json"
-            )
-            # Advanced analytics/visualization
-            st.subheader("Batch Analytics & Visualization")
-            if "mean_reward" in df_batch.columns:
-                st.line_chart(df_batch.set_index("experiment")["mean_reward"])
-            if "max_reward" in df_batch.columns:
-                st.line_chart(df_batch.set_index("experiment")["max_reward"])
-            # Advanced metrics
-            st.markdown("**Advanced Metrics**")
-            if "diversity" in df_batch.columns:
-                st.line_chart(df_batch.set_index("experiment")["diversity"])
-            if "group_stability" in df_batch.columns:
-                st.line_chart(df_batch.set_index("experiment")["group_stability"])
+        # st.session_state["distributed_execution"] = distributed_execution  # Removed to fix StreamlitAPIException
+
+        tab_names = ["Simulation", "Batch Experiments", "Analytics", "Agent Chat"]
+        tabs = st.tabs(tab_names)
+
+        with tabs[0]:
+            st.header("Simulation Controls")
+            n_steps = st.number_input("Steps to Run", min_value=1, max_value=1000, value=10, step=1, key="n_steps")
+            run_n_steps = st.button("Run N Steps")
+            auto_run = st.checkbox("Auto-Run Simulation", value=False, key="auto_run")
+            pause_run = st.button("Pause Auto-Run")
+            # Place simulation logic and visualization here
+            # Example: render_agent_positions, simulate_step, etc.
+            # (Add your simulation panel code here)
+
+        with tabs[1]:
+            st.header("Batch/Parallel Experiments")
+            n_experiments = st.number_input("Number of Experiments", min_value=1, max_value=100, value=5, step=1, key="n_experiments")
+            agent_counts = st.text_input("Agent Counts (comma-separated)", value="10,50,100", key="batch_agent_counts")
+            seeds = st.text_input("Seeds (comma-separated)", value="42,43,44,45,46", key="batch_seeds")
+            fast_mode = st.checkbox("Fast Mode (Optimize for Large Scale, Minimal UI)", value=True, key="fast_mode")
+            run_batch = st.button("Run Batch Experiments")
+            batch_results = st.session_state.get("batch_results", None)
+            if run_batch:
+                agent_counts_list = [int(x.strip()) for x in agent_counts.split(",") if x.strip().isdigit()]
+                seeds_list = [int(x.strip()) for x in seeds.split(",") if x.strip().isdigit()]
+                st.session_state["batch_results"] = run_batch_experiments(n_experiments, agent_counts_list, seeds_list, n_steps, fast_mode)
+                st.success("Batch experiments completed.")
+                batch_results = st.session_state["batch_results"]
+            if batch_results:
+                import pandas as pd
+                import json
+                st.subheader("Batch Results Table")
+                df_batch = pd.DataFrame(batch_results)
+                st.dataframe(df_batch)
+                st.download_button(
+                    label="Download Batch Results as CSV",
+                    data=df_batch.to_csv(index=False),
+                    file_name="batch_results.csv",
+                    mime="text/csv"
+                )
+                st.download_button(
+                    label="Download Batch Results as JSON",
+                    data=json.dumps(batch_results, indent=2),
+                    file_name="batch_results.json",
+                    mime="application/json"
+                )
+
+        with tabs[2]:
+            st.header("Analytics")
+            # Place analytics/visualization code here
+            # Example: batch analytics, charts, render_group_modules, etc.
+            # (Add your analytics panel code here)
+            batch_results = st.session_state.get("batch_results", None)
+            if batch_results:
+                import pandas as pd
+                df_batch = pd.DataFrame(batch_results)
+                if "max_reward" in df_batch.columns and "experiment" in df_batch.columns:
+                    st.line_chart(df_batch.set_index("experiment")["max_reward"])
+                if "diversity" in df_batch.columns and "experiment" in df_batch.columns:
+                    st.line_chart(df_batch.set_index("experiment")["diversity"])
+                if "group_stability" in df_batch.columns and "experiment" in df_batch.columns:
+                    st.line_chart(df_batch.set_index("experiment")["group_stability"])
+                # Advanced metrics
+                st.markdown("**Advanced Metrics**")
             if "intervention_count" in df_batch.columns:
                 st.bar_chart(df_batch.set_index("experiment")["intervention_count"])
             # Export advanced analytics
-            st.download_button(
-                label="Download Advanced Analytics (CSV)",
-                data=df_batch.to_csv(index=False),
-                file_name="batch_advanced_analytics.csv",
-                mime="text/csv"
-            )
+            if batch_results is not None:
+                st.download_button(
+                    label="Download Advanced Analytics (CSV)",
+                    data=df_batch.to_csv(index=False),
+                    file_name="batch_advanced_analytics.csv",
+                    mime="text/csv"
+                )
+
+        # --- Agent Chat Tab ---
+        with tabs[3]:
+            st.header("Agent Chat (Human-Agent Collaboration)")
+            from dashboard.chat import chat_panel
+            from src.core.neuro_fuzzy_fusion_agent import NeuroFuzzyFusionAgent
+            # Use session or create a demo agent
+            if "agent_chat_agent" not in st.session_state:
+                st.session_state.agent_chat_agent = NeuroFuzzyFusionAgent(
+                    input_dims=[4, 3], hidden_dim=16, output_dim=5, fusion_type='concat', fusion_alpha=0.6
+                )
+            chat_panel(st.session_state.agent_chat_agent)
+
         # Simulation progress/status
         st.write(f"Current Step: {st.session_state.get('step', 0)}")
         st.write(f"Simulation Running: {'Yes' if st.session_state.get('sim_running', False) else 'No'}")
