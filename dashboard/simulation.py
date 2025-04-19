@@ -44,10 +44,17 @@ def simulate_step():
     # Collective action selection
     collective_mode = st.session_state.get("collective_mode", "individual")
     actions = []
+    agent_rules = []
     if collective_mode == "individual":
-        actions = [agent.act(o) for agent, o in zip(agents, obs)]
+        for agent, o in zip(agents, obs):
+            action = agent.act(o)
+            actions.append(action)
+            # Try to get rule/attention info if available
+            rule = getattr(agent, "last_rule", None)
+            agent_rules.append(rule)
     else:
         actions = mas.collective_action_selection(obs, mode=collective_mode)
+        agent_rules = [None] * len(agents)
     # Apply actions to environment (example, adapt as needed)
     env = st.session_state.get("env")
     if env is not None:
@@ -58,6 +65,20 @@ def simulate_step():
         for i, agent in enumerate(agents):
             agent.observe(rewards[i])
     st.session_state["step"] = st.session_state.get("step", 0) + 1
+    # --- Episode memory recording ---
+    if "episode_memory" not in st.session_state:
+        st.session_state["episode_memory"] = []
+    step_data = []
+    for i, agent in enumerate(agents):
+        step_data.append({
+            "agent": i,
+            "obs": obs[i],
+            "action": actions[i],
+            "reward": st.session_state.get("rewards", [None]*len(agents))[i],
+            "group": getattr(agent, "group", None),
+            "rule": agent_rules[i],
+        })
+    st.session_state["episode_memory"].append(step_data)
 
 def run_batch_experiments(n_experiments, agent_counts_list, seeds_list, n_steps, fast_mode=True):
     """

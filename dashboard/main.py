@@ -286,19 +286,60 @@ def main():
             except Exception as e:
                 st.info("(NetworkX/Matplotlib required for group visualization)")
             st.subheader("Action & State Traceback")
-            agent_idx = st.number_input("Select Agent Index for Traceback", min_value=0, max_value=len(mas.agents)-1, value=0, step=1, key="trace_agent_idx")
-            step_idx = st.number_input("Select Step for Traceback", min_value=0, max_value=st.session_state.get('step', 0)-1, value=0, step=1, key="trace_step_idx")
-            # Placeholder: Show last action, rule, and group for agent at step
-            st.info(f"Traceback for Agent {agent_idx} at Step {step_idx} (implement episode memory for full trace)")
-            # If you store episode memory, fetch and show: action, rule, observation, group, etc.
-        st.subheader("Interactive Scenario Playback (Coming Soon)")
-        st.info("Scenario playback and step-by-step episode inspection will be available here.")
+        episode_memory = st.session_state.get("episode_memory", [])
+        max_step = len(episode_memory) - 1
+        agent_idx = st.number_input("Select Agent Index for Traceback", min_value=0, max_value=len(mas.agents)-1, value=0, step=1, key="trace_agent_idx")
+        step_idx = st.number_input("Select Step for Traceback", min_value=0, max_value=max_step if max_step >= 0 else 0, value=0, step=1, key="trace_step_idx")
+        if episode_memory and 0 <= step_idx <= max_step:
+            agent_data = next((item for item in episode_memory[step_idx] if item["agent"] == agent_idx), None)
+            if agent_data:
+                st.json(agent_data)
+            else:
+                st.info(f"No data for Agent {agent_idx} at Step {step_idx}.")
+        else:
+            st.info("No episode memory available yet.")
+
+        st.subheader("Interactive Scenario Playback")
+        if episode_memory:
+            # Playback controls
+            playback_step = st.number_input("Playback Step", min_value=0, max_value=max_step if max_step >= 0 else 0, value=0, step=1, key="playback_step")
+            col_play, col_pause, col_prev, col_next = st.columns(4)
+            if 'playback_running' not in st.session_state:
+                st.session_state['playback_running'] = False
+            if col_play.button("Play"):
+                st.session_state['playback_running'] = True
+            if col_pause.button("Pause"):
+                st.session_state['playback_running'] = False
+            if col_prev.button("Step Back") and playback_step > 0:
+                st.session_state['playback_step'] = playback_step - 1
+            if col_next.button("Step Forward") and playback_step < max_step:
+                st.session_state['playback_step'] = playback_step + 1
+            # Auto-playback logic
+            import time
+            if st.session_state.get('playback_running', False):
+                if playback_step < max_step:
+                    st.session_state['playback_step'] = playback_step + 1
+                    time.sleep(0.4)
+                    st.experimental_rerun()
+                else:
+                    st.session_state['playback_running'] = False
+            # Show all agent data at current playback step
+            st.write(f"Playback: Step {playback_step} / {max_step}")
+            st.json(episode_memory[playback_step])
+            st.download_button(
+                label="Download Episode Memory (JSON)",
+                data=json.dumps(episode_memory, indent=2),
+                file_name="episode_memory.json",
+                mime="application/json"
+            )
+        else:
+            st.info("No episode memory available yet.")
                 for t in type_counts:
                     if t in entry:
                         type_counts[t] += 1
             st.write("**Intervention Counts by Type:**", type_counts)
             # Analytics: interventions over time
-            if 'time' in df_log.columns:
+{{ ... }}
                 df_log['time'] = pd.to_datetime(df_log['time'])
                 df_log = df_log.sort_values('time')
                 df_log['count'] = 1
