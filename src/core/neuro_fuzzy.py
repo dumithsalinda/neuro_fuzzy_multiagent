@@ -134,6 +134,50 @@ class NeuroFuzzyHybrid:
             summaries.append({"type": "dynamic", "index": i, "antecedents": rule.antecedents, "consequent": rule.consequent})
         return summaries
 
+    def evolve_rules(self, recent_inputs=None, min_avg_activation=0.01):
+        """
+        Prune dynamic fuzzy rules with average firing strength below threshold over recent_inputs.
+        Optionally, can add/tune rules in future.
+        """
+        if recent_inputs is None or len(self.fis.dynamic_rules) == 0:
+            return False
+        avg_activations = []
+        for rule in self.fis.dynamic_rules:
+            activations = []
+            for x in recent_inputs:
+                activation = 1.0
+                for i, fs in rule.antecedents:
+                    activation *= fs.membership(x[i])
+                activations.append(activation)
+            avg_activations.append(np.mean(activations))
+        # Prune rules below threshold
+        to_prune = [i for i, avg in enumerate(avg_activations) if avg < min_avg_activation]
+        # Prune in reverse order to keep indices valid
+        for idx in sorted(to_prune, reverse=True):
+            del self.fis.dynamic_rules[idx]
+        self.fis.rules = self.fis.core_rules + self.fis.dynamic_rules
+        return len(to_prune) > 0
+
+    def auto_switch_mode(self, error_history, thresholds=None):
+        """
+        Adaptively switch mode based on recent error history.
+        thresholds: dict with keys 'neural', 'fuzzy', 'hybrid' and float values.
+        If error is high in current mode, switch to another.
+        """
+        if thresholds is None:
+            thresholds = {'neural': 0.2, 'fuzzy': 0.2, 'hybrid': 0.15}
+        if not error_history or len(error_history) < 3:
+            return self.mode
+        avg_error = np.mean(error_history[-5:])
+        # Simple logic: if error too high in current mode, switch
+        if self.mode == 'neural' and avg_error > thresholds['neural']:
+            self.set_mode('hybrid')
+        elif self.mode == 'hybrid' and avg_error > thresholds['hybrid']:
+            self.set_mode('fuzzy')
+        elif self.mode == 'fuzzy' and avg_error > thresholds['fuzzy']:
+            self.set_mode('neural')
+        return self.mode
+
     def set_learning_rate(self, lr):
         """
         Set learning rate for the neural network and (if supported) the FIS.

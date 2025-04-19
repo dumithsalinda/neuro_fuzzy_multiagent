@@ -58,6 +58,34 @@ neuro_fuzzy_multiagent/
 
 ## 4. Key Workflows
 
+### Evolving Fuzzy Rule Bases & Adaptive Hybrid Learning
+
+The system supports dynamic evolution and adaptation of fuzzy rule bases, as well as automatic switching between neural, fuzzy, and hybrid inference modes for robust agent performance.
+
+#### 1. Evolving Fuzzy Rule Bases
+- Use `agent.evolve_rules(recent_inputs, min_avg_activation)` to prune dynamic fuzzy rules whose average firing strength (activation) on recent data falls below the specified threshold.
+- This maintains a compact, relevant, and adaptive fuzzy rule base for each agent.
+
+**Example:**
+```python
+# Prune weak rules using recent data
+recent_inputs = [np.array([0.1, 0.9]), np.array([0.2, 0.8]), ...]
+pruned = agent.evolve_rules(recent_inputs, min_avg_activation=0.05)
+```
+
+#### 2. Adaptive Hybrid Learning & Mode Switching
+- Use `agent.auto_switch_mode(error_history, thresholds)` to automatically switch the agent's inference mode based on recent error history.
+- The agent will switch between 'neural', 'fuzzy', and 'hybrid' modes to optimize performance and robustness.
+
+**Example:**
+```python
+# Switch mode if error is high
+error_history = [0.12, 0.11, 0.15, 0.18, 0.2]
+current_mode = agent.auto_switch_mode(error_history)
+```
+
+- Both features are available in the `NeuroFuzzyAgent` API, and can be integrated into training loops or experiment logic for self-organizing, adaptive agents.
+
 ### A. Agent Setup & Training
 - Agents are instantiated via the dashboard or scripts.
 - Supports multi-modal input (vision, audio, text, etc.).

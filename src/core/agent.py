@@ -256,6 +256,14 @@ class NeuroFuzzyAgent(Agent):
         """Get the current inference mode for this agent's neuro-fuzzy model."""
         return self.model.get_mode()
 
+    def evolve_rules(self, recent_inputs=None, min_avg_activation=0.01):
+        """Prune dynamic fuzzy rules with low average firing strength."""
+        return self.model.evolve_rules(recent_inputs=recent_inputs, min_avg_activation=min_avg_activation)
+
+    def auto_switch_mode(self, error_history, thresholds=None):
+        """Adaptively switch mode based on recent error history."""
+        return self.model.auto_switch_mode(error_history, thresholds=thresholds)
+
     def self_organize(self, mutation_rate=0.01, tune_fuzzy=True, rule_change=True):
         """
         Trigger self-organization in the underlying neuro-fuzzy hybrid model.
