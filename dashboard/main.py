@@ -243,28 +243,56 @@ def main():
         # --- Timeline & Analytics ---
         if intervention_log:
             # Timeline table
+            st.subheader("Intervention Timeline")
             df_log = pd.DataFrame(intervention_log)
             st.dataframe(df_log)
-            # --- Export buttons ---
-            st.markdown("**Export Intervention Log & Analytics**")
-            col_csv, col_json = st.columns(2)
-            with col_csv:
-                st.download_button(
-                    label="Download Log as CSV",
-                    data=df_log.to_csv(index=False),
-                    file_name="intervention_log.csv",
-                    mime="text/csv"
-                )
-            with col_json:
-                st.download_button(
-                    label="Download Log as JSON",
-                    data=json.dumps(intervention_log, indent=2),
-                    file_name="intervention_log.json",
-                    mime="application/json"
-                )
-            # Analytics: count by type
-            type_counts = {"override_action": 0, "move_group": 0, "edit_module": 0}
-            for entry in intervention_log:
+            # Analytics
+            st.subheader("Intervention Analytics")
+            intervention_types = df_log.apply(lambda row: list(row.keys())[2:], axis=1).explode().value_counts()
+            st.bar_chart(intervention_types)
+            # Cumulative interventions
+            df_log['timestamp'] = pd.to_datetime(df_log['time'])
+            df_log = df_log.sort_values('timestamp')
+            df_log['cumulative'] = range(1, len(df_log) + 1)
+            st.line_chart(df_log.set_index('timestamp')['cumulative'])
+            # Export options
+            st.download_button("Export Log as CSV", df_log.to_csv(index=False), "intervention_log.csv", "text/csv")
+            st.download_button("Export Log as JSON", df_log.to_json(orient="records", indent=2), "intervention_log.json", "application/json")
+
+        # --- Explainability & Visualization ---
+        st.markdown("---")
+        st.header("Explainability & Visualization")
+        mas = st.session_state.get("multiagent_system")
+        if mas:
+            st.subheader("Fuzzy Rules (per Group)")
+            import json
+            for group_id, module in mas.group_modules.items():
+                st.markdown(f"**Group {group_id} Rules:**")
+                st.json(module)
+            st.subheader("Group Structure & Dynamics")
+            try:
+                import networkx as nx
+                import matplotlib.pyplot as plt
+                G = nx.Graph()
+                for group_id, members in mas.groups.items():
+                    for agent in members:
+                        G.add_node(f"A{agent}", group=group_id)
+                        G.add_edge(f"G{group_id}", f"A{agent}")
+                    G.add_node(f"G{group_id}", group=group_id)
+                fig, ax = plt.subplots()
+                pos = nx.spring_layout(G)
+                nx.draw(G, pos, with_labels=True, node_color=[G.nodes[n].get('group', 0) for n in G.nodes], cmap=plt.cm.Set3, ax=ax)
+                st.pyplot(fig)
+            except Exception as e:
+                st.info("(NetworkX/Matplotlib required for group visualization)")
+            st.subheader("Action & State Traceback")
+            agent_idx = st.number_input("Select Agent Index for Traceback", min_value=0, max_value=len(mas.agents)-1, value=0, step=1, key="trace_agent_idx")
+            step_idx = st.number_input("Select Step for Traceback", min_value=0, max_value=st.session_state.get('step', 0)-1, value=0, step=1, key="trace_step_idx")
+            # Placeholder: Show last action, rule, and group for agent at step
+            st.info(f"Traceback for Agent {agent_idx} at Step {step_idx} (implement episode memory for full trace)")
+            # If you store episode memory, fetch and show: action, rule, observation, group, etc.
+        st.subheader("Interactive Scenario Playback (Coming Soon)")
+        st.info("Scenario playback and step-by-step episode inspection will be available here.")
                 for t in type_counts:
                     if t in entry:
                         type_counts[t] += 1
