@@ -44,6 +44,191 @@ def main():
             simulate_step()
             time.sleep(0.5)
             st.experimental_rerun()
+        # --- Human Intervention Panel ---
+        st.markdown("---")
+        st.header("Human Intervention & Override")
+        user_name = st.text_input("Your Name or Email (for attribution)", key="user_name")
+        agents = st.session_state.get("agents", [])
+        mas = st.session_state.get("multiagent_system")
+        if agents and mas:
+            import pandas as pd
+            import json
+            # Prepare agent info table
+            agent_data = []
+            for idx, agent in enumerate(agents):
+                agent_data.append({
+                    'Agent': idx,
+                    'Group': getattr(agent, 'group', None),
+                    'LastAction': getattr(agent, 'last_action', None),
+                })
+            df = pd.DataFrame(agent_data)
+            st.subheader("Batch Edit Agent Groups")
+            edited_df = st.data_editor(df, num_rows="dynamic", use_container_width=True, key="edit_agent_table")
+            if st.button("Apply Group Edits"):
+                for _, row in edited_df.iterrows():
+                    idx = int(row['Agent'])
+                    new_group = row['Group']
+                    if new_group != getattr(agents[idx], 'group', None):
+                        old_group = getattr(agents[idx], 'group', None)
+                        mas.leave_group(idx)
+                        mas.form_group(new_group, [idx])
+                        # Log
+                        log_entry = {"time": str(pd.Timestamp.now()), "agent": idx, "move_group": {"from": old_group, "to": new_group}, "user": user_name}
+                        if "intervention_log" not in st.session_state:
+                            st.session_state["intervention_log"] = []
+                        st.session_state["intervention_log"].append(log_entry)
+                st.success("Batch group edits applied.")
+            st.subheader("Override Agent Action or Group (Single)")
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                agent_idx = st.number_input("Agent Index", min_value=0, max_value=len(agents)-1, value=0, step=1, key="intervene_agent_idx")
+            with col2:
+                new_action = st.text_input("Override Action (optional)", key="intervene_action")
+            with col3:
+                new_group = st.text_input("Move to Group (optional)", key="intervene_group")
+            if st.button("Apply Intervention"):
+                log_entry = {"time": str(pd.Timestamp.now()), "agent": agent_idx, "user": user_name}
+                if new_action:
+                    agents[agent_idx].last_action = new_action
+                    log_entry["override_action"] = new_action
+                if new_group:
+                    old_group = getattr(agents[agent_idx], 'group', None)
+                    mas.leave_group(agent_idx)
+                    mas.form_group(new_group, [agent_idx])
+                    log_entry["move_group"] = {"from": old_group, "to": new_group}
+                # Log intervention
+                if "intervention_log" not in st.session_state:
+                    st.session_state["intervention_log"] = []
+                st.session_state["intervention_log"].append(log_entry)
+                st.success(f"Intervention applied to Agent {agent_idx}.")
+            # --- Group Module Editing ---
+            st.subheader("Edit Group Modules (Rules/Parameters)")
+            if mas.group_modules:
+                for group_id, module in mas.group_modules.items():
+                    st.markdown(f"**Group {group_id} Module:**")
+                    module_json = st.text_area(f"Edit Module for Group {group_id}", json.dumps(module, indent=2), key=f"edit_module_{group_id}")
+                    if st.button(f"Apply Module Edit to Group {group_id}", key=f"apply_module_{group_id}"):
+                        try:
+                            new_module = json.loads(module_json)
+                            mas.group_modules[group_id] = new_module
+                            log_entry = {"time": str(pd.Timestamp.now()), "group": group_id, "edit_module": True, "user": user_name}
+                            if "intervention_log" not in st.session_state:
+                                st.session_state["intervention_log"] = []
+                            st.session_state["intervention_log"].append(log_entry)
+                            st.success(f"Module for Group {group_id} updated.")
+                        except Exception as e:
+                            st.error(f"Invalid JSON: {e}")
+            # Display intervention log
+            st.subheader("Intervention Log")
+            if "intervention_log" in st.session_state and st.session_state["intervention_log"]:
+                st.json(st.session_state["intervention_log"])
+        # --- Intervention Timeline & Analytics ---
+        st.markdown("---")
+        st.header("Intervention Timeline & Analytics")
+        intervention_log = st.session_state.get("intervention_log", [])
+        import pandas as pd
+        import json
+        import matplotlib.pyplot as plt
+        # --- Google Sheets Integration Controls ---
+        st.markdown("**Google Sheets Collaboration**")
+        gsheet_key = st.file_uploader("Upload Google Service Account Key (JSON)", type=["json"], key="gsheet_key")
+        spreadsheet_id = st.text_input("Google Spreadsheet ID", key="gsheet_spreadsheet_id")
+        worksheet_name = st.text_input("Worksheet Name", value="Sheet1", key="gsheet_worksheet_name")
+        auto_sync = st.checkbox("Enable Auto-Sync with Google Sheets", value=False, key="gsheet_auto_sync")
+        sync_interval = st.number_input("Auto-Sync Interval (seconds)", min_value=5, max_value=600, value=60, step=5, key="gsheet_sync_interval")
+        col_sync1, col_sync2 = st.columns(2)
+        if gsheet_key is not None:
+            # Save uploaded key to a temp file
+            import tempfile
+            key_bytes = gsheet_key.read()
+            with tempfile.NamedTemporaryFile(delete=False, suffix=".json") as tmp:
+                tmp.write(key_bytes)
+                json_keyfile_path = tmp.name
+            from dashboard.google_sheets import get_gsheet_client, read_sheet_to_df, write_df_to_sheet
+            gc = get_gsheet_client(json_keyfile_path)
+            def merge_logs(local_log, remote_log):
+                # Merge by unique (time, agent, group, user) tuple
+                seen = set()
+                merged = []
+                for entry in local_log + remote_log:
+                    key = (entry.get('time'), entry.get('agent'), entry.get('group', None), entry.get('user', None))
+                    if key not in seen:
+                        merged.append(entry)
+                        seen.add(key)
+                merged.sort(key=lambda x: x.get('time', ''))
+                return merged
+            with col_sync1:
+                if st.button("Sync Log to Google Sheets"):
+                    if spreadsheet_id and worksheet_name:
+                        df_log = pd.DataFrame(intervention_log)
+                        write_df_to_sheet(gc, spreadsheet_id, worksheet_name, df_log)
+                        st.success("Log synced to Google Sheets!")
+            with col_sync2:
+                if st.button("Load Log from Google Sheets"):
+                    if spreadsheet_id and worksheet_name:
+                        df_gsheet = read_sheet_to_df(gc, spreadsheet_id, worksheet_name)
+                        # Merge logs
+                        merged_log = merge_logs(st.session_state.get("intervention_log", []), df_gsheet.to_dict(orient="records"))
+                        st.session_state["intervention_log"] = merged_log
+                        st.success("Log loaded and merged from Google Sheets!")
+            # --- Auto-sync logic ---
+            import time
+            if auto_sync and spreadsheet_id and worksheet_name:
+                last_sync = st.session_state.get("gsheet_last_sync", 0)
+                now = time.time()
+                if now - last_sync > sync_interval:
+                    # Pull remote log and merge
+                    df_gsheet = read_sheet_to_df(gc, spreadsheet_id, worksheet_name)
+                    merged_log = merge_logs(st.session_state.get("intervention_log", []), df_gsheet.to_dict(orient="records"))
+                    st.session_state["intervention_log"] = merged_log
+                    # Push merged log
+                    df_log = pd.DataFrame(st.session_state["intervention_log"])
+                    write_df_to_sheet(gc, spreadsheet_id, worksheet_name, df_log)
+                    st.session_state["gsheet_last_sync"] = now
+                    st.info("Auto-synced intervention log with Google Sheets.")
+        # --- Timeline & Analytics ---
+        if intervention_log:
+            # Timeline table
+            df_log = pd.DataFrame(intervention_log)
+            st.dataframe(df_log)
+            # --- Export buttons ---
+            st.markdown("**Export Intervention Log & Analytics**")
+            col_csv, col_json = st.columns(2)
+            with col_csv:
+                st.download_button(
+                    label="Download Log as CSV",
+                    data=df_log.to_csv(index=False),
+                    file_name="intervention_log.csv",
+                    mime="text/csv"
+                )
+            with col_json:
+                st.download_button(
+                    label="Download Log as JSON",
+                    data=json.dumps(intervention_log, indent=2),
+                    file_name="intervention_log.json",
+                    mime="application/json"
+                )
+            # Analytics: count by type
+            type_counts = {"override_action": 0, "move_group": 0, "edit_module": 0}
+            for entry in intervention_log:
+                for t in type_counts:
+                    if t in entry:
+                        type_counts[t] += 1
+            st.write("**Intervention Counts by Type:**", type_counts)
+            # Analytics: interventions over time
+            if 'time' in df_log.columns:
+                df_log['time'] = pd.to_datetime(df_log['time'])
+                df_log = df_log.sort_values('time')
+                df_log['count'] = 1
+                df_log['cumulative'] = df_log['count'].cumsum()
+                plt.figure(figsize=(6,3))
+                plt.plot(df_log['time'], df_log['cumulative'], marker='o')
+                plt.xlabel('Time')
+                plt.ylabel('Cumulative Interventions')
+                plt.title('Interventions Over Time')
+                st.pyplot(plt)
+        else:
+            st.info("No interventions have been logged yet.")
         # --- SOM Grouping Section ---
         st.markdown("---")
         st.header("Dynamic Agent Grouping (SOM)")

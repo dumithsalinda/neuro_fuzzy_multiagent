@@ -12,3 +12,5 @@ Pillow
 opencv-python
 pydrive2
 MiniSom
+gspread
+google-auth
