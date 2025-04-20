@@ -1,5 +1,6 @@
 import numpy as np
 
+
 class ANFISHybrid:
     """
     Minimal Adaptive Neuro-Fuzzy Inference System (ANFIS) hybrid model.
@@ -8,6 +9,7 @@ class ANFISHybrid:
     - Forward: computes fuzzy rule firing strengths, weighted sum for output
     - Dynamic: can add/prune rules based on usage and error
     """
+
     def __init__(self, input_dim, n_rules):
         self.input_dim = input_dim
         self.n_rules = n_rules
@@ -17,25 +19,29 @@ class ANFISHybrid:
         self.rule_weights = np.random.randn(n_rules)
         # For dynamic rule management
         self.firing_history = [[] for _ in range(n_rules)]  # recent firing strengths
-        self.error_history = [[] for _ in range(n_rules)]   # recent errors
+        self.error_history = [[] for _ in range(n_rules)]  # recent errors
         self.max_history = 50
 
     def membership(self, x, center, width):
         # Gaussian membership
-        return np.exp(-((x - center) ** 2) / (2 * width ** 2))
+        return np.exp(-((x - center) ** 2) / (2 * width**2))
 
     def forward(self, x):
         x = np.asarray(x)
         firing_strengths = np.ones(self.n_rules)
         for r in range(self.n_rules):
             for d in range(self.input_dim):
-                firing_strengths[r] *= self.membership(x[d], self.centers[r, d], self.widths[r, d])
+                firing_strengths[r] *= self.membership(
+                    x[d], self.centers[r, d], self.widths[r, d]
+                )
         # Store firing strengths for rule usage tracking
         self._last_firing_strengths = firing_strengths.copy()
         if firing_strengths.sum() == 0:
             output = 0.0
         else:
-            output = np.dot(firing_strengths, self.rule_weights) / firing_strengths.sum()
+            output = (
+                np.dot(firing_strengths, self.rule_weights) / firing_strengths.sum()
+            )
         return output
 
     def update(self, x, target, lr=0.01):
@@ -47,7 +53,9 @@ class ANFISHybrid:
         memberships = np.zeros((self.n_rules, self.input_dim))
         for r in range(self.n_rules):
             for d in range(self.input_dim):
-                memberships[r, d] = self.membership(x[d], self.centers[r, d], self.widths[r, d])
+                memberships[r, d] = self.membership(
+                    x[d], self.centers[r, d], self.widths[r, d]
+                )
                 firing_strengths[r] *= memberships[r, d]
         norm = firing_strengths.sum() if firing_strengths.sum() != 0 else 1.0
         grad = firing_strengths / norm
@@ -60,12 +68,30 @@ class ANFISHybrid:
                 w = self.widths[r, d]
                 # Partial derivative of output w.r.t. center
                 if firing_strengths[r] != 0:
-                    dmu_dc = mu * (x[d] - c) / (w ** 2)
-                    d_out_dc = (self.rule_weights[r] * (dmu_dc * firing_strengths[r] / mu) * norm - self.rule_weights @ firing_strengths * dmu_dc * firing_strengths[r] / (mu * norm)) / (norm ** 2)
+                    dmu_dc = mu * (x[d] - c) / (w**2)
+                    d_out_dc = (
+                        self.rule_weights[r]
+                        * (dmu_dc * firing_strengths[r] / mu)
+                        * norm
+                        - self.rule_weights
+                        @ firing_strengths
+                        * dmu_dc
+                        * firing_strengths[r]
+                        / (mu * norm)
+                    ) / (norm**2)
                     self.centers[r, d] += lr * error * d_out_dc
                     # Partial derivative of output w.r.t. width
-                    dmu_dw = mu * ((x[d] - c) ** 2) / (w ** 3)
-                    d_out_dw = (self.rule_weights[r] * (dmu_dw * firing_strengths[r] / mu) * norm - self.rule_weights @ firing_strengths * dmu_dw * firing_strengths[r] / (mu * norm)) / (norm ** 2)
+                    dmu_dw = mu * ((x[d] - c) ** 2) / (w**3)
+                    d_out_dw = (
+                        self.rule_weights[r]
+                        * (dmu_dw * firing_strengths[r] / mu)
+                        * norm
+                        - self.rule_weights
+                        @ firing_strengths
+                        * dmu_dw
+                        * firing_strengths[r]
+                        / (mu * norm)
+                    ) / (norm**2)
                     self.widths[r, d] += lr * error * d_out_dw
                     # Clamp widths to avoid collapse
                     self.widths[r, d] = max(self.widths[r, d], 1e-3)
@@ -112,12 +138,20 @@ class ANFISHybrid:
         width_arr = np.ones((1, self.input_dim)) * width
         self.add_rule(center, width_arr, weight)
 
-    def dynamic_rule_update(self, error_threshold=0.5, firing_threshold=1e-3, min_history=20):
+    def dynamic_rule_update(
+        self, error_threshold=0.5, firing_threshold=1e-3, min_history=20
+    ):
         # Prune underused rules
         self.prune_rules(threshold=firing_threshold, min_history=min_history)
         # Generate rule if recent error is high and no rule fires strongly
-        recent_errors = [np.mean(hist[-min_history:]) if len(hist) >= min_history else 0 for hist in self.error_history]
+        recent_errors = [
+            np.mean(hist[-min_history:]) if len(hist) >= min_history else 0
+            for hist in self.error_history
+        ]
         if len(recent_errors) > 0 and max(recent_errors) > error_threshold:
-            if hasattr(self, '_last_firing_strengths') and max(self._last_firing_strengths) < firing_threshold:
-                if hasattr(self, '_last_input'):
+            if (
+                hasattr(self, "_last_firing_strengths")
+                and max(self._last_firing_strengths) < firing_threshold
+            ):
+                if hasattr(self, "_last_input"):
                     self.generate_rule(self._last_input)

@@ -2,13 +2,23 @@ import torch
 import torch.nn as nn
 from .fusion import FusionNetwork
 
+
 class MultiModalFusionAgent:
     """
     Agent that accepts multiple modalities as input and uses a fusion network for policy/Q-value computation.
     Easily extensible: add new fusion strategies in FusionNetwork and update here.
     TODO: Add support for training (currently eval-only), more modalities, and advanced fusion methods (e.g., attention, gating).
     """
-    def __init__(self, input_dims, hidden_dim, output_dim, fusion_type='concat', lr=1e-3, gamma=0.99):
+
+    def __init__(
+        self,
+        input_dims,
+        hidden_dim,
+        output_dim,
+        fusion_type="concat",
+        lr=1e-3,
+        gamma=0.99,
+    ):
         """
         Args:
             input_dims (list[int]): List of input dimensions for each modality (e.g., [img_dim, txt_dim]).
@@ -18,7 +28,9 @@ class MultiModalFusionAgent:
             lr (float): Learning rate for optimizer.
             gamma (float): Discount factor for Q-learning.
         """
-        self.model = FusionNetwork(input_dims, hidden_dim, output_dim, fusion_type=fusion_type)
+        self.model = FusionNetwork(
+            input_dims, hidden_dim, output_dim, fusion_type=fusion_type
+        )
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.model.to(self.device)
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=lr)
@@ -46,10 +58,17 @@ class MultiModalFusionAgent:
         """
         if not hasattr(self, "loss_history"):
             from collections import deque
+
             self.loss_history = deque(maxlen=200)
         self.set_train_mode(True)
-        obs = [torch.tensor(x, dtype=torch.float32, device=self.device).unsqueeze(0) for x in obs_list]
-        next_obs = [torch.tensor(x, dtype=torch.float32, device=self.device).unsqueeze(0) for x in next_obs_list]
+        obs = [
+            torch.tensor(x, dtype=torch.float32, device=self.device).unsqueeze(0)
+            for x in obs_list
+        ]
+        next_obs = [
+            torch.tensor(x, dtype=torch.float32, device=self.device).unsqueeze(0)
+            for x in next_obs_list
+        ]
         qvals = self.model(obs)  # shape: [1, n_actions]
         qval = qvals[0, action]
         with torch.no_grad():
@@ -72,7 +91,10 @@ class MultiModalFusionAgent:
         Returns:
             int: Selected action (argmax Q-value)
         """
-        features = [torch.tensor(x, dtype=torch.float32, device=self.device).unsqueeze(0) for x in obs_list]
+        features = [
+            torch.tensor(x, dtype=torch.float32, device=self.device).unsqueeze(0)
+            for x in obs_list
+        ]
         with torch.no_grad():
             qvals = self.model(features)
         action = torch.argmax(qvals, dim=-1).item()
@@ -86,34 +108,42 @@ class MultiModalFusionAgent:
         Returns:
             dict: { 'raw_features': [...], 'fusion_weights': [...], 'fused_vector': [...], 'q_values': [...] }
         """
-        features = [torch.tensor(x, dtype=torch.float32, device=self.device).unsqueeze(0) for x in obs_list]
-        details = {'raw_features': [f.cpu().numpy().tolist() for f in features]}
-        fusion_type = getattr(self.model, 'fusion_type', 'concat')
+        features = [
+            torch.tensor(x, dtype=torch.float32, device=self.device).unsqueeze(0)
+            for x in obs_list
+        ]
+        details = {"raw_features": [f.cpu().numpy().tolist() for f in features]}
+        fusion_type = getattr(self.model, "fusion_type", "concat")
         with torch.no_grad():
-            if fusion_type == 'concat':
+            if fusion_type == "concat":
                 fused = torch.cat(features, dim=-1)
-                details['fused_vector'] = fused.cpu().numpy().tolist()
-                details['fusion_weights'] = None
-            elif fusion_type == 'attention':
+                details["fused_vector"] = fused.cpu().numpy().tolist()
+                details["fusion_weights"] = None
+            elif fusion_type == "attention":
                 import torch.nn.functional as F
+
                 weights = F.softmax(self.model.attn, dim=0).cpu().numpy().tolist()
-                details['fusion_weights'] = weights
-                padded = [F.pad(f, (0, self.model.fusion_dim - f.shape[-1])) for f in features]
-                fused = sum(w * p for w, p in zip(self.model.attn.softmax(dim=0), padded))
-                details['fused_vector'] = fused.cpu().numpy().tolist()
-            elif fusion_type == 'gating':
+                details["fusion_weights"] = weights
+                padded = [
+                    F.pad(f, (0, self.model.fusion_dim - f.shape[-1])) for f in features
+                ]
+                fused = sum(
+                    w * p for w, p in zip(self.model.attn.softmax(dim=0), padded)
+                )
+                details["fused_vector"] = fused.cpu().numpy().tolist()
+            elif fusion_type == "gating":
                 x_cat = torch.cat(features, dim=-1)
                 gates = self.model.gate(x_cat)  # shape: [batch, n_modalities]
                 gates_np = gates.cpu().numpy().tolist()[0]
-                details['fusion_weights'] = gates_np
+                details["fusion_weights"] = gates_np
                 gated = [gates[:, i].unsqueeze(-1) * f for i, f in enumerate(features)]
                 fused = torch.cat(gated, dim=-1)
-                details['fused_vector'] = fused.cpu().numpy().tolist()
+                details["fused_vector"] = fused.cpu().numpy().tolist()
             else:
-                details['fused_vector'] = None
-                details['fusion_weights'] = None
+                details["fused_vector"] = None
+                details["fusion_weights"] = None
             qvals = self.model(features)
-            details['q_values'] = qvals.cpu().numpy().tolist()[0]
+            details["q_values"] = qvals.cpu().numpy().tolist()[0]
         return details
 
     def __repr__(self):

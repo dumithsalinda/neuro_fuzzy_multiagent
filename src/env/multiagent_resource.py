@@ -2,11 +2,13 @@ import numpy as np
 
 from .base_env import BaseEnvironment
 
+
 class MultiAgentResourceEnv(BaseEnvironment):
     """
     Multi-agent resource collection environment (grid).
     Agents collect resources for reward. Supports cooperative, competitive, or mixed.
     """
+
     def __init__(self, grid_size=5, n_agents=2, n_resources=3, mode="competitive"):
         self.grid_size = grid_size
         self.n_agents = n_agents
@@ -15,10 +17,15 @@ class MultiAgentResourceEnv(BaseEnvironment):
         self.reset()
 
     def reset(self):
-        self.agent_positions = [tuple(np.random.randint(0, self.grid_size, size=2)) for _ in range(self.n_agents)]
+        self.agent_positions = [
+            tuple(np.random.randint(0, self.grid_size, size=2))
+            for _ in range(self.n_agents)
+        ]
         self.resource_positions = set()
         while len(self.resource_positions) < self.n_resources:
-            self.resource_positions.add(tuple(np.random.randint(0, self.grid_size, size=2)))
+            self.resource_positions.add(
+                tuple(np.random.randint(0, self.grid_size, size=2))
+            )
         self.resource_positions = set(self.resource_positions)
         self.collected = [0] * self.n_agents
         self.done = False
@@ -26,7 +33,13 @@ class MultiAgentResourceEnv(BaseEnvironment):
 
     def _get_obs(self):
         # Each agent observes its own position and all resource positions
-        return [np.array(list(self.agent_positions[i]) + [coord for pos in self.resource_positions for coord in pos]) for i in range(self.n_agents)]
+        return [
+            np.array(
+                list(self.agent_positions[i])
+                + [coord for pos in self.resource_positions for coord in pos]
+            )
+            for i in range(self.n_agents)
+        ]
 
     def get_observation(self):
         return self._get_obs()
@@ -36,22 +49,24 @@ class MultiAgentResourceEnv(BaseEnvironment):
 
     def extract_features(self, state=None):
         import numpy as np
+
         if state is None:
             state = self.get_observation()
         # state is a list of arrays (one per agent)
         return [np.array(s) for s in state]
-
 
     def get_state(self):
         return {
             "agent_positions": self.agent_positions,
             "resource_positions": list(self.resource_positions),
             "collected": self.collected,
-            "done": self.done
+            "done": self.done,
         }
 
     def render(self, mode="human"):
-        print(f"Agents: {self.agent_positions}, Resources: {self.resource_positions}, Collected: {self.collected}")
+        print(
+            f"Agents: {self.agent_positions}, Resources: {self.resource_positions}, Collected: {self.collected}"
+        )
 
     @property
     def action_space(self):

@@ -3,7 +3,9 @@ parallel_agent_executor.py
 
 Utility for running agent steps in parallel (threaded or process-based).
 """
+
 from concurrent.futures import ThreadPoolExecutor, as_completed
+
 
 def run_agents_parallel(agents, observations, max_workers=4):
     """

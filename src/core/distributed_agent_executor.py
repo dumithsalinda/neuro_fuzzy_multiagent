@@ -3,25 +3,31 @@ distributed_agent_executor.py
 
 Utility for running agent steps in parallel using Ray (distributed, multi-process, multi-node).
 """
+
 import ray
 
 ray.init(ignore_reinit_error=True, log_to_driver=False)
+
 
 @ray.remote
 class RayAgentWrapper:
     def __init__(self, agent):
         self.agent = agent
+
     def act(self, obs):
         return self.agent.act(obs)
+
     def get_knowledge(self):
         # Should return Q-table, NN weights, or fuzzy rules depending on agent
-        if hasattr(self.agent, 'share_knowledge'):
+        if hasattr(self.agent, "share_knowledge"):
             return self.agent.share_knowledge()
         return None
+
     def set_knowledge(self, knowledge):
         # Should update Q-table, NN weights, or fuzzy rules depending on agent
-        if hasattr(self.agent, 'integrate_online_knowledge'):
+        if hasattr(self.agent, "integrate_online_knowledge"):
             self.agent.integrate_online_knowledge(knowledge)
+
 
 def run_agents_distributed(agents, observations):
     """

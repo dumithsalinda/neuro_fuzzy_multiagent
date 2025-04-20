@@ -3,9 +3,11 @@ import torch.nn as nn
 from .agent import Agent
 from .fusion import FusionNetwork
 
+
 class MultiModalDQNAgent(Agent):
     def explain_action(self, features):
         import torch
+
         features = [torch.FloatTensor(f).unsqueeze(0).to(self.device) for f in features]
         with torch.no_grad():
             q_values = self.fusion_net(features).cpu().numpy().flatten()
@@ -13,21 +15,24 @@ class MultiModalDQNAgent(Agent):
         return {
             "q_values": q_values.tolist(),
             "chosen_action": action,
-            "epsilon": self.epsilon
+            "epsilon": self.epsilon,
         }
 
     """
     DQN agent that takes multi-modal features (e.g., text + image) as input.
     Features should be provided as a list of tensors (one per modality).
     """
+
     def __init__(self, input_dims, action_dim, alpha=1e-3, gamma=0.99, epsilon=0.1):
         super().__init__(model=None)
         self.input_dims = input_dims  # list of input dims per modality
         self.action_dim = action_dim
         self.gamma = gamma
         self.epsilon = epsilon
-        self.device = torch.device('cpu')
-        self.fusion_net = FusionNetwork(input_dims, hidden_dim=128, output_dim=action_dim).to(self.device)
+        self.device = torch.device("cpu")
+        self.fusion_net = FusionNetwork(
+            input_dims, hidden_dim=128, output_dim=action_dim
+        ).to(self.device)
         self.optimizer = torch.optim.Adam(self.fusion_net.parameters(), lr=alpha)
         self.memory = []  # (features, action, reward, next_features, done)
         self.batch_size = 32
@@ -48,7 +53,9 @@ class MultiModalDQNAgent(Agent):
         return action
 
     def observe(self, reward, next_features, done):
-        self.memory.append((self.last_features, self.last_action, reward, next_features, done))
+        self.memory.append(
+            (self.last_features, self.last_action, reward, next_features, done)
+        )
         if len(self.memory) >= self.batch_size:
             self.train_step()
         if done:
@@ -57,12 +64,19 @@ class MultiModalDQNAgent(Agent):
     def train_step(self):
         # Simple DQN-style batch update (stub, not prioritized)
         import random
+
         if len(self.memory) < self.batch_size:
             return
         batch = random.sample(self.memory, self.batch_size)
         features, actions, rewards, next_features, dones = zip(*batch)
-        features = [torch.FloatTensor([f[i] for f in features]).to(self.device) for i in range(len(self.input_dims))]
-        next_features = [torch.FloatTensor([nf[i] for nf in next_features]).to(self.device) for i in range(len(self.input_dims))]
+        features = [
+            torch.FloatTensor([f[i] for f in features]).to(self.device)
+            for i in range(len(self.input_dims))
+        ]
+        next_features = [
+            torch.FloatTensor([nf[i] for nf in next_features]).to(self.device)
+            for i in range(len(self.input_dims))
+        ]
         actions = torch.LongTensor(actions).unsqueeze(1).to(self.device)
         rewards = torch.FloatTensor(rewards).unsqueeze(1).to(self.device)
         dones = torch.FloatTensor(dones).unsqueeze(1).to(self.device)

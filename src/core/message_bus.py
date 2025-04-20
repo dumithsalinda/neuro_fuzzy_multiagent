@@ -3,6 +3,7 @@ class MessageBus:
     General-purpose message bus for agent communication.
     Supports broadcast, direct, and group messaging.
     """
+
     def __init__(self):
         self.agents = []
         self.groups = {}

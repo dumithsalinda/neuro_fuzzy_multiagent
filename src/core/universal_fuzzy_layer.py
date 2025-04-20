@@ -5,12 +5,14 @@ A universal fuzzy logic layer that can be attached to any agent type (classic, n
 Supports dynamic rule management, fuzzy set configuration, and explainability.
 """
 
-from .fuzzy_system import FuzzyInferenceSystem, FuzzySet, FuzzyRule
+from .fuzzy_system import FuzzyInferenceSystem, FuzzyRule
+
 
 class UniversalFuzzyLayer:
     """
     Universal fuzzy logic layer for plug-and-play integration with any agent.
     """
+
     def __init__(self, fuzzy_sets_per_input=None, core_rules=None):
         self.fis = FuzzyInferenceSystem(core_rules=core_rules)
         self.fuzzy_sets_per_input = fuzzy_sets_per_input or []
@@ -49,9 +51,23 @@ class UniversalFuzzyLayer:
         """
         summaries = []
         for i, rule in enumerate(self.fis.core_rules):
-            summaries.append({"type": "core", "index": i, "antecedents": rule.antecedents, "consequent": rule.consequent})
+            summaries.append(
+                {
+                    "type": "core",
+                    "index": i,
+                    "antecedents": rule.antecedents,
+                    "consequent": rule.consequent,
+                }
+            )
         for i, rule in enumerate(self.fis.dynamic_rules):
-            summaries.append({"type": "dynamic", "index": i, "antecedents": rule.antecedents, "consequent": rule.consequent})
+            summaries.append(
+                {
+                    "type": "dynamic",
+                    "index": i,
+                    "antecedents": rule.antecedents,
+                    "consequent": rule.consequent,
+                }
+            )
         return summaries
 
     def explain(self, x):
@@ -61,11 +77,8 @@ class UniversalFuzzyLayer:
         rule_activations = []
         for rule in self.fis.rules:
             activation = 1.0
-            for (i, fs) in rule.antecedents:
+            for i, fs in rule.antecedents:
                 activation *= fs.membership(x[i])
             rule_activations.append(activation)
         output = self.evaluate(x)
-        return {
-            "rule_activations": rule_activations,
-            "output": output
-        }
+        return {"rule_activations": rule_activations, "output": output}

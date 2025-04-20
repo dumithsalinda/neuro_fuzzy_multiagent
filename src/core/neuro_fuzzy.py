@@ -14,6 +14,7 @@ import numpy as np
 from .neural_network import FeedforwardNeuralNetwork
 from .fuzzy_system import FuzzyInferenceSystem
 
+
 class NeuroFuzzyHybrid:
     def update_nn_config(self, nn_config):
         """
@@ -27,21 +28,23 @@ class NeuroFuzzyHybrid:
         Update the fuzzy inference system configuration at runtime.
         If dynamic rule generation keys are present, regenerate rules.
         """
-        if fis_config is not None and all(k in fis_config for k in ('X', 'y', 'fuzzy_sets_per_input')):
+        if fis_config is not None and all(
+            k in fis_config for k in ("X", "y", "fuzzy_sets_per_input")
+        ):
             self.fis.dynamic_rule_generation(
-                fis_config['X'], fis_config['y'], fis_config['fuzzy_sets_per_input']
+                fis_config["X"], fis_config["y"], fis_config["fuzzy_sets_per_input"]
             )
 
     def __init__(self, nn_config, fis_config=None):
         self.nn = FeedforwardNeuralNetwork(**nn_config)
         self.fis = FuzzyInferenceSystem()
-        self.mode = 'hybrid'  # 'neural', 'fuzzy', or 'hybrid'
+        self.mode = "hybrid"  # 'neural', 'fuzzy', or 'hybrid'
         self.hybrid_weight = 0.5  # Default: equal weighting
         # Optionally generate rules if info provided
         if fis_config is not None:
-            if all(k in fis_config for k in ('X', 'y', 'fuzzy_sets_per_input')):
+            if all(k in fis_config for k in ("X", "y", "fuzzy_sets_per_input")):
                 self.fis.dynamic_rule_generation(
-                    fis_config['X'], fis_config['y'], fis_config['fuzzy_sets_per_input']
+                    fis_config["X"], fis_config["y"], fis_config["fuzzy_sets_per_input"]
                 )
 
     def set_mode(self, mode, hybrid_weight=None):
@@ -49,7 +52,7 @@ class NeuroFuzzyHybrid:
         Set the inference mode. mode: 'neural', 'fuzzy', or 'hybrid'.
         If 'hybrid', hybrid_weight sets the neural/fuzzy blend (0.0-1.0).
         """
-        assert mode in ('neural', 'fuzzy', 'hybrid')
+        assert mode in ("neural", "fuzzy", "hybrid")
         self.mode = mode
         if hybrid_weight is not None:
             assert 0.0 <= hybrid_weight <= 1.0
@@ -67,15 +70,15 @@ class NeuroFuzzyHybrid:
         - 'hybrid': weighted sum of NN(x) and FIS(x)
         """
         # Defensive: ensure mode and hybrid_weight always present
-        if not hasattr(self, 'mode'):
-            self.mode = 'hybrid'
-        if not hasattr(self, 'hybrid_weight'):
+        if not hasattr(self, "mode"):
+            self.mode = "hybrid"
+        if not hasattr(self, "hybrid_weight"):
             self.hybrid_weight = 0.5
-        if self.mode == 'neural':
+        if self.mode == "neural":
             return self.nn.forward(x)
-        elif self.mode == 'fuzzy':
+        elif self.mode == "fuzzy":
             return self.fis.evaluate(x)
-        elif self.mode == 'hybrid':
+        elif self.mode == "hybrid":
             fuzzy_out = self.fis.evaluate(x)
             nn_out = self.nn.forward(x)
             # Ensure both are arrays for weighted sum
@@ -98,17 +101,22 @@ class NeuroFuzzyHybrid:
         if hasattr(self.fis, "rules"):
             for rule in self.fis.rules:
                 activation = 1.0
-                for (i, fs) in rule.antecedents:
+                for i, fs in rule.antecedents:
                     activation *= fs.membership(x[i])
                 rule_activations.append(activation)
         # Neural net output
         nn_out = self.nn.forward(x)
         import numpy as np
-        action = int(np.argmax(nn_out)) if hasattr(nn_out, "__len__") and len(nn_out) > 1 else float(nn_out)
+
+        action = (
+            int(np.argmax(nn_out))
+            if hasattr(nn_out, "__len__") and len(nn_out) > 1
+            else float(nn_out)
+        )
         return {
             "rule_activations": rule_activations,
             "nn_output": nn_out.tolist() if hasattr(nn_out, "tolist") else nn_out,
-            "chosen_action": action
+            "chosen_action": action,
         }
 
     def forward(self, x):
@@ -125,6 +133,7 @@ class NeuroFuzzyHybrid:
         as_core: if True, add as core rule; otherwise, as dynamic rule
         """
         from .fuzzy_system import FuzzyRule
+
         rule = FuzzyRule(antecedents, consequent)
         self.fis.add_rule(rule, as_core=as_core)
 
@@ -146,9 +155,23 @@ class NeuroFuzzyHybrid:
         """
         summaries = []
         for i, rule in enumerate(self.fis.core_rules):
-            summaries.append({"type": "core", "index": i, "antecedents": rule.antecedents, "consequent": rule.consequent})
+            summaries.append(
+                {
+                    "type": "core",
+                    "index": i,
+                    "antecedents": rule.antecedents,
+                    "consequent": rule.consequent,
+                }
+            )
         for i, rule in enumerate(self.fis.dynamic_rules):
-            summaries.append({"type": "dynamic", "index": i, "antecedents": rule.antecedents, "consequent": rule.consequent})
+            summaries.append(
+                {
+                    "type": "dynamic",
+                    "index": i,
+                    "antecedents": rule.antecedents,
+                    "consequent": rule.consequent,
+                }
+            )
         return summaries
 
     def evolve_rules(self, recent_inputs=None, min_avg_activation=0.01):
@@ -168,7 +191,9 @@ class NeuroFuzzyHybrid:
                 activations.append(activation)
             avg_activations.append(np.mean(activations))
         # Prune rules below threshold
-        to_prune = [i for i, avg in enumerate(avg_activations) if avg < min_avg_activation]
+        to_prune = [
+            i for i, avg in enumerate(avg_activations) if avg < min_avg_activation
+        ]
         # Prune in reverse order to keep indices valid
         for idx in sorted(to_prune, reverse=True):
             del self.fis.dynamic_rules[idx]
@@ -182,35 +207,35 @@ class NeuroFuzzyHybrid:
         If error is high in current mode, switch to another.
         """
         if thresholds is None:
-            thresholds = {'neural': 0.2, 'fuzzy': 0.2, 'hybrid': 0.15}
+            thresholds = {"neural": 0.2, "fuzzy": 0.2, "hybrid": 0.15}
         if not error_history or len(error_history) < 3:
             return self.mode
         avg_error = np.mean(error_history[-5:])
         # Simple logic: if error too high in current mode, switch
-        if self.mode == 'neural' and avg_error > thresholds['neural']:
-            self.set_mode('hybrid')
-        elif self.mode == 'hybrid' and avg_error > thresholds['hybrid']:
-            self.set_mode('fuzzy')
-        elif self.mode == 'fuzzy' and avg_error > thresholds['fuzzy']:
-            self.set_mode('neural')
+        if self.mode == "neural" and avg_error > thresholds["neural"]:
+            self.set_mode("hybrid")
+        elif self.mode == "hybrid" and avg_error > thresholds["hybrid"]:
+            self.set_mode("fuzzy")
+        elif self.mode == "fuzzy" and avg_error > thresholds["fuzzy"]:
+            self.set_mode("neural")
         return self.mode
 
     def set_learning_rate(self, lr):
         """
         Set learning rate for the neural network and (if supported) the FIS.
         """
-        if hasattr(self.nn, 'learning_rate'):
+        if hasattr(self.nn, "learning_rate"):
             self.nn.learning_rate = lr
-        if hasattr(self.fis, 'learning_rate'):
+        if hasattr(self.fis, "learning_rate"):
             self.fis.learning_rate = lr
 
     def get_learning_rate(self):
         """
         Get learning rate from the neural network (and/or FIS).
         """
-        if hasattr(self.nn, 'learning_rate'):
+        if hasattr(self.nn, "learning_rate"):
             return self.nn.learning_rate
-        elif hasattr(self.fis, 'learning_rate'):
+        elif hasattr(self.fis, "learning_rate"):
             return self.fis.learning_rate
         else:
             return None
@@ -228,15 +253,16 @@ class NeuroFuzzyHybrid:
         Configuration for FuzzyInferenceSystem (e.g., rule generation params, fuzzy sets).
         If provided, used for dynamic rule generation after initialization.
     """
+
     def __init__(self, nn_config, fis_config=None):
         self.nn = FeedforwardNeuralNetwork(**nn_config)
         self.fis = FuzzyInferenceSystem()
         # Optionally generate rules if info provided
         if fis_config is not None:
             # Example: {'X': ..., 'y': ..., 'fuzzy_sets_per_input': ...}
-            if all(k in fis_config for k in ('X', 'y', 'fuzzy_sets_per_input')):
+            if all(k in fis_config for k in ("X", "y", "fuzzy_sets_per_input")):
                 self.fis.dynamic_rule_generation(
-                    fis_config['X'], fis_config['y'], fis_config['fuzzy_sets_per_input']
+                    fis_config["X"], fis_config["y"], fis_config["fuzzy_sets_per_input"]
                 )
 
     def online_update(self, x, y, lr=0.01):
@@ -244,11 +270,9 @@ class NeuroFuzzyHybrid:
         Online/continual learning update. x: input, y: target output.
         Calls neural network backward method if implemented.
         """
-        if hasattr(self.nn, 'backward'):
+        if hasattr(self.nn, "backward"):
             self.nn.backward(x, y, lr=lr)
         # Optionally update fuzzy rules in future
-
-
 
     def backward(self, x, y, lr=0.01):
         """
@@ -274,7 +298,7 @@ class NeuroFuzzyHybrid:
         h = self.nn.activation(np.dot(batch_fuzzy_out, self.nn.W1) + self.nn.b1)
         dW2 = np.dot(h.T, error)
         db2 = np.sum(error, axis=0)
-        dh = np.dot(error, self.nn.W2.T) * (1 - h ** 2)
+        dh = np.dot(error, self.nn.W2.T) * (1 - h**2)
         dW1 = np.dot(batch_fuzzy_out.T, dh)
         db1 = np.sum(dh, axis=0)
         self.nn.W2 -= lr * dW2
@@ -312,17 +336,18 @@ class NeuroFuzzyHybrid:
                     fs.tune(data)
 
         # Randomly add or remove a rule (demonstration only)
-        if rule_change and hasattr(self.fis, 'rules') and len(self.fis.rules) > 0:
+        if rule_change and hasattr(self.fis, "rules") and len(self.fis.rules) > 0:
             import random
+
             if random.random() < 0.5 and len(self.fis.rules) > 1:
                 # Remove a random rule
-                idx = random.randint(0, len(self.fis.rules)-1)
+                idx = random.randint(0, len(self.fis.rules) - 1)
                 del self.fis.rules[idx]
             else:
                 # Duplicate a random rule with small perturbation
-                idx = random.randint(0, len(self.fis.rules)-1)
+                idx = random.randint(0, len(self.fis.rules) - 1)
                 rule = self.fis.rules[idx]
-                new_conseq = rule.consequent + np.random.randn()*0.1
+                new_conseq = rule.consequent + np.random.randn() * 0.1
                 new_conseq = np.clip(new_conseq, 0, 1)  # Clamp to [0, 1]
                 new_rule = type(rule)(rule.antecedents, new_conseq)
                 self.fis.add_rule(new_rule)

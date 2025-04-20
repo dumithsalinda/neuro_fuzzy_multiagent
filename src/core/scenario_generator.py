@@ -1,11 +1,13 @@
 import itertools
 import random
 
+
 class ScenarioGenerator:
     """
     Utility to generate experiment scenarios/curricula for benchmarking.
     Supports grid search, random sampling, and curriculum generation.
     """
+
     def __init__(self, param_grid: dict):
         self.param_grid = param_grid
 
@@ -29,6 +31,7 @@ class ScenarioGenerator:
         # Returns scenarios sorted by a parameter (e.g., increasing agent count)
         scenarios = self.grid_search()
         return sorted(scenarios, key=lambda x: x[order_by])
+
 
 # Usage Example:
 # grid = {"agent_type": ["DQNAgent", "NeuroFuzzyAgent"], "agent_count": [2, 4, 8], "env": ["Gridworld", "IoTEnv"]}

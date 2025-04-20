@@ -1,11 +1,13 @@
 from src.core.message_bus import MessageBus
 from src.core.agent_factory import create_agent_from_config
 
+
 class AgentManager:
     """
     Manages dynamic addition and removal of agents at runtime.
     Integrates with MessageBus for plug-and-play communication.
     """
+
     def __init__(self, bus=None):
         self.bus = bus if bus is not None else MessageBus()
         self.agents = []

@@ -2,11 +2,13 @@ import numpy as np
 
 from .base_env import BaseEnvironment
 
+
 class MultiAgentGridworldEnv(BaseEnvironment):
     """
     Multi-agent gridworld environment with optional obstacles.
     Agents move on a grid, can be cooperative or competitive.
     """
+
     def __init__(self, grid_size=5, n_agents=2, mode="cooperative", n_obstacles=0):
         self.grid_size = grid_size
         self.n_agents = n_agents
@@ -45,7 +47,10 @@ class MultiAgentGridworldEnv(BaseEnvironment):
     def _get_obs(self):
         # Each agent observes its own position, the target, and (optionally) obstacles
         # For now, obstacles are not included in obs vector for simplicity
-        return [np.array(list(self.agent_positions[i]) + list(self.target)) for i in range(self.n_agents)]
+        return [
+            np.array(list(self.agent_positions[i]) + list(self.target))
+            for i in range(self.n_agents)
+        ]
 
     def get_observation(self):
         return self._get_obs()
@@ -55,11 +60,13 @@ class MultiAgentGridworldEnv(BaseEnvironment):
             "agent_positions": self.agent_positions,
             "target": self.target,
             "obstacles": self.obstacles,
-            "done": self.done
+            "done": self.done,
         }
 
     def render(self, mode="human"):
-        print(f"Agents: {self.agent_positions}, Target: {self.target}, Obstacles: {self.obstacles}")
+        print(
+            f"Agents: {self.agent_positions}, Target: {self.target}, Obstacles: {self.obstacles}"
+        )
 
     @property
     def action_space(self):

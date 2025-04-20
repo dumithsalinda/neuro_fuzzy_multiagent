@@ -2,7 +2,7 @@ import datetime
 import os
 import pickle
 import time
-from collections import deque, defaultdict
+from collections import defaultdict, deque
 
 import matplotlib.pyplot as plt
 import networkx as nx
@@ -1310,70 +1310,107 @@ else:
 
 # --- ANFIS Explainability Panel & Rule Controls ---
 for i, agent in enumerate(st.session_state.agents):
+    st.markdown("---")
+    st.header(f"Agent {i+1} Explainability & Visualization")
+    # --- Real-time Reward Plot ---
     if (
-        hasattr(agent, "model")
-        and hasattr(agent.model, "rule_weights")
-        and hasattr(agent.model, "centers")
+        "reward_history" in st.session_state
+        and len(st.session_state.reward_history) > i
     ):
-        with st.expander(f"ANFIS Agent {i+1} - Explainability & Rule Controls"):
+        st.subheader("Reward History (Live)")
+        st.line_chart(st.session_state.reward_history[i])
+    # --- Real-time Q-value or Rule Activation Plot ---
+    if hasattr(agent, "explanation_history") and agent.explanation_history:
+        st.subheader("Q-values / Rule Activations (Live)")
+        st.line_chart(agent.explanation_history)
+    # --- Rule/Neuron Contribution ---
+    if hasattr(agent, "model") and hasattr(agent.model, "rule_weights"):
+        with st.expander(f"Fuzzy/ANFIS Agent {i+1} - Rule Contributions"):
             st.write("**Rule Weights:**", agent.model.rule_weights)
             st.write("**Centers:**", agent.model.centers)
             st.write("**Widths:**", agent.model.widths)
-            # --- Membership Function Visualization ---
-            st.markdown("---")
-            st.subheader("Fuzzy Rule Visualization")
-            import matplotlib.pyplot as plt
+    if hasattr(agent, "q_values_history") and agent.q_values_history:
+        with st.expander(f"DQN Agent {i+1} - Q-Value Breakdown"):
+            st.write("Q-values (per step):", agent.q_values_history)
+    # --- Timeline for Step-by-Step Review ---
+    if hasattr(agent, "explanation_history") and agent.explanation_history:
+        st.subheader("Step-by-Step Explanation Review")
+        step = st.slider(
+            f"Step for Agent {i+1}", 0, len(agent.explanation_history) - 1, 0
+        )
+        st.write(f"Explanation at Step {step}: {agent.explanation_history[step]}")
+    # --- Log Loading for Post-hoc Analysis ---
+    if st.checkbox(f"Load Explanation Log for Agent {i+1}"):
+        uploaded_file = st.file_uploader(
+            f"Upload explanation log for Agent {i+1}", type=["csv", "json"]
+        )
+        if uploaded_file is not None:
+            import pandas as pd
 
-            x_range = np.linspace(-2, 2, 200)
-            n_rules = agent.model.n_rules
-            input_dim = agent.model.input_dim
-            fig, axs = plt.subplots(
-                input_dim, 1, figsize=(6, 2 * input_dim), squeeze=False
+            if uploaded_file.name.endswith(".csv"):
+                df = pd.read_csv(uploaded_file)
+            else:
+                df = pd.read_json(uploaded_file)
+            st.write(df)
+            st.line_chart(df.iloc[:, 1])
+    # --- Communication Graph Visualization ---
+    if "messages_history" in st.session_state and st.session_state.messages_history:
+        from src.utils.visualization import plot_communication_graph
+
+        st.subheader("Agent Communication Graph (Live)")
+        plot_communication_graph(
+            st.session_state.messages_history, len(st.session_state.agents)
+        )
+        st.markdown("---")
+        st.subheader("Fuzzy Rule Visualization")
+        import matplotlib.pyplot as plt
+
+        x_range = np.linspace(-2, 2, 200)
+        n_rules = agent.model.n_rules
+        input_dim = agent.model.input_dim
+        fig, axs = plt.subplots(input_dim, 1, figsize=(6, 2 * input_dim), squeeze=False)
+        for d in range(input_dim):
+            ax = axs[d, 0]
+            for r in range(n_rules):
+                c = agent.model.centers[r, d]
+                w = agent.model.widths[r, d]
+                mu = np.exp(-((x_range - c) ** 2) / (2 * w**2))
+                ax.plot(x_range, mu, label=f"Rule {r}")
+            ax.set_title(f"Input Dimension {d+1}")
+            ax.set_xlabel("x")
+            ax.set_ylabel("Membership")
+            ax.legend()
+        st.pyplot(fig)
+        # --- Rule Firing Strengths ---
+        if hasattr(agent.model, "_last_firing_strengths"):
+            st.write(
+                "**Last Rule Firing Strengths:**",
+                agent.model._last_firing_strengths,
             )
-            for d in range(input_dim):
-                ax = axs[d, 0]
-                for r in range(n_rules):
-                    c = agent.model.centers[r, d]
-                    w = agent.model.widths[r, d]
-                    mu = np.exp(-((x_range - c) ** 2) / (2 * w**2))
-                    ax.plot(x_range, mu, label=f"Rule {r}")
-                ax.set_title(f"Input Dimension {d+1}")
-                ax.set_xlabel("x")
-                ax.set_ylabel("Membership")
-                ax.legend()
-            st.pyplot(fig)
-            # --- Rule Firing Strengths ---
-            if hasattr(agent.model, "_last_firing_strengths"):
-                st.write(
-                    "**Last Rule Firing Strengths:**",
-                    agent.model._last_firing_strengths,
-                )
-                # Detailed textual explanation
-                obs = getattr(agent, "last_obs", None)
-                st.markdown(
-                    f"**Last Input:** {np.round(obs, 3) if obs is not None else 'N/A'}"
-                )
-                weights = getattr(agent.model, "rule_weights", None)
-                firings = agent.model._last_firing_strengths
-                if weights is not None:
-                    contributions = weights * firings
-                    st.markdown("**Rule Contributions (weight × firing):**")
-                    for idx, (w, f, c) in enumerate(
-                        zip(weights, firings, contributions)
-                    ):
-                        st.markdown(
-                            f"- Rule {idx}: weight={w:.3f}, firing={f:.3f}, contribution={c:.3f}"
-                        )
-                    ranked = np.argsort(-np.abs(contributions))
+            # Detailed textual explanation
+            obs = getattr(agent, "last_obs", None)
+            st.markdown(
+                f"**Last Input:** {np.round(obs, 3) if obs is not None else 'N/A'}"
+            )
+            weights = getattr(agent.model, "rule_weights", None)
+            firings = agent.model._last_firing_strengths
+            if weights is not None:
+                contributions = weights * firings
+                st.markdown("**Rule Contributions (weight × firing):**")
+                for idx, (w, f, c) in enumerate(zip(weights, firings, contributions)):
                     st.markdown(
-                        "**Top Contributing Rules:** "
-                        + ", ".join(
-                            [
-                                f"{i} (|contrib|={abs(contributions[i]):.3f})"
-                                for i in ranked[:3]
-                            ]
-                        )
+                        f"- Rule {idx}: weight={w:.3f}, firing={f:.3f}, contribution={c:.3f}"
                     )
+                ranked = np.argsort(-np.abs(contributions))
+                st.markdown(
+                    "**Top Contributing Rules:** "
+                    + ", ".join(
+                        [
+                            f"{i} (|contrib|={abs(contributions[i]):.3f})"
+                            for i in ranked[:3]
+                        ]
+                    )
+                )
                 # Simple summary
                 max_idx = int(np.argmax(agent.model._last_firing_strengths))
                 st.info(
@@ -1385,6 +1422,107 @@ for i, agent in enumerate(st.session_state.agents):
             st.markdown("---")
             st.subheader("Human Feedback")
             if "interventions" not in st.session_state:
+
+            # --- Action Override ---
+            st.markdown("**Override Agent Action**")
+            override_action = st.text_input(f"Override next action for Agent {i+1} (leave blank for no override)")
+            if st.button(f"Apply Override for Agent {i+1}"):
+                if override_action:
+                    if "interventions" not in st.session_state:
+                        st.session_state["interventions"] = []
+                    st.session_state["interventions"].append({
+                        "agent": i+1,
+                        "type": "action_override",
+                        "action": override_action,
+                        "step": st.session_state.get("step", 0)
+                    })
+                    st.success(f"Override action '{override_action}' for Agent {i+1} at step {st.session_state.get('step', 0)}.")
+
+            # --- Reward Shaping ---
+            st.markdown("**Manual Reward Feedback**")
+            reward_feedback = st.number_input(f"Manual reward for Agent {i+1} (leave blank for none)", value=0.0)
+            if st.button(f"Apply Reward Feedback for Agent {i+1}"):
+                if reward_feedback != 0.0:
+                    if "interventions" not in st.session_state:
+                        st.session_state["interventions"] = []
+                    st.session_state["interventions"].append({
+                        "agent": i+1,
+                        "type": "reward_feedback",
+                        "reward": reward_feedback,
+                        "step": st.session_state.get("step", 0)
+                    })
+                    st.success(f"Manual reward {reward_feedback} for Agent {i+1} at step {st.session_state.get('step', 0)}.")
+
+            # --- Demonstration Logging ---
+            st.markdown("**Demonstrate Action (Imitation Learning)**")
+            demo_action = st.text_input(f"Demonstrate action for Agent {i+1} (for imitation learning)")
+            if st.button(f"Log Demonstration for Agent {i+1}"):
+                if demo_action:
+                    if "interventions" not in st.session_state:
+                        st.session_state["interventions"] = []
+                    st.session_state["interventions"].append({
+                        "agent": i+1,
+                        "type": "demonstration",
+                        "action": demo_action,
+                        "step": st.session_state.get("step", 0)
+                    })
+                    st.success(f"Logged demonstration action '{demo_action}' for Agent {i+1} at step {st.session_state.get('step', 0)}.")
+
+            # --- Real-World/Live Data Integration ---
+            st.markdown("---")
+            st.subheader("Real-World/Live Data Integration")
+            from src.utils import realtime_data
+            data_source = st.selectbox(f"Select live data source for Agent {i+1}", ["None", "Mock Sensor", "REST API", "MQTT Stream"])
+            live_value = None
+            connection_status = None
+            if data_source == "Mock Sensor":
+                live_value = realtime_data.get_mock_sensor_value()
+                st.write(f"Mock Sensor Value: {live_value:.3f}")
+            elif data_source == "REST API":
+                rest_url = st.text_input(f"REST API URL for Agent {i+1}", "http://localhost:5000/value")
+                if st.button(f"Fetch REST Value for Agent {i+1}"):
+                    live_value = realtime_data.get_rest_api_value(rest_url)
+                    if live_value is not None:
+                        st.success(f"REST API Value: {live_value}")
+                    else:
+                        st.error("Failed to fetch value from REST API.")
+            elif data_source == "MQTT Stream":
+                broker = st.text_input(f"MQTT Broker for Agent {i+1}", "localhost")
+                topic = st.text_input(f"MQTT Topic for Agent {i+1}", "test/topic")
+                if st.button(f"Connect MQTT for Agent {i+1}"):
+                    if not hasattr(st.session_state, f"mqtt_client_{i}"):
+                        try:
+                            client = realtime_data.MQTTClientWrapper(broker, topic)
+                            client.connect_and_subscribe()
+                            st.session_state[f"mqtt_client_{i}"] = client
+                            connection_status = "connected"
+                        except Exception as e:
+                            st.error(f"MQTT connection error: {e}")
+                    else:
+                        connection_status = "already connected"
+                if hasattr(st.session_state, f"mqtt_client_{i}"):
+                    client = st.session_state[f"mqtt_client_{i}"]
+                    live_value = client.get_value()
+                    if live_value is not None:
+                        st.success(f"MQTT Value: {live_value}")
+                    else:
+                        st.info("Waiting for MQTT message...")
+                if st.button(f"Disconnect MQTT for Agent {i+1}"):
+                    if hasattr(st.session_state, f"mqtt_client_{i}"):
+                        st.session_state[f"mqtt_client_{i}"].disconnect()
+                        del st.session_state[f"mqtt_client_{i}"]
+                        st.info("MQTT disconnected.")
+            # Inject live_value as environment/agent input if available
+            if live_value is not None:
+                # Try to inject into env (assume set_external_input exists)
+                try:
+                    if hasattr(st.session_state, "env") and hasattr(st.session_state.env, "set_external_input"):
+                        st.session_state.env.set_external_input(i, live_value)
+                        st.success(f"Injected live value {live_value} into environment for Agent {i+1}.")
+                    else:
+                        st.info(f"Live value {live_value} available for Agent {i+1}, but env integration not implemented.")
+                except Exception as e:
+                    st.warning(f"Failed to inject live value: {e}")
                 st.session_state["interventions"] = []
             with st.form(f"feedback_form_{i}", clear_on_submit=True):
                 override = st.text_input(

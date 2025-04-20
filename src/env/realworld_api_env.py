@@ -1,12 +1,14 @@
 import numpy as np
 from .base_env import BaseEnvironment
 
+
 class RealWorldAPIEnv(BaseEnvironment):
     """
     Example environment for real-world API/sensor/robot integration.
     Implements optional hooks for connection, action, and sensor data.
     Replace stub logic with actual API/robot code as needed.
     """
+
     def __init__(self, config=None):
         self.config = config or {}
         self.connected = False

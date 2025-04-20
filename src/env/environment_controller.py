@@ -7,6 +7,7 @@ class EnvironmentController:
     Supports agent state transfer during environment switch.
     Optionally integrates with a MultiAgentSystem.
     """
+
     def __init__(self, env_name, agents=None, multiagent_system=None, **env_kwargs):
         self.env_name = env_name
         self.env_kwargs = env_kwargs
@@ -17,7 +18,9 @@ class EnvironmentController:
     def get_env(self):
         return self.env
 
-    def switch_environment(self, new_env_name, transfer_state=True, transfer_fn=None, **new_env_kwargs):
+    def switch_environment(
+        self, new_env_name, transfer_state=True, transfer_fn=None, **new_env_kwargs
+    ):
         """
         Switch environment at runtime. Optionally transfer agent and environment state.
         transfer_fn: custom function(agent, old_env, new_env) for state transfer.
@@ -52,6 +55,7 @@ class EnvironmentController:
                 # Default: reset agent, optionally copy last observation/action if compatible
                 agent.reset()
                 # Optionally: agent.last_observation = old_env.get_observation() or similar
+
 
 # Example integration with MultiAgentSystem:
 # from src.core.multiagent_system import MultiAgentSystem

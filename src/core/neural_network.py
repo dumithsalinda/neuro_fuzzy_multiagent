@@ -9,16 +9,19 @@ Minimal feedforward neural network class for NeuroFuzzyHybrid:
 
 import numpy as np
 
+
 class FeedforwardNeuralNetwork:
     """
     Minimal feedforward neural network for hybrid neuro-fuzzy systems.
     input_dim should match the feature vector dimension for the agent's input type (e.g., 768 for BERT, 512 for ResNet18).
     Extendable for hybrid learning (backpropagation + evolution).
     """
+
     """
     Minimal feedforward neural network for hybrid neuro-fuzzy systems.
     Extendable for hybrid learning (backpropagation + evolution).
     """
+
     def __init__(self, input_dim, hidden_dim, output_dim, activation=np.tanh):
         self.input_dim = input_dim
         self.hidden_dim = hidden_dim
@@ -39,8 +42,6 @@ class FeedforwardNeuralNetwork:
 
     def backward(self, x, y, lr=0.01):
         """Stub for backpropagation update. To be implemented."""
-        pass
 
     def evolutionary_update(self, mutation_rate=0.01):
         """Stub for evolutionary update (mutation/crossover). To be implemented."""
-        pass

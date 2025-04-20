@@ -1,14 +1,15 @@
 import os
 import json
-import csv
 import datetime
 import uuid
+
 
 class ExperimentManager:
     """
     Manages experiment tracking, versioning, and result aggregation for agent experiments.
     Stores metadata, parameters, and results for each run.
     """
+
     def __init__(self, log_dir="experiments"):
         self.log_dir = log_dir
         os.makedirs(log_dir, exist_ok=True)
@@ -22,7 +23,7 @@ class ExperimentManager:
             "timestamp": timestamp,
             "params": params,
             "results": None,
-            "log_file": os.path.join(self.log_dir, f"run_{run_id}.json")
+            "log_file": os.path.join(self.log_dir, f"run_{run_id}.json"),
         }
         self.runs.append(run_info)
         return run_info
@@ -30,7 +31,15 @@ class ExperimentManager:
     def log_results(self, run_info: dict, results: dict):
         run_info["results"] = results
         with open(run_info["log_file"], "w") as f:
-            json.dump({"params": run_info["params"], "results": results, "timestamp": run_info["timestamp"]}, f, indent=2)
+            json.dump(
+                {
+                    "params": run_info["params"],
+                    "results": results,
+                    "timestamp": run_info["timestamp"],
+                },
+                f,
+                indent=2,
+            )
 
     def aggregate_results(self, metric: str):
         # Aggregate a metric across all runs
@@ -49,13 +58,16 @@ class ExperimentManager:
             if fname.endswith(".json"):
                 with open(os.path.join(self.log_dir, fname), "r") as f:
                     data = json.load(f)
-                    self.runs.append({
-                        "run_id": fname.split("_")[1].split(".")[0],
-                        "timestamp": data.get("timestamp"),
-                        "params": data.get("params"),
-                        "results": data.get("results"),
-                        "log_file": os.path.join(self.log_dir, fname)
-                    })
+                    self.runs.append(
+                        {
+                            "run_id": fname.split("_")[1].split(".")[0],
+                            "timestamp": data.get("timestamp"),
+                            "params": data.get("params"),
+                            "results": data.get("results"),
+                            "log_file": os.path.join(self.log_dir, fname),
+                        }
+                    )
+
 
 # Usage Example:
 # mgr = ExperimentManager()

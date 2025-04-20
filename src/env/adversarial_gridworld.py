@@ -2,11 +2,13 @@ import numpy as np
 
 from .base_env import BaseEnvironment
 
+
 class AdversarialGridworldEnv(BaseEnvironment):
     """
     Multi-agent gridworld with pursuers and evaders.
     Pursuers try to catch evaders; evaders try to reach target or avoid capture.
     """
+
     def __init__(self, grid_size=5, n_pursuers=1, n_evaders=1, n_obstacles=0):
         self.grid_size = grid_size
         self.n_pursuers = n_pursuers
@@ -78,11 +80,11 @@ class AdversarialGridworldEnv(BaseEnvironment):
 
     def extract_features(self, state=None):
         import numpy as np
+
         if state is None:
             state = self.get_observation()
         # state is a list of arrays (one per agent)
         return [np.array(s) for s in state]
-
 
     def get_observation(self):
         return self._get_obs()
@@ -90,19 +92,19 @@ class AdversarialGridworldEnv(BaseEnvironment):
     def perceive(self):
         return self.get_observation()
 
-
-
     def get_state(self):
         return {
             "pursuer_positions": self.pursuer_positions,
             "evader_positions": self.evader_positions,
             "obstacles": self.obstacles,
             "target": self.target,
-            "done": self.done
+            "done": self.done,
         }
 
     def render(self, mode="human"):
-        print(f"Pursuers: {self.pursuer_positions}, Evaders: {self.evader_positions}, Target: {self.target}, Obstacles: {self.obstacles}")
+        print(
+            f"Pursuers: {self.pursuer_positions}, Evaders: {self.evader_positions}, Target: {self.target}, Obstacles: {self.obstacles}"
+        )
 
     @property
     def action_space(self):
@@ -115,8 +117,8 @@ class AdversarialGridworldEnv(BaseEnvironment):
 
     def step(self, actions):
         # actions: list of ints, 0=up, 1=down, 2=left, 3=right, order: pursuers then evaders
-        pursuer_actions = actions[:self.n_pursuers]
-        evader_actions = actions[self.n_pursuers:]
+        pursuer_actions = actions[: self.n_pursuers]
+        evader_actions = actions[self.n_pursuers :]
         # Move pursuers
         for i, action in enumerate(pursuer_actions):
             x, y = self.pursuer_positions[i]
@@ -152,7 +154,7 @@ class AdversarialGridworldEnv(BaseEnvironment):
         for i, ppos in enumerate(self.pursuer_positions):
             for j, epos in enumerate(self.evader_positions):
                 if ppos == epos:
-                    rewards[i] = 1   # pursuer gets reward
+                    rewards[i] = 1  # pursuer gets reward
                     rewards[self.n_pursuers + j] = -1  # evader penalized
                     done = True
         # Check evader reaches target

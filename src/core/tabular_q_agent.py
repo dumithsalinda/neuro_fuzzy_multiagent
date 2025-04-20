@@ -2,9 +2,11 @@ import numpy as np
 from .agent import Agent
 from .laws import enforce_laws, LawViolation
 
+
 class TabularQLearningAgent(Agent):
     def explain_action(self, observation):
         import numpy as np
+
         if self.n_states is None:
             q_vals = self.q_table.get(observation, np.zeros(self.n_actions))
         else:
@@ -13,13 +15,14 @@ class TabularQLearningAgent(Agent):
         return {
             "q_values": q_vals.tolist(),
             "chosen_action": action,
-            "epsilon": self.epsilon
+            "epsilon": self.epsilon,
         }
 
     """
     Tabular Q-Learning Agent for discrete state and action spaces.
     If n_states is None, uses a dict-based Q-table for large/sparse spaces.
     """
+
     def __init__(self, n_states=None, n_actions=2, alpha=0.1, gamma=0.99, epsilon=0.1):
         super().__init__(model=None)
         self.n_states = n_states
@@ -45,7 +48,7 @@ class TabularQLearningAgent(Agent):
         else:
             action = np.argmax(q_vals)
         try:
-            enforce_laws(action, state, category='action')
+            enforce_laws(action, state, category="action")
         except LawViolation:
             action = 0  # fallback to legal action
         self.last_state = observation

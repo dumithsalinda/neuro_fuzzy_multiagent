@@ -3,13 +3,17 @@ multiagent_system.py
 
 Defines MultiAgentSystem for managing and coordinating multiple agents.
 """
+
 from typing import List, Any, Optional
+
 
 class MultiAgentSystem:
     def __init__(self, agents: List[Any]):
         self.agents = agents
         self.messages = [[] for _ in agents]  # Message inbox per agent
-        self.message_history = [[] for _ in agents]  # Optional: store all received messages
+        self.message_history = [
+            [] for _ in agents
+        ]  # Optional: store all received messages
         self.groups = {}  # group_id -> set of agent indices
         self.group_leaders = {}  # group_id -> agent index
         self.group_roles = {}  # group_id -> {agent_idx: role}
@@ -37,7 +41,7 @@ class MultiAgentSystem:
         for group in self.groups.values():
             updated = set()
             for i in group:
-                updated.add(i if i < idx else i-1)
+                updated.add(i if i < idx else i - 1)
             group.clear()
             group.update(updated)
         # Update group_roles indices
@@ -46,7 +50,7 @@ class MultiAgentSystem:
             for i, role in roles.items():
                 if i == idx:
                     continue
-                updated_roles[i if i < idx else i-1] = role
+                updated_roles[i if i < idx else i - 1] = role
             self.group_roles[gid] = updated_roles
         # Remove as leader if necessary, and re-elect if possible
         for gid in affected_groups:
@@ -133,12 +137,16 @@ class MultiAgentSystem:
         self.messages = new_messages
         return actions
 
-    def send_message(self, sender_idx: int, recipient_idx: int, message: Any, msg_type: str = "INFO"):
+    def send_message(
+        self, sender_idx: int, recipient_idx: int, message: Any, msg_type: str = "INFO"
+    ):
         msg = {"from": sender_idx, "type": msg_type, "content": message}
         self.messages[recipient_idx].append(msg)
         self.message_history[recipient_idx].append(msg)
 
-    def broadcast_message(self, sender_idx: int, message: Any, msg_type: str = "BROADCAST"):
+    def broadcast_message(
+        self, sender_idx: int, message: Any, msg_type: str = "BROADCAST"
+    ):
         msg = {"from": sender_idx, "type": msg_type, "content": message}
         for i in range(len(self.agents)):
             if i != sender_idx:

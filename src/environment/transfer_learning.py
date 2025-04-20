@@ -15,6 +15,7 @@ These utilities support experiments in transfer learning, domain adaptation, and
 
 import numpy as np
 
+
 class FeatureExtractor:
     """
     Simple feature extractor stub. Can be extended to neural or statistical models.
@@ -26,6 +27,7 @@ class FeatureExtractor:
     output_dim : int
         Output feature dimensionality.
     """
+
     def __init__(self, input_dim, output_dim):
         """
         Initialize the feature extractor with random weights.
@@ -38,6 +40,7 @@ class FeatureExtractor:
             Output feature dimensionality.
         """
         self.W = np.random.randn(input_dim, output_dim) * 0.1
+
     def extract(self, x):
         """
         Extract features from input vector x (linear mapping).
@@ -52,6 +55,7 @@ class FeatureExtractor:
             Extracted feature vector.
         """
         return np.dot(x, self.W)
+
 
 def domain_adaptation(source_features, target_features):
     """
@@ -70,6 +74,7 @@ def domain_adaptation(source_features, target_features):
     """
     # For now, just return features unchanged
     return source_features, target_features
+
 
 def coral(source, target):
     """
@@ -95,7 +100,8 @@ def coral(source, target):
     A = np.linalg.inv(np.linalg.cholesky(cov_s)).T @ np.linalg.cholesky(cov_t)
     return (source_c @ A) + np.mean(target, axis=0)
 
-def mmd(source, target, kernel='linear', gamma=1.0):
+
+def mmd(source, target, kernel="linear", gamma=1.0):
     """
     Maximum Mean Discrepancy (MMD) alignment between source and target features.
     Supports linear and RBF kernels.
@@ -114,30 +120,38 @@ def mmd(source, target, kernel='linear', gamma=1.0):
     float
         MMD distance between source and target (for reporting/monitoring).
     """
+
     def linear(X, Y):
         return np.dot(X, Y.T)
+
     def rbf(X, Y):
-        XX = np.sum(X ** 2, axis=1, keepdims=True)
-        YY = np.sum(Y ** 2, axis=1, keepdims=True)
+        XX = np.sum(X**2, axis=1, keepdims=True)
+        YY = np.sum(Y**2, axis=1, keepdims=True)
         XY = np.dot(X, Y.T)
         dists = XX - 2 * XY + YY.T
         return np.exp(-gamma * dists)
-    if kernel == 'linear':
+
+    if kernel == "linear":
         K_xx = linear(source, source)
         K_yy = linear(target, target)
         K_xy = linear(source, target)
-    elif kernel == 'rbf':
+    elif kernel == "rbf":
         K_xx = rbf(source, source)
         K_yy = rbf(target, target)
         K_xy = rbf(source, target)
     else:
-        raise ValueError('Unknown kernel type')
+        raise ValueError("Unknown kernel type")
     m = source.shape[0]
     n = target.shape[0]
-    mmd_value = (np.sum(K_xx) / (m * m) + np.sum(K_yy) / (n * n) - 2 * np.sum(K_xy) / (m * n))
+    mmd_value = (
+        np.sum(K_xx) / (m * m) + np.sum(K_yy) / (n * n) - 2 * np.sum(K_xy) / (m * n)
+    )
     return mmd_value
 
-def transfer_learning(pretrain_env, finetune_env, model, feature_extractor, steps=10, align_fn=None):
+
+def transfer_learning(
+    pretrain_env, finetune_env, model, feature_extractor, steps=10, align_fn=None
+):
     """
     Minimal stub: returns the input model unchanged.
     """

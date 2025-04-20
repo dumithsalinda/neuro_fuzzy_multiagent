@@ -3,9 +3,13 @@ import numpy as np
 
 class MultiAgentSystem:
     """
-    Manages a group of agents and facilitates collaboration/communication.
+    Manages a group of agents and facilitates collaboration and communication.
+
     Supports dynamic group formation, joining, leaving, and dissolution for self-organization.
-    Supports group leader election for group-level protocols.
+    Provides APIs for group leader election, group knowledge sharing, and privacy-aware communication.
+
+    Args:
+        agents (list[Agent]): List of agent instances managed by the system.
     """
 
     def __init__(self, agents):
@@ -14,7 +18,7 @@ class MultiAgentSystem:
         self.group_leaders = {}  # group_id -> agent index
         self.group_modules = {}  # group_id -> group-specific module (rules/subnetwork)
 
-    def share_group_knowledge(self, mode='average'):
+    def share_group_knowledge(self, mode="average"):
         """
         For each group, aggregate and distribute knowledge among group members.
         mode: 'average' (default), 'copy_leader', or custom.
@@ -28,18 +32,22 @@ class MultiAgentSystem:
             if not knowledge_list:
                 continue
             # Simple average if possible, else copy leader's knowledge
-            if mode == 'average' and isinstance(knowledge_list[0], (np.ndarray, list)):
-                avg_knowledge = np.mean(knowledge_list, axis=0) if len(knowledge_list) > 0 else knowledge_list
+            if mode == "average" and isinstance(knowledge_list[0], (np.ndarray, list)):
+                avg_knowledge = (
+                    np.mean(knowledge_list, axis=0)
+                    if len(knowledge_list) > 0
+                    else knowledge_list
+                )
                 for idx in members:
                     self.agents[idx].integrate_online_knowledge(avg_knowledge)
-            elif mode == 'copy_leader':
+            elif mode == "copy_leader":
                 leader_idx = self.group_leaders.get(group_id, list(members)[0])
                 leader_knowledge = self.agents[leader_idx].share_knowledge()
                 for idx in members:
                     self.agents[idx].integrate_online_knowledge(leader_knowledge)
             # Extend with more aggregation modes as needed
 
-    def collective_action_selection(self, observations, mode='leader'):
+    def collective_action_selection(self, observations, mode="leader"):
         """
         For each group, select actions collectively for all members.
         mode: 'leader' (all follow leader), 'vote' (majority), or custom.
@@ -50,27 +58,25 @@ class MultiAgentSystem:
         for group_id, members in self.groups.items():
             if not members:
                 continue
-            if mode == 'leader':
+            if mode == "leader":
                 leader_idx = self.group_leaders.get(group_id, list(members)[0])
                 leader_obs = observations[leader_idx]
                 leader_action = self.agents[leader_idx].act(leader_obs)
                 for idx in members:
                     actions[idx] = leader_action
-            elif mode == 'vote':
+            elif mode == "vote":
                 group_obs = [observations[idx] for idx in members]
-                group_actions = [self.agents[idx].act(obs) for idx, obs in zip(members, group_obs)]
+                group_actions = [
+                    self.agents[idx].act(obs) for idx, obs in zip(members, group_obs)
+                ]
                 # Majority vote
                 from collections import Counter
+
                 most_common = Counter(group_actions).most_common(1)[0][0]
                 for idx in members:
                     actions[idx] = most_common
             # Extend with more collective modes as needed
         return actions
-
-        self.agents = agents
-        self.groups = {}  # group_id -> set of agent indices
-        self.group_leaders = {}  # group_id -> agent index
-        self.group_modules = {}  # group_id -> group-specific module (rules/subnetwork)
 
     def elect_leaders(self):
         """
@@ -122,8 +128,13 @@ class MultiAgentSystem:
         Each SOM node becomes a group; agents mapped to the same node are grouped together.
         """
         from src.core.som_cluster import SOMClusterer
+
         feature_matrix = np.array(feature_matrix)
-        som = SOMClusterer(input_dim=feature_matrix.shape[1], som_shape=som_shape, num_iteration=num_iteration)
+        som = SOMClusterer(
+            input_dim=feature_matrix.shape[1],
+            som_shape=som_shape,
+            num_iteration=num_iteration,
+        )
         som.fit(feature_matrix)
         clusters = som.predict(feature_matrix)
         # Map (x, y) SOM nodes to group IDs
@@ -156,8 +167,8 @@ class MultiAgentSystem:
         """
         if module is None:
             module = {
-                'rules': [f"rule_{group_id}_1", f"rule_{group_id}_2"],
-                'subnetwork': f"subnet_{group_id}"
+                "rules": [f"rule_{group_id}_1", f"rule_{group_id}_2"],
+                "subnetwork": f"subnet_{group_id}",
             }
         self.group_modules[group_id] = module
 

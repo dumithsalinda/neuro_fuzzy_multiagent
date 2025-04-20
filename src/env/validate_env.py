@@ -3,11 +3,14 @@ validate_env.py
 
 Utility for validating that an environment class or instance implements the required BaseEnvironment API and behaves correctly.
 """
+
 import inspect
 import sys
 import os
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
 from src.env.base_env import BaseEnvironment
+
 
 def validate_environment(env_cls_or_instance, verbose=True):
     """
@@ -21,7 +24,9 @@ def validate_environment(env_cls_or_instance, verbose=True):
     else:
         env = env_cls_or_instance
     # Check inheritance
-    assert isinstance(env, BaseEnvironment), f"{type(env)} does not inherit from BaseEnvironment"
+    assert isinstance(
+        env, BaseEnvironment
+    ), f"{type(env)} does not inherit from BaseEnvironment"
     required_methods = ["reset", "step", "render", "get_state", "get_observation"]
     required_properties = ["action_space", "observation_space"]
     # Check methods
@@ -38,7 +43,7 @@ def validate_environment(env_cls_or_instance, verbose=True):
     assert obs is not None, "reset() did not return an observation"
     action = env.action_space if not callable(env.action_space) else env.action_space()
     # Multi-agent support: if env has n_agents, pass a list of actions
-    if hasattr(env, 'n_agents') and isinstance(env.n_agents, int) and env.n_agents > 1:
+    if hasattr(env, "n_agents") and isinstance(env.n_agents, int) and env.n_agents > 1:
         actions = [0 for _ in range(env.n_agents)]  # use 0 as default action
     else:
         actions = action if not isinstance(action, (list, tuple)) else action[0]

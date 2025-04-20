@@ -1,13 +1,28 @@
 import numpy as np
 from minisom import MiniSom
 
+
 class SOMClusterer:
     """
     Utility for clustering agent features using Self-Organizing Maps (SOM).
     """
-    def __init__(self, input_dim, som_shape=(5, 5), sigma=1.0, learning_rate=0.5, num_iteration=100):
+
+    def __init__(
+        self,
+        input_dim,
+        som_shape=(5, 5),
+        sigma=1.0,
+        learning_rate=0.5,
+        num_iteration=100,
+    ):
         self.som_shape = som_shape
-        self.som = MiniSom(som_shape[0], som_shape[1], input_dim, sigma=sigma, learning_rate=learning_rate)
+        self.som = MiniSom(
+            som_shape[0],
+            som_shape[1],
+            input_dim,
+            sigma=sigma,
+            learning_rate=learning_rate,
+        )
         self.num_iteration = num_iteration
         self._trained = False
 

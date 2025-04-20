@@ -1,5 +1,5 @@
 from minisom import MiniSom
-import numpy as np
+
 
 class AgentFeatureSOM:
     def __init__(self, x=5, y=5, input_len=3, sigma=1.0, learning_rate=0.5):

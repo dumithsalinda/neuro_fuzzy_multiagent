@@ -1,4 +1,4 @@
-import numpy as np
+
 
 class MetaController:
     """
@@ -6,6 +6,7 @@ class MetaController:
     Can operate as a standalone (global) controller or be embedded in agents.
     Supports fuzzy rule tuning, neural parameter adaptation, and group coordination.
     """
+
     def __init__(self, agents=None):
         self.agents = agents if agents is not None else []
 
@@ -17,7 +18,7 @@ class MetaController:
         Tune all fuzzy sets in agent's fuzzy system using provided data.
         data: list/array of input samples (used for updating fuzzy set parameters)
         """
-        if hasattr(agent, 'model') and hasattr(agent.model, 'fis'):
+        if hasattr(agent, "model") and hasattr(agent.model, "fis"):
             fis = agent.model.fis
             for rule in fis.rules:
                 for i, fs in rule.antecedents:
@@ -29,7 +30,7 @@ class MetaController:
         """
         Set a new learning rate for the agent's neural network (and FIS if supported).
         """
-        if hasattr(agent, 'set_learning_rate'):
+        if hasattr(agent, "set_learning_rate"):
             agent.set_learning_rate(new_lr)
 
     def adapt_all_agents(self, data_map=None, lr_map=None):

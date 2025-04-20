@@ -1,8 +1,9 @@
 """
 CurriculumScenarioGenerator: yields scenarios of increasing difficulty for curriculum learning.
 """
+
 import itertools
-import numpy as np
+
 
 class CurriculumScenarioGenerator:
     def __init__(self, base_grid, curriculum_steps):
@@ -21,6 +22,9 @@ class CurriculumScenarioGenerator:
             # Merge step_params into base_grid
             merged_grid = {**self.base_grid, **step_params}
             keys = list(merged_grid.keys())
-            values = [merged_grid[k] if isinstance(merged_grid[k], list) else [merged_grid[k]] for k in keys]
+            values = [
+                merged_grid[k] if isinstance(merged_grid[k], list) else [merged_grid[k]]
+                for k in keys
+            ]
             for combo in itertools.product(*values):
                 yield dict(zip(keys, combo))

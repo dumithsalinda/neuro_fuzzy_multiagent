@@ -5,10 +5,12 @@ import torch.optim as optim
 from .agent import Agent
 from .laws import enforce_laws, LawViolation
 
+
 class QNetwork(nn.Module):
     """
     Q-Network for DQNAgent. state_dim should match the feature vector dimension for the agent's input type (e.g., 768 for BERT, 512 for ResNet18).
     """
+
     def __init__(self, state_dim, action_dim):
         super().__init__()
         self.net = nn.Sequential(
@@ -16,34 +18,42 @@ class QNetwork(nn.Module):
             nn.ReLU(),
             nn.Linear(64, 64),
             nn.ReLU(),
-            nn.Linear(64, action_dim)
+            nn.Linear(64, action_dim),
         )
+
     def forward(self, x):
         return self.net(x)
+
 
 class DQNAgent(Agent):
     def explain_action(self, observation):
         import torch
-        obs_tensor = torch.FloatTensor(np.array(observation, copy=True)).unsqueeze(0).to(self.device)
+
+        obs_tensor = (
+            torch.FloatTensor(np.array(observation, copy=True))
+            .unsqueeze(0)
+            .to(self.device)
+        )
         with torch.no_grad():
             q_values = self.q_net(obs_tensor).cpu().numpy().flatten()
         action = int(q_values.argmax())
         return {
             "q_values": q_values.tolist(),
             "chosen_action": action,
-            "epsilon": self.epsilon
+            "epsilon": self.epsilon,
         }
 
     """
     Deep Q-Learning Agent for continuous or large state spaces.
     """
+
     def __init__(self, state_dim, action_dim, alpha=1e-3, gamma=0.99, epsilon=0.1):
         super().__init__(model=None)
         self.state_dim = state_dim
         self.action_dim = action_dim
         self.gamma = gamma
         self.epsilon = epsilon
-        self.device = torch.device('cpu')
+        self.device = torch.device("cpu")
         self.q_net = QNetwork(state_dim, action_dim).to(self.device)
         self.optimizer = optim.Adam(self.q_net.parameters(), lr=alpha)
         self.memory = []  # (state, action, reward, next_state, done)
@@ -52,7 +62,11 @@ class DQNAgent(Agent):
         self.last_action = None
 
     def act(self, observation, state=None):
-        obs_tensor = torch.FloatTensor(np.array(observation, copy=True)).unsqueeze(0).to(self.device)
+        obs_tensor = (
+            torch.FloatTensor(np.array(observation, copy=True))
+            .unsqueeze(0)
+            .to(self.device)
+        )
         if np.random.rand() < self.epsilon:
             action = np.random.randint(self.action_dim)
         else:
@@ -60,7 +74,7 @@ class DQNAgent(Agent):
                 q_values = self.q_net(obs_tensor)
                 action = q_values.argmax().item()
         try:
-            enforce_laws(action, state, category='action')
+            enforce_laws(action, state, category="action")
         except LawViolation:
             action = 0
         self.last_state = observation
@@ -69,7 +83,9 @@ class DQNAgent(Agent):
 
     def observe(self, reward, next_state, done):
         # Store experience
-        self.memory.append((self.last_state, self.last_action, reward, next_state, done))
+        self.memory.append(
+            (self.last_state, self.last_action, reward, next_state, done)
+        )
         if len(self.memory) >= self.batch_size:
             self.train_step()
         if done:
@@ -80,7 +96,9 @@ class DQNAgent(Agent):
         if len(self.memory) < self.batch_size:
             return
         batch = np.random.choice(len(self.memory), self.batch_size, replace=False)
-        states, actions, rewards, next_states, dones = zip(*[self.memory[i] for i in batch])
+        states, actions, rewards, next_states, dones = zip(
+            *[self.memory[i] for i in batch]
+        )
         states = torch.FloatTensor(np.array(states)).to(self.device)
         actions = torch.LongTensor(actions).unsqueeze(1).to(self.device)
         rewards = torch.FloatTensor(rewards).unsqueeze(1).to(self.device)

@@ -3,6 +3,7 @@ class EnvironmentFactory:
     Factory for creating environments by name or config.
     Register new environments here for easy extension.
     """
+
     _registry = {}
 
     @classmethod
@@ -15,9 +16,12 @@ class EnvironmentFactory:
             raise ValueError(f"Unknown environment: {name}")
         return cls._registry[name](**kwargs)
 
+
 # Example registration (add others as needed)
 from src.env.multiagent_gridworld_env import MultiAgentGridworldEnv
-from src.env.multiagent_gridworld import MultiAgentGridworldEnv as MultiAgentGridworldEnv2
+from src.env.multiagent_gridworld import (
+    MultiAgentGridworldEnv as MultiAgentGridworldEnv2,
+)
 from src.env.simple_env import SimpleDiscreteEnv, SimpleContinuousEnv
 from src.env.adversarial_gridworld import AdversarialGridworldEnv
 from src.env.multiagent_resource import MultiAgentResourceEnv

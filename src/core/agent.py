@@ -5,24 +5,29 @@ Defines a generic Agent class for single and multiagent scenarios.
 Supports integration with neuro-fuzzy models, transfer learning, and various environments.
 """
 
-import numpy as np
 
 from .laws import enforce_laws
 from .neuro_fuzzy import NeuroFuzzyHybrid
 from .online_learning import OnlineLearnerMixin
 from .universal_fuzzy_layer import UniversalFuzzyLayer
+from typing import Callable, Optional, Dict, Any
 
 
 class Agent(OnlineLearnerMixin):
     """
     Generic agent that interacts with an environment using a model and policy.
-    Now supports online learning from web resources.
-    Supports dynamic group membership for self-organization.
-    Supports plug-and-play fuzzy logic via UniversalFuzzyLayer.
-    Implements a standardized communication API (send_message, receive_message).
+
+    Supports online learning, dynamic group membership, plug-and-play fuzzy logic (UniversalFuzzyLayer),
+    and a standardized communication API (send_message, receive_message).
+
+    Args:
+        model: The agent's underlying model (e.g., DQN, NeuroFuzzyHybrid).
+        policy: Callable for action selection (optional).
+        bus: Optional message bus for inter-agent communication.
+        group: Optional group identifier.
     """
 
-    def __init__(self, model, policy=None, bus=None, group=None):
+    def __init__(self, model: Any, policy: Optional[Callable] = None, bus: Optional[Any] = None, group: Optional[str] = None):
         self.model = model
         self.policy = policy if policy is not None else self.random_policy
         self.last_action = None
@@ -58,8 +63,8 @@ class Agent(OnlineLearnerMixin):
         """
         self.message_inbox.append((message, sender))
         self.last_message = (message, sender)
-        if isinstance(message, dict) and message.get('type') == 'knowledge':
-            knowledge = message.get('content')
+        if isinstance(message, dict) and message.get("type") == "knowledge":
+            knowledge = message.get("content")
             self.knowledge_received.append(knowledge)
             self.receive_knowledge(knowledge, sender=sender)
 
@@ -196,13 +201,11 @@ class Agent(OnlineLearnerMixin):
         """
         Placeholder for agent learning (to be overridden for RL, etc.).
         """
-        pass
 
     def self_organize(self, *args, **kwargs):
         """
         Placeholder for agent self-organization (to be overridden).
         """
-        pass
 
     def reset(self):
         """
@@ -222,7 +225,6 @@ class Agent(OnlineLearnerMixin):
         if self.bus is not None:
             self.bus.unregister(self)
         self.bus = None
-
 
     @staticmethod
     def random_policy(observation, model):
@@ -275,7 +277,6 @@ class NeuroFuzzyAgent(Agent):
         Updates nn_config, fis_config, meta_controller, universal_fuzzy_layer.
         """
         import json
-        import os
 
         import yaml
 

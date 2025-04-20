@@ -1,21 +1,33 @@
 import numpy as np
+
 try:
     from .anfis_hybrid import ANFISHybrid
 except ImportError:
     from anfis_hybrid import ANFISHybrid
+
 
 class NeuroFuzzyANFISAgent:
     """
     Agent wrapper for the ANFISHybrid neuro-fuzzy model.
     Supports act (forward), observe (online update), experience replay for continual learning,
     and meta-learning hooks (e.g., adaptive learning rate, learning-to-learn).
-    
+
     meta_update_fn: Optional callback called after each update.
       Signature: fn(agent, step: int) -> None
       agent: the NeuroFuzzyANFISAgent instance
       step: current update step
     """
-    def __init__(self, input_dim, n_rules, lr=0.01, buffer_size=100, replay_enabled=True, replay_batch=8, meta_update_fn=None):
+
+    def __init__(
+        self,
+        input_dim,
+        n_rules,
+        lr=0.01,
+        buffer_size=100,
+        replay_enabled=True,
+        replay_batch=8,
+        meta_update_fn=None,
+    ):
         self.model = ANFISHybrid(input_dim, n_rules)
         self.lr = lr
         self.last_obs = None
@@ -52,13 +64,16 @@ class NeuroFuzzyANFISAgent:
             self.meta_update_fn(self, self.update_step)
 
     def replay_sample(self):
-        idxs = np.random.choice(len(self.replay_buffer), self.replay_batch, replace=False)
+        idxs = np.random.choice(
+            len(self.replay_buffer), self.replay_batch, replace=False
+        )
         return [self.replay_buffer[i] for i in idxs]
 
     def replay_update(self):
         batch = self.replay_sample()
         for obs, reward in batch:
             self.model.update(obs, reward, lr=self.lr)
+
 
 # Simple test/demo
 if __name__ == "__main__":
@@ -73,4 +88,6 @@ if __name__ == "__main__":
             print(f"Step {step}: pred={y_pred:.3f}, target={y_target:.3f}")
     # Final test
     x_test = np.array([0.5, -0.2])
-    print(f"Test input {x_test}, pred={agent.act(x_test):.3f}, target={x_test.sum():.3f}")
+    print(
+        f"Test input {x_test}, pred={agent.act(x_test):.3f}, target={x_test.sum():.3f}"
+    )

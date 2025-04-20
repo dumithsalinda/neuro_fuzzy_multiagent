@@ -16,5 +16,8 @@ ray
 gspread
 google-auth
 pytest
-gspread
 mock
+# Development dependencies
+flake8
+black
+autoflake

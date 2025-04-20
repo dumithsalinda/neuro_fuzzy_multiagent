@@ -21,6 +21,14 @@ A robust, environment-independent, dynamic self-organizing neuro-fuzzy multi-age
 - **Adversarial Testing:** Perturb agent observations with various adversarial methods for robustness analysis.
 - **Dashboard:** Interactive dashboard for simulation, analytics, manual feedback, batch experiments, model management, and multi-modal agent demo.
 
+## Real-Time Data Integration & Human-in-the-Loop (HITL)
+
+- **Live Data Sources:** Agents/environments can receive real-time values from REST APIs, MQTT streams, or mock sensors, injected directly via the dashboard.
+- **Human-in-the-Loop Controls:** Pause, resume, stop, override actions, and provide manual rewards or demonstrations during experiments.
+- **Plug-and-Play:** Supports seamless switching between simulated and real-world data sources for agent control and observation.
+- **Architecture:** Environments implement `set_external_input(agent_idx, value)` to accept live values (see `src/env/base_env.py`).
+- **Dashboard UI:** Select, connect, and monitor live data sources and human feedback in real time.
+
 ## Core Modules
 - `src/core/agent.py`: Agent logic, knowledge sharing, law compliance, extensibility.
 - `src/core/multiagent.py`: Multi-agent system, group decision, privacy-aware knowledge sharing.

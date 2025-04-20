@@ -1,11 +1,13 @@
 from .base_env import BaseEnvironment
 import numpy as np
 
+
 class MultiAgentGridworldEnv(BaseEnvironment):
     """
     Example refactored environment: Multi-Agent Gridworld
     Now inherits from BaseEnvironment and implements required methods.
     """
+
     def __init__(self, grid_size=5, n_agents=3, n_obstacles=2):
         self.grid_size = grid_size
         self.n_agents = n_agents
@@ -41,10 +43,12 @@ class MultiAgentGridworldEnv(BaseEnvironment):
 
     def get_observation(self):
         # Return agent-agnostic observation (positions as flat array)
-        obs = np.concatenate([
-            np.array(self.agent_positions).flatten(),
-            np.array(self.obstacle_positions).flatten()
-        ])
+        obs = np.concatenate(
+            [
+                np.array(self.agent_positions).flatten(),
+                np.array(self.obstacle_positions).flatten(),
+            ]
+        )
         return obs
 
     def perceive(self):
@@ -52,6 +56,7 @@ class MultiAgentGridworldEnv(BaseEnvironment):
 
     def extract_features(self, state=None):
         import numpy as np
+
         if state is None:
             state = self.get_observation()
         return np.array(state)
@@ -61,7 +66,7 @@ class MultiAgentGridworldEnv(BaseEnvironment):
         return {
             "agent_positions": self.agent_positions,
             "obstacle_positions": self.obstacle_positions,
-            "timestep": self.timestep
+            "timestep": self.timestep,
         }
 
     @property
@@ -74,14 +79,26 @@ class MultiAgentGridworldEnv(BaseEnvironment):
         # Flat array: [agents * 2 + obstacles * 2]
         return self.n_agents * 2 + self.n_obstacles * 2
 
+    def set_external_input(self, agent_idx, value):
+        if not hasattr(self, "_external_inputs"):
+            self._external_inputs = {}
+        self._external_inputs[agent_idx] = value
+
     def _random_pos(self):
-        return [np.random.randint(0, self.grid_size), np.random.randint(0, self.grid_size)]
+        return [
+            np.random.randint(0, self.grid_size),
+            np.random.randint(0, self.grid_size),
+        ]
 
     def _move(self, pos, action):
         # Simple move logic
         x, y = pos
-        if action == 1 and x > 0: x -= 1
-        elif action == 2 and x < self.grid_size - 1: x += 1
-        elif action == 3 and y > 0: y -= 1
-        elif action == 4 and y < self.grid_size - 1: y += 1
+        if action == 1 and x > 0:
+            x -= 1
+        elif action == 2 and x < self.grid_size - 1:
+            x += 1
+        elif action == 3 and y > 0:
+            y -= 1
+        elif action == 4 and y < self.grid_size - 1:
+            y += 1
         return [x, y]
