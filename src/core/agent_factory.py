@@ -3,6 +3,11 @@ import yaml
 from src.core.agent import NeuroFuzzyAgent
 from src.core.meta_controller import MetaController
 from src.core.universal_fuzzy_layer import UniversalFuzzyLayer
+from src.core.neuro_fuzzy_fusion_agent import NeuroFuzzyFusionAgent
+from src.core.dqn_agent import DQNAgent
+from src.core.multimodal_dqn_agent import MultiModalDQNAgent
+from src.core.anfis_agent import NeuroFuzzyANFISAgent
+from src.core.multimodal_fusion_agent import MultiModalFusionAgent
 
 def create_agent_from_config(config):
     """
@@ -27,8 +32,73 @@ def create_agent_from_config(config):
             universal_fuzzy_layer=universal_fuzzy_layer,
             meta_controller=meta_controller
         )
+    elif agent_type == 'NeuroFuzzyFusionAgent':
+        # Required: input_dims, hidden_dim, output_dim
+        required = ['input_dims', 'hidden_dim', 'output_dim']
+        for r in required:
+            if r not in config:
+                raise ValueError(f"Missing required config field '{r}' for NeuroFuzzyFusionAgent")
+        agent = NeuroFuzzyFusionAgent(
+            input_dims=config['input_dims'],
+            hidden_dim=config['hidden_dim'],
+            output_dim=config['output_dim'],
+            fusion_type=config.get('fusion_type', 'concat'),
+            fuzzy_config=config.get('fuzzy_config', None),
+            fusion_alpha=config.get('fusion_alpha', 0.5),
+            device=config.get('device', None)
+        )
+    elif agent_type == 'DQNAgent':
+        required = ['state_dim', 'action_dim']
+        for r in required:
+            if r not in config:
+                raise ValueError(f"Missing required config field '{r}' for DQNAgent")
+        agent = DQNAgent(
+            state_dim=config['state_dim'],
+            action_dim=config['action_dim'],
+            alpha=config.get('alpha', 1e-3),
+            gamma=config.get('gamma', 0.99),
+            epsilon=config.get('epsilon', 0.1)
+        )
+    elif agent_type == 'MultiModalDQNAgent':
+        required = ['input_dims', 'action_dim']
+        for r in required:
+            if r not in config:
+                raise ValueError(f"Missing required config field '{r}' for MultiModalDQNAgent")
+        agent = MultiModalDQNAgent(
+            input_dims=config['input_dims'],
+            action_dim=config['action_dim'],
+            alpha=config.get('alpha', 1e-3),
+            gamma=config.get('gamma', 0.99),
+            epsilon=config.get('epsilon', 0.1)
+        )
+    elif agent_type == 'NeuroFuzzyANFISAgent':
+        required = ['input_dim', 'n_rules']
+        for r in required:
+            if r not in config:
+                raise ValueError(f"Missing required config field '{r}' for NeuroFuzzyANFISAgent")
+        agent = NeuroFuzzyANFISAgent(
+            input_dim=config['input_dim'],
+            n_rules=config['n_rules'],
+            lr=config.get('lr', 0.01),
+            buffer_size=config.get('buffer_size', 100),
+            replay_enabled=config.get('replay_enabled', True),
+            replay_batch=config.get('replay_batch', 8),
+            meta_update_fn=config.get('meta_update_fn', None)
+        )
+    elif agent_type == 'MultiModalFusionAgent':
+        required = ['input_dims', 'hidden_dim', 'output_dim']
+        for r in required:
+            if r not in config:
+                raise ValueError(f"Missing required config field '{r}' for MultiModalFusionAgent")
+        agent = MultiModalFusionAgent(
+            input_dims=config['input_dims'],
+            hidden_dim=config['hidden_dim'],
+            output_dim=config['output_dim'],
+            fusion_type=config.get('fusion_type', 'concat'),
+            lr=config.get('lr', 1e-3),
+            gamma=config.get('gamma', 0.99)
+        )
     elif agent_type == 'DummyAgent':
-        # Import DummyAgent from the test module if available, else fallback to Agent
         from tests.dummy_agent import DummyAgent
         agent = DummyAgent(model=None)
     else:

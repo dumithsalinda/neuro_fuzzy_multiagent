@@ -24,7 +24,7 @@ class QNetwork(nn.Module):
 class DQNAgent(Agent):
     def explain_action(self, observation):
         import torch
-        obs_tensor = torch.FloatTensor(observation).unsqueeze(0).to(self.device)
+        obs_tensor = torch.FloatTensor(np.array(observation, copy=True)).unsqueeze(0).to(self.device)
         with torch.no_grad():
             q_values = self.q_net(obs_tensor).cpu().numpy().flatten()
         action = int(q_values.argmax())
@@ -52,7 +52,7 @@ class DQNAgent(Agent):
         self.last_action = None
 
     def act(self, observation, state=None):
-        obs_tensor = torch.FloatTensor(observation).unsqueeze(0).to(self.device)
+        obs_tensor = torch.FloatTensor(np.array(observation, copy=True)).unsqueeze(0).to(self.device)
         if np.random.rand() < self.epsilon:
             action = np.random.randint(self.action_dim)
         else:
