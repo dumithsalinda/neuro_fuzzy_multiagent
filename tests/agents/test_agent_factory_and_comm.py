@@ -5,7 +5,7 @@ import json
 from src.core.management.agent_factory import create_agent_from_config, create_agent_from_file
 from src.core.agents.agent import Agent
 
-from tests.dummy_agent import DummyAgent
+from .dummy_agent import DummyAgent
 
 def test_create_agent_from_yaml():
     config = {

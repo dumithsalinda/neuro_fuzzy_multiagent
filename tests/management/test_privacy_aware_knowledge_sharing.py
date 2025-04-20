@@ -2,7 +2,7 @@ import pytest
 
 from src.core.agents.agent import Agent
 from src.core.management.multiagent import MultiAgentSystem
-from tests.dummy_agent import DummyAgent
+from agents.dummy_agent import DummyAgent
 
 
 def test_public_knowledge_sharing():

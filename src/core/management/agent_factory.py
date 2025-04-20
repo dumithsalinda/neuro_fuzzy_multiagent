@@ -108,7 +108,7 @@ def create_agent_from_config(config):
             gamma=config.get("gamma", 0.99),
         )
     elif agent_type == "DummyAgent":
-        from tests.dummy_agent import DummyAgent
+        from agents.dummy_agent import DummyAgent
 
         agent = DummyAgent(model=None)
     else:

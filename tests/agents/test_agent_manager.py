@@ -3,7 +3,7 @@ from src.core.management.agent_manager import AgentManager
 from src.core.management.message_bus import MessageBus
 from src.core.agents.agent import Agent
 
-from tests.dummy_agent import DummyAgent
+from .dummy_agent import DummyAgent
 
 def minimal_agent_config(name):
     return {
