@@ -8,6 +8,7 @@ from src.core.agent_factory import create_agent_from_config
 from src.core.experiment_manager import ExperimentManager
 from src.core.scenario_generator import ScenarioGenerator
 from src.env.environment_factory import EnvironmentFactory
+from src.utils.visualization import plot_rewards, plot_agent_explanations, plot_rule_activations
 
 # Map scenario env names to factory keys
 ENV_MAP = {
@@ -99,3 +100,68 @@ for scenario in scenarios:
 
 means = mgr.aggregate_results("mean_reward")
 print(f"All mean rewards: {means}")
+
+# Visualization: plot reward history for all runs
+plot_rewards([r for r in means if r is not None], title="Mean Rewards Across Scenarios")
+
+# Visualization: collect and plot agent explanations for the first scenario
+# (Assume Q-values or rule activations are returned by explain_action; fallback to zeros if not available)
+first_scenario = scenarios[0]
+np.random.seed(first_scenario["seed"])
+env_key = ENV_MAP[first_scenario["env"]]
+env = EnvironmentFactory.create(env_key, n_agents=first_scenario["agent_count"])
+agent_cfg_path = AGENT_CFG_MAP[first_scenario["agent_type"]]
+agents = [create_agent_from_config(__import__('yaml').safe_load(open(agent_cfg_path))) for _ in range(first_scenario["agent_count"])]
+obs = env.reset()
+explanation_history = [[] for _ in range(first_scenario["agent_count"])]
+done = False
+steps = 0
+while not done and steps < 20:
+    per_agent_obs = [obs for _ in range(first_scenario["agent_count"])]
+    actions = []
+    for i, agent in enumerate(agents):
+        agent_obs = per_agent_obs[i]
+        if hasattr(agent, 'explain_action'):
+            try:
+                explanation = agent.explain_action(agent_obs)
+                # Use Q-values if present, else rule activations, else zeros
+                if "q_values" in explanation:
+                    explanation_history[i].append(np.max(explanation["q_values"]))
+                elif "rule_activations" in explanation:
+                    explanation_history[i].append(np.max(explanation["rule_activations"]))
+                else:
+                    explanation_history[i].append(0)
+            except Exception:
+                explanation_history[i].append(0)
+        else:
+            explanation_history[i].append(0)
+        # Normal action selection for step
+        if hasattr(agent, 'select_action'):
+            try:
+                action = agent.select_action(agent_obs)
+            except Exception:
+                action = np.random.randint(env.action_space) if hasattr(env, 'action_space') else 0
+        elif hasattr(agent, 'act'):
+            try:
+                action = agent.act(agent_obs)
+            except Exception:
+                action = np.random.randint(env.action_space) if hasattr(env, 'action_space') else 0
+        else:
+            action = np.random.randint(env.action_space) if hasattr(env, 'action_space') else 0
+        actions.append(action)
+    step_result = env.step(actions)
+    if isinstance(step_result, tuple) and len(step_result) == 4:
+        obs, rewards, done, info = step_result
+    else:
+        break
+    steps += 1
+plot_agent_explanations(explanation_history, title="Max Q-values or Rule Activations (First Scenario)")
+
+# If the first agent is a NeuroFuzzyAgent and explanation includes rule_activations, plot per-rule activations for the first step
+if hasattr(agents[0], 'explain_action'):
+    try:
+        explanation = agents[0].explain_action(per_agent_obs[0])
+        if "rule_activations" in explanation:
+            plot_rule_activations(explanation["rule_activations"], agent_idx=0, title="NeuroFuzzyAgent Rule Activations (First Step)")
+    except Exception:
+        pass
