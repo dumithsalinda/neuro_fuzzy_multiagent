@@ -5,10 +5,12 @@ Runs real agents in real environments for each scenario.
 import numpy as np
 import os
 from src.core.agent_factory import create_agent_from_config
+from src.core.agent_manager import AgentManager
 from src.core.experiment_manager import ExperimentManager
 from src.core.scenario_generator import ScenarioGenerator
 from src.env.environment_factory import EnvironmentFactory
 from src.utils.visualization import plot_rewards, plot_agent_explanations, plot_rule_activations
+from src.utils.human_in_the_loop import human_in_the_loop_control
 
 # Map scenario env names to factory keys
 ENV_MAP = {
@@ -36,16 +38,36 @@ for scenario in scenarios:
     # Create environment
     env_key = ENV_MAP[scenario["env"]]
     env = EnvironmentFactory.create(env_key, n_agents=scenario["agent_count"])
-    # Create agents
+    # Create agents using AgentManager for plug-and-play
+    agent_mgr = AgentManager()
     agent_cfg_path = AGENT_CFG_MAP[scenario["agent_type"]]
-    agents = [create_agent_from_config(
-        __import__('yaml').safe_load(open(agent_cfg_path))) for _ in range(scenario["agent_count"])]
+    agent_cfg = __import__('yaml').safe_load(open(agent_cfg_path))
+    for _ in range(scenario["agent_count"]):
+        agent_mgr.add_agent(agent_cfg)
+    agents = agent_mgr.get_agents()
     # Run one episode with random actions
     obs = env.reset()
     total_rewards = [0 for _ in range(scenario["agent_count"])]
     done = False
     steps = 0
     while not done and steps < 50:
+        # Human-in-the-loop: every 10 steps, prompt user for control
+        if steps > 0 and steps % 10 == 0:
+            print("[Plug-and-Play] To swap the first agent, type 'swap' at the prompt.")
+            hitl_cmd = human_in_the_loop_control(steps, agent=agents[0], env=env)
+            if hitl_cmd == 'stop':
+                print("Episode stopped by user at step {}.".format(steps))
+                break
+            elif hitl_cmd.strip().lower() == 'swap':
+                # Swap the first agent with the other type
+                old_agent = agents[0]
+                current_type = scenario["agent_type"]
+                new_type = "NeuroFuzzyAgent" if current_type == "DQNAgent" else "DQNAgent"
+                new_cfg_path = AGENT_CFG_MAP[new_type]
+                new_cfg = __import__('yaml').safe_load(open(new_cfg_path))
+                new_agent = agent_mgr.replace_agent(old_agent, new_cfg)
+                agents = agent_mgr.get_agents()
+                print("[Plug-and-Play] Swapped first agent to {}.".format(new_type))
         # Try to get per-agent observations if available, else share obs
         per_agent_obs = None
         if isinstance(obs, dict) and "agent_positions" in obs:
@@ -96,10 +118,10 @@ for scenario in scenarios:
         "agent_count": scenario["agent_count"]
     }
     mgr.log_results(run, result)
-    print(f"Finished run {run['run_id']} | {scenario} | mean_reward={mean_reward:.2f}")
+    print("Finished run {} | {} | mean_reward={:.2f}".format(run['run_id'], scenario, mean_reward))
 
 means = mgr.aggregate_results("mean_reward")
-print(f"All mean rewards: {means}")
+print("All mean rewards: {}".format(means))
 
 # Visualization: plot reward history for all runs
 plot_rewards([r for r in means if r is not None], title="Mean Rewards Across Scenarios")

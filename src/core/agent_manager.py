@@ -33,6 +33,15 @@ class AgentManager:
         """
         agent.reload_config(config_or_path)
 
+    def replace_agent(self, old_agent, new_config, group=None):
+        """
+        Replace an existing agent with a new one created from new_config.
+        Optionally assign to the same group.
+        Returns the new agent.
+        """
+        self.remove_agent(old_agent)
+        return self.add_agent(new_config, group=group)
+
     def get_agents(self, group=None):
         if group:
             return list(self.agent_groups.get(group, []))
