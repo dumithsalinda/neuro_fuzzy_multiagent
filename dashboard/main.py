@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import networkx as nx
 import pandas as pd
 import streamlit as st
-
+from dashboard.sidebar import render_sidebar
 from dashboard.chat import chat_panel
 from dashboard.login import login_form
 from dashboard.simulation import run_batch_experiments, simulate_step, som_group_agents
@@ -18,6 +18,36 @@ from dashboard.visualization import (
 )
 from src.core.neuro_fuzzy_fusion_agent import NeuroFuzzyFusionAgent
 
+# --- Unified Plug-and-Play Sidebar ---
+def main():
+    render_sidebar()  # Always show plug-and-play selection/config/hot-reload
+    # --- Main Tabs ---
+    tab_labels = [
+        "Simulation Controls",
+        "Batch Experiments",
+        "Analytics",
+        "Agent Chat",
+        "Interventions",
+        "Collaboration",
+        "Settings",
+    ]
+    tabs = st.tabs(tab_labels)
+    with tabs[0]:
+        simulation_controls()
+    with tabs[1]:
+        batch_experiments()
+    with tabs[2]:
+        analytics()
+    with tabs[3]:
+        agent_chat()
+    with tabs[4]:
+        interventions()
+    with tabs[5]:
+        collaboration()
+    with tabs[6]:
+        settings()
+
+# (Keep all other functions as before, but ensure they use st.session_state for selected plugins/config)
 
 def merge_logs(local_log, remote_log):
     """
