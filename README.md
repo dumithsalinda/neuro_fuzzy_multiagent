@@ -153,6 +153,51 @@ pytest tests/
 
 All dashboard and core functions are covered by the test suite. If you encounter any errors, see the test output for details and troubleshooting.
 
+### Test Suite Organization (2025)
+
+Tests are now organized by feature/module for clarity and maintainability:
+
+```
+tests/
+  agents/         # Tests for agent classes and agent-related logic
+  core/           # Core system, law, online learning, and plugin tests
+  environments/   # Environment and environment-controller tests
+  management/     # Multi-agent system, group, dashboard, and management tests
+  integration/    # Cross-module, knowledge sharing, and integration tests
+```
+
+- Place new agent tests in `tests/agents/`, environment tests in `tests/environments/`, etc.
+- Each subfolder contains an `__init__.py` for pytest discovery.
+- Example: To test a new agent, add `test_my_agent.py` to `tests/agents/`.
+- Update imports to use relative paths (e.g., `from .dummy_agent import DummyAgent`).
+
+---
+
+## Meta-Learning & AutoML
+
+The platform supports meta-learning and automated hyperparameter optimization for agents:
+
+### MetaAgent
+- Dynamically selects the best-performing agent type (e.g., DQN, Q-Learning) based on recent performance.
+- Usage:
+  ```python
+  from src.core.agents.meta_agent import MetaAgent
+  meta = MetaAgent(candidate_agents=[(DQNAgent, {...}), (TabularQLearningAgent, {...})])
+  ```
+- The MetaAgent tries each candidate for a set number of steps (exploration), then switches to the best.
+
+### HyperparameterOptimizer
+- Simple optimizer for agent hyperparameters (random search; extensible to Bayesian/evolutionary).
+- Usage:
+  ```python
+  from src.core.agents.hpo import HyperparameterOptimizer
+  hpo = HyperparameterOptimizer(param_space, eval_fn)
+  best_params, best_score = hpo.optimize(n_trials=100)
+  ```
+- Use to tune agent configs for best performance.
+
+See `src/core/agents/meta_agent.py` and `src/core/agents/hpo.py` for details and extension points.
+
 ## Example Usage
 ```python
 from core.agent import Agent
