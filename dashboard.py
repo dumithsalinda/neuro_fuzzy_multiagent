@@ -11,15 +11,9 @@ import streamlit as st
 
 from dashboard.main import main
 from dashboard_env import initialize_env_and_agents
-from src.core.agent import Agent
-from src.core.dqn_agent import DQNAgent
-from src.core.message_bus import MessageBus
-from src.core.multiagent import MultiAgentSystem
-from src.core.multimodal_fusion_agent import MultiModalFusionAgent
-from src.core.neuro_fuzzy import NeuroFuzzyHybrid
-from src.core.tabular_q_agent import TabularQLearningAgent
-from src.env.environment_factory import EnvironmentFactory
-from src.env.simple_env import SimpleContinuousEnv, SimpleDiscreteEnv
+from src.env.registry import get_registered_environments
+from src.core.agent_registry import get_registered_agents
+from src.plugins.registry import get_registered_sensors, get_registered_actuators
 
 MODEL_DIR = "models"
 os.makedirs(MODEL_DIR, exist_ok=True)
@@ -32,33 +26,115 @@ main()
 # --- Real-World Integration Sidebar ---
 
 
-# List of registered environments for dynamic selection
-env_choices = [
-    ("Gridworld", "multiagent_gridworld_v2"),
-    ("Gridworld (Simple)", "multiagent_gridworld"),
-    ("Adversarial Gridworld", "adversarial_gridworld"),
-    ("Resource Collection", "multiagent_resource"),
-    ("Simple Discrete", "simple_discrete"),
-    ("Simple Continuous", "simple_continuous"),
+# --- Plug-and-Play Environment and Agent Selection ---
+registered_envs = get_registered_environments()
+registered_agents = get_registered_agents()
+import importlib
+
+# --- Plugin Hot-Reload Button ---
+if st.sidebar.button("🔄 Reload Plugins"):
+    importlib.invalidate_caches()
+    importlib.reload(importlib.import_module("src.plugins.registry"))
+    st.experimental_rerun()
+
+registered_sensors = get_registered_sensors()
+registered_actuators = get_registered_actuators()
+
+env_names = list(registered_envs.keys())
+selected_env_name = st.sidebar.selectbox("Environment Type", env_names)
+# Show docstring for selected environment
+if selected_env_name in registered_envs:
+    env_cls = registered_envs[selected_env_name]
+    st.sidebar.caption(f"**Env Doc:** {env_cls.__doc__}")
+
+agent_names = list(registered_agents.keys())
+agent_count = st.sidebar.slider("Number of Agents", 1, 5, 3)
+selected_agent_names = [
+    st.sidebar.selectbox(f"Agent {i+1} Type", agent_names, key=f"agent_type_{i}")
+    for i in range(agent_count)
 ]
+# Show docstring for selected agent types
+for i, agent_cls_name in enumerate(selected_agent_names):
+    if agent_cls_name in registered_agents:
+        agent_cls = registered_agents[agent_cls_name]
+        st.sidebar.caption(f"**Agent {i+1} Doc:** {agent_cls.__doc__}")
+# Additional environment-specific options (e.g., obstacles)
+n_obstacles = st.sidebar.slider("Number of Obstacles", 0, 10, 2)
 
-env_type, env_key = st.sidebar.selectbox(
-    "Environment Type", env_choices, format_func=lambda x: x[0]
-)
+# --- Plug-and-Play Sensor/Actuator Plugin Selection ---
+sensor_names = list(registered_sensors.keys())
+actuator_names = list(registered_actuators.keys())
+selected_sensor_name = st.sidebar.selectbox("Sensor Plugin", ["None"] + sensor_names)
+if selected_sensor_name != "None":
+    sensor_cls = registered_sensors[selected_sensor_name]
+    st.sidebar.caption(f"**Sensor Doc:** {sensor_cls.__doc__}")
+selected_actuator_name = st.sidebar.selectbox("Actuator Plugin", ["None"] + actuator_names)
+if selected_actuator_name != "None":
+    actuator_cls = registered_actuators[selected_actuator_name]
+    st.sidebar.caption(f"**Actuator Doc:** {actuator_cls.__doc__}")
 
-agent_type = None  # Always defined for safety
+import inspect
 
-if env_type == "Gridworld":
-    agent_type = None
-    agent_count = st.sidebar.slider("Number of Agents", 1, 5, 3)
-    n_obstacles = st.sidebar.slider("Number of Obstacles", 0, 10, 2)
-    agent_type_choices = [
-        "Neuro-Fuzzy",
-        "Tabular Q-Learning",
-        "DQN RL",
-        "Multi-Modal Fusion Agent",
-        "ANFIS Agent",
-    ]
+def get_init_params(cls):
+    sig = inspect.signature(cls.__init__)
+    # Exclude self and *args/**kwargs
+    return [p for p in sig.parameters.values()
+            if p.name != 'self' and p.kind in (p.POSITIONAL_OR_KEYWORD, p.KEYWORD_ONLY)]
+
+def get_param_value(param, label_prefix=""):
+    label = f"{label_prefix}{param.name} ({param.annotation.__name__ if param.annotation != inspect._empty else 'Any'})"
+    default = None if param.default == inspect._empty else param.default
+    # Use Streamlit input widgets based on type
+    if param.annotation in [int, float]:
+        return st.sidebar.number_input(label, value=default if default is not None else 0)
+    elif param.annotation == bool:
+        return st.sidebar.checkbox(label, value=default if default is not None else False)
+    elif param.annotation == str:
+        return st.sidebar.text_input(label, value=default if default is not None else "")
+    else:
+        return st.sidebar.text_input(label, value=str(default) if default is not None else "")
+
+# Environment config
+env_kwargs = {}
+if selected_env_name in registered_envs:
+    env_cls = registered_envs[selected_env_name]
+    for param in get_init_params(env_cls):
+        env_kwargs[param.name] = get_param_value(param, label_prefix="Env: ")
+
+# Agent config (for each agent)
+agent_kwargs_list = []
+for i, agent_cls_name in enumerate(selected_agent_names):
+    kwargs = {}
+    if agent_cls_name in registered_agents:
+        agent_cls = registered_agents[agent_cls_name]
+        for param in get_init_params(agent_cls):
+            kwargs[param.name] = get_param_value(param, label_prefix=f"Agent {i+1}: ")
+    agent_kwargs_list.append(kwargs)
+
+# Sensor config
+sensor_kwargs = {}
+if selected_sensor_name != "None":
+    sensor_cls = registered_sensors[selected_sensor_name]
+    for param in get_init_params(sensor_cls):
+        sensor_kwargs[param.name] = get_param_value(param, label_prefix="Sensor: ")
+
+# Actuator config
+actuator_kwargs = {}
+if selected_actuator_name != "None":
+    actuator_cls = registered_actuators[selected_actuator_name]
+    for param in get_init_params(actuator_cls):
+        actuator_kwargs[param.name] = get_param_value(param, label_prefix="Actuator: ")
+
+# Instantiate plugins and store in session_state for use elsewhere
+if selected_sensor_name != "None":
+    st.session_state["sensor_plugin"] = registered_sensors[selected_sensor_name](**sensor_kwargs)
+else:
+    st.session_state["sensor_plugin"] = None
+if selected_actuator_name != "None":
+    st.session_state["actuator_plugin"] = registered_actuators[selected_actuator_name](**actuator_kwargs)
+else:
+    st.session_state["actuator_plugin"] = None
+
     agent_types = [
         st.sidebar.selectbox(
             f"Agent {i+1} Type", agent_type_choices, key=f"agent_type_{i}"

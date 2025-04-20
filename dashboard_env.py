@@ -55,10 +55,44 @@ def realworld_sidebar():
             realworld_result_placeholder.error(f"Failed: {ex}")
 
 
-def initialize_env_and_agents(agent_type, agent_count, n_obstacles):
-    # This logic is moved from dashboard.py lines 159-241
-    from src.env.environment_factory import EnvironmentFactory
+from src.env.registry import get_registered_environments
+from src.core.agent_registry import get_registered_agents
+
+def initialize_env_and_agents(selected_agent_names, agent_count, n_obstacles, selected_env_name=None, env_kwargs=None):
+    """
+    Initializes the selected environment and agent classes using plug-and-play registries.
+    Args:
+        selected_agent_names (list[str]): List of agent class names (from registry) for each agent.
+        agent_count (int): Number of agents.
+        n_obstacles (int): Number of obstacles (passed to env if supported).
+        selected_env_name (str): Environment class name (from registry).
+        env_kwargs (dict): Additional kwargs for environment instantiation.
+    Returns:
+        env, agents (list)
+    """
+    registered_envs = get_registered_environments()
+    registered_agents = get_registered_agents()
+    env_kwargs = env_kwargs or {}
+    # Add obstacles if supported
+    if n_obstacles is not None:
+        env_kwargs["n_obstacles"] = n_obstacles
+    env = None
+    if selected_env_name and selected_env_name in registered_envs:
+        env_cls = registered_envs[selected_env_name]
+        try:
+            env = env_cls(**env_kwargs)
+        except Exception:
+            env = env_cls()
     agents = []
+    for i in range(agent_count):
+        agent_cls_name = selected_agent_names[i % len(selected_agent_names)]
+        agent_cls = registered_agents.get(agent_cls_name)
+        if agent_cls is not None:
+            try:
+                agents.append(agent_cls())
+            except Exception:
+                agents.append(agent_cls)
+    return env, agents
     env_key = None
     env_kwargs = {}
     agent_types = None
