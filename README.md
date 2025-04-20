@@ -1,5 +1,44 @@
 # Neuro-Fuzzy Multi-Agent System
 
+---
+
+## 🟢 Beginner’s Guide
+
+### What is this project?
+This is a flexible platform for building, testing, and experimenting with teams of intelligent agents (like little robots or AI programs) that can sense, act, learn, and work together. It supports easy “plug-and-play” for new agent types, environments, sensors, and actuators—no need to change core code!
+
+### What can you do with it?
+- Simulate teams of smart agents in different environments.
+- Add your own agents, environments, sensors, or actuators with just a new file.
+- Use a friendly dashboard to run experiments, visualize results, and interact with agents in real time.
+- Integrate real-world data or human feedback for advanced experiments.
+
+### How do you use it?
+1. **Install requirements:**  
+   ```sh
+   pip install -r requirements.txt
+   ```
+2. **Start the dashboard:**  
+   ```sh
+   streamlit run dashboard.py
+   ```
+3. **Try it out:**  
+   - Select environments, agents, sensors, and actuators from the sidebar.
+   - Run simulations, see results, and interact live.
+   - Try adding your own plugin (see DEVELOPER.md for step-by-step instructions).
+
+### Where to learn more?
+- **DEVELOPER.md:** How to add new agents, environments, sensors, or actuators.
+- **CONTRIBUTING.md:** How to contribute your own plugins or improvements.
+- **Dashboard UI:** Tooltips and docstrings are shown for every selectable module.
+
+### Troubleshooting
+- If you see errors, check that all dependencies are installed.
+- Use the “🔄 Reload Plugins” button in the dashboard after adding new files.
+- For more help, open an issue or discussion on the project repository.
+
+---
+
 ## Overview
 A robust, environment-independent, dynamic self-organizing neuro-fuzzy multi-agent system with:
 - **Unbreakable Laws:** Hard constraints on agent and group behavior.
