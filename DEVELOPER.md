@@ -1,10 +1,88 @@
 # Plug-and-Play Developer Guide
 
-Welcome to the plug-and-play neuro-fuzzy multi-agent platform! This guide explains how to add new environments, agents, and (optionally) plugins so that they are automatically discovered and available in the dashboard/config—**no core code changes required**.
+Welcome to the plug-and-play neuro-fuzzy multi-agent platform! This guide explains how to add new environments, agents, neural networks, sensors, and actuators so that they are automatically discovered and available in the dashboard/config—**no core code changes required**.
 
 ---
 
 ## 1. Directory Structure
+
+```
+src/
+  env/           # Environment plugins (BaseEnvironment subclasses)
+  core/          # Agent plugins (Agent subclasses, neural networks)
+  plugins/       # Sensor/actuator plugins (BaseSensor, BaseActuator)
+  utils/         # Utilities (e.g., config_loader.py)
+```
+
+---
+
+## 2. Plugin API Reference
+
+### Environments
+- Subclass `BaseEnvironment` in `src/env/`.
+- Implement: `reset`, `step`, `get_observation`, `get_state`, `render`.
+- Add a docstring describing config options.
+
+### Agents
+- Subclass `Agent` in `src/core/`.
+- Register using `@register_agent` decorator or base class scanning.
+
+### Neural Networks (Plug-and-Play)
+- Subclass `BaseNeuralNetwork` in `src/core/neural_network.py`.
+- Register using `@register_neural_network`.
+- Required methods: `forward`, `backward`, `evolve` (optional), `__init__` with config params.
+- Add docstrings for config options.
+- Example config (YAML):
+  ```yaml
+  nn_config:
+    nn_type: FeedforwardNeuralNetwork
+    input_dim: 4
+    hidden_dim: 8
+    output_dim: 2
+    activation: tanh
+  ```
+
+### Sensors/Actuators
+- Subclass `BaseSensor` or `BaseActuator` in `src/plugins/`.
+- Register using decorators or base class scanning.
+
+---
+
+## 3. Auto-Discovery & Registration
+- All plugins are auto-discovered by scanning their respective directories.
+- Use decorators (e.g., `@register_neural_network`) or ensure your class is a subclass of the appropriate base class.
+- No need to manually edit registries.
+
+---
+
+## 4. Config & Dashboard Integration
+- Plugins can be selected via YAML/JSON config files or interactively in the dashboard sidebar.
+- See `config/nn_config_example.yaml` for neural network config.
+- Use the dashboard “🔄 Reload Plugins” button after adding new files.
+
+---
+
+## 5. Auto-Generated Plugin Docs
+- See `PLUGIN_DOCS.md` (auto-generated) for a list of all available plugins, their docstrings, and config options.
+- To regenerate, run:
+  ```sh
+  python generate_plugin_docs.py
+  ```
+
+---
+
+## 6. Best Practices
+- Add clear docstrings to every plugin class.
+- Specify all config options in `__init__` and docstring.
+- Use type hints for all parameters.
+- Test your plugin with `pytest` and the dashboard before sharing.
+
+---
+
+## 7. Troubleshooting
+- If your plugin does not appear in the dashboard, check for typos, missing base class, or missing decorator.
+- Use the dashboard reload button after adding new files.
+- See `PLUGIN_DOCS.md` for a list of all discovered plugins.
 
 ```
 src/

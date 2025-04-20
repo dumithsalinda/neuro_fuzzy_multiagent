@@ -28,6 +28,7 @@ This is a flexible platform for building, testing, and experimenting with teams 
    - Try adding your own plugin (see DEVELOPER.md for step-by-step instructions).
 
 ### Where to learn more?
+- **PLUGIN_DOCS.md:** Full auto-generated list of all available environments, agents, neural networks, sensors, and actuators, including config options and docstrings. Regenerate with `python generate_plugin_docs.py` after adding plugins.
 - **DEVELOPER.md:** How to add new agents, environments, sensors, or actuators.
 - **CONTRIBUTING.md:** How to contribute your own plugins or improvements.
 - **Dashboard UI:** Tooltips and docstrings are shown for every selectable module.
