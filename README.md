@@ -198,6 +198,34 @@ The platform supports meta-learning and automated hyperparameter optimization fo
 
 See `src/core/agents/meta_agent.py` and `src/core/agents/hpo.py` for details and extension points.
 
+---
+
+## Interoperability
+
+### OpenAI Gym/Env Compatibility
+- Use standard RL environments with the platform via `GymEnvWrapper`.
+- Example:
+  ```python
+  from src.core.environments.gym_env_wrapper import GymEnvWrapper
+  env = GymEnvWrapper('CartPole-v1')
+  obs = env.reset()
+  action = env.action_space.sample()
+  obs, reward, done, info = env.step(action)
+  ```
+- Enables benchmarking and comparison with widely-used RL tasks.
+
+### ROS/IoT Integration
+- Minimal ROS bridge for agent-environment communication via ROS topics.
+- Example:
+  ```python
+  from src.core.plugins.ros_bridge import ROSBridge
+  bridge = ROSBridge(node_name='nfma_ros_bridge')
+  pub = bridge.create_publisher('/nfma/test', queue_size=1)
+  bridge.publish('/nfma/test', 'hello world')
+  ```
+- Allows integration with robotics middleware and real-world sensors/actuators.
+- Requires `rospy` (ROS Python client library).
+
 ## Example Usage
 ```python
 from core.agent import Agent
