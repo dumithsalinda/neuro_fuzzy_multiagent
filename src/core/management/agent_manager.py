@@ -1,5 +1,5 @@
-from src.core.message_bus import MessageBus
-from src.core.agent_factory import create_agent_from_config
+from src.core.management.message_bus import MessageBus
+from src.core.management.agent_factory import create_agent_from_config
 
 
 class AgentManager:

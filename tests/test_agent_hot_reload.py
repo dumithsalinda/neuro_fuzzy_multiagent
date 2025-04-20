@@ -1,8 +1,8 @@
 import os
 import tempfile
 import yaml
-from src.core.agent_manager import AgentManager
-from src.core.message_bus import MessageBus
+from src.core.management.agent_manager import AgentManager
+from src.core.management.message_bus import MessageBus
 
 def test_agent_hot_reload():
     bus = MessageBus()

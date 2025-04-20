@@ -4,7 +4,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 
 import numpy as np
 import pytest
-from src.core.fuzzy_system import FuzzySet, FuzzyRule, FuzzyInferenceSystem
+from src.core.neural_networks.fuzzy_system import FuzzySet, FuzzyRule, FuzzyInferenceSystem
 
 def test_fuzzy_set_membership_and_tune():
     fs = FuzzySet("A", [0.0, 1.0])

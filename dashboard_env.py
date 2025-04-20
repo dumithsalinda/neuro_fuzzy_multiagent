@@ -1,30 +1,40 @@
 import streamlit as st
-from src.core.agent import Agent
-from src.core.dqn_agent import DQNAgent
-from src.core.multiagent import MultiAgentSystem
+
+from src.core.agents.agent import Agent
+from src.core.agents.anfis_agent import NeuroFuzzyANFISAgent
+from src.core.agents.dqn_agent import DQNAgent
+from src.core.agents.tabular_q_agent import TabularQLearningAgent
+from src.core.management.multiagent import MultiAgentSystem
 from src.core.neuro_fuzzy import NeuroFuzzyHybrid
-from src.core.tabular_q_agent import TabularQLearningAgent
-from src.core.anfis_agent import NeuroFuzzyANFISAgent
+
 
 # --- ANFIS Experience Replay Sidebar Controls ---
 def anfis_replay_sidebar():
     st.sidebar.markdown("---")
     st.sidebar.markdown("**ANFIS Agent Online/Continual Learning**")
     replay_enabled = st.sidebar.checkbox("Enable Experience Replay", value=True)
-    buffer_size = st.sidebar.number_input("Replay Buffer Size", min_value=10, max_value=1000, value=100, step=10)
-    batch_size = st.sidebar.number_input("Replay Batch Size", min_value=1, max_value=128, value=8, step=1)
+    buffer_size = st.sidebar.number_input(
+        "Replay Buffer Size", min_value=10, max_value=1000, value=100, step=10
+    )
+    batch_size = st.sidebar.number_input(
+        "Replay Batch Size", min_value=1, max_value=128, value=8, step=1
+    )
     return replay_enabled, buffer_size, batch_size
 
-from src.env.simple_env import SimpleContinuousEnv, SimpleDiscreteEnv
+
 import json
-import requests
-from collections import defaultdict, deque
 import os
+from collections import defaultdict, deque
+
+import requests
+
+from src.env.simple_env import SimpleContinuousEnv, SimpleDiscreteEnv
 
 MODEL_DIR = "models"
 os.makedirs(MODEL_DIR, exist_ok=True)
 
 reward_history = defaultdict(lambda: deque(maxlen=100))
+
 
 def realworld_sidebar():
     st.sidebar.markdown("---")
@@ -32,12 +42,15 @@ def realworld_sidebar():
     realworld_types = ["robot", "api", "iot_sensor"]
     realworld_mode = st.sidebar.selectbox("Mode", ["Observe", "Act"])
     realworld_type = st.sidebar.selectbox("Type", realworld_types)
-    realworld_url = st.sidebar.text_input("Endpoint URL", value="http://localhost:9000/data")
+    realworld_url = st.sidebar.text_input(
+        "Endpoint URL", value="http://localhost:9000/data"
+    )
     realworld_config = {"url": realworld_url}
     realworld_config_json = json.dumps(realworld_config)
     realworld_action = (
         st.sidebar.text_input("Action (JSON)", value='{"move": "forward"}')
-        if realworld_mode == "Act" else None
+        if realworld_mode == "Act"
+        else None
     )
     realworld_result_placeholder = st.sidebar.empty()
     if st.sidebar.button(f"Real-World {realworld_mode}"):
@@ -47,7 +60,11 @@ def realworld_sidebar():
             data = (
                 {"config": realworld_config_json, "source_type": realworld_type}
                 if realworld_mode == "Observe"
-                else {"config": realworld_config_json, "target_type": realworld_type, "action": realworld_action}
+                else {
+                    "config": realworld_config_json,
+                    "target_type": realworld_type,
+                    "action": realworld_action,
+                }
             )
             r = requests.post(api_url, data=data, headers=headers, timeout=3)
             realworld_result_placeholder.success(f"Result: {r.text}")
@@ -55,10 +72,17 @@ def realworld_sidebar():
             realworld_result_placeholder.error(f"Failed: {ex}")
 
 
+from src.core.agents.agent_registry import get_registered_agents
 from src.env.registry import get_registered_environments
-from src.core.agent_registry import get_registered_agents
 
-def initialize_env_and_agents(selected_agent_names, agent_count, n_obstacles, selected_env_name=None, env_kwargs=None):
+
+def initialize_env_and_agents(
+    selected_agent_names,
+    agent_count,
+    n_obstacles,
+    selected_env_name=None,
+    env_kwargs=None,
+):
     """
     Initializes the selected environment and agent classes using plug-and-play registries.
     Args:
@@ -96,15 +120,24 @@ def initialize_env_and_agents(selected_agent_names, agent_count, n_obstacles, se
     env_key = None
     env_kwargs = {}
     agent_types = None
-    alpha = gamma = epsilon = n_states = n_actions = mm_img_dim = mm_txt_dim = mm_hidden_dim = mm_n_actions = mm_fusion_type = n_pursuers = n_evaders = 0
-    env_type = agent_type  # This may need to be adjusted depending on your sidebar logic
+    alpha = gamma = epsilon = n_states = n_actions = mm_img_dim = mm_txt_dim = (
+        mm_hidden_dim
+    ) = mm_n_actions = mm_fusion_type = n_pursuers = n_evaders = 0
+    env_type = (
+        agent_type  # This may need to be adjusted depending on your sidebar logic
+    )
     # --- ANFIS Experience Replay Controls ---
     replay_enabled, buffer_size, batch_size = False, 100, 8
     if agent_type == "ANFIS Agent":
         # Try to get sidebar settings if running in Streamlit
         try:
             from streamlit import session_state as _st
-            replay_enabled, buffer_size, batch_size = _st.get("anfis_replay_enabled", True), _st.get("anfis_buffer_size", 100), _st.get("anfis_batch_size", 8)
+
+            replay_enabled, buffer_size, batch_size = (
+                _st.get("anfis_replay_enabled", True),
+                _st.get("anfis_buffer_size", 100),
+                _st.get("anfis_batch_size", 8),
+            )
         except Exception:
             pass
     # Example mapping, adapt as needed:
@@ -141,6 +174,7 @@ def initialize_env_and_agents(selected_agent_names, agent_count, n_obstacles, se
                 )
             elif ag_type == "Multi-Modal Fusion Agent":
                 from src.core.multimodal_fusion_agent import MultiModalFusionAgent
+
                 agents.append(
                     MultiModalFusionAgent(
                         [mm_img_dim, mm_txt_dim],
@@ -151,15 +185,16 @@ def initialize_env_and_agents(selected_agent_names, agent_count, n_obstacles, se
                 )
             elif ag_type == "Neuro-Fuzzy Fusion":
                 from src.core.neuro_fuzzy_fusion_agent import NeuroFuzzyFusionAgent
+
                 # Example default: 2 modalities, hidden_dim=8, output_dim=4, fusion_type='concat'
                 agents.append(
                     NeuroFuzzyFusionAgent(
                         input_dims=[4, 4],
                         hidden_dim=8,
                         output_dim=4,
-                        fusion_type='concat',
+                        fusion_type="concat",
                         fuzzy_config=None,
-                        fusion_alpha=0.5
+                        fusion_alpha=0.5,
                     )
                 )
             else:
@@ -174,6 +209,7 @@ def initialize_env_and_agents(selected_agent_names, agent_count, n_obstacles, se
                 )
     elif env_type == "Adversarial Gridworld":
         from src.env.adversarial_gridworld import AdversarialGridworldEnv
+
         n_states, n_actions = 5, 4
         agents = [
             TabularQLearningAgent(
@@ -202,7 +238,16 @@ def initialize_env_and_agents(selected_agent_names, agent_count, n_obstacles, se
         except Exception:
             pass
         for _ in range(agent_count):
-            agents.append(NeuroFuzzyANFISAgent(input_dim=2, n_rules=4, lr=0.01, buffer_size=buffer_size, replay_enabled=replay_enabled, replay_batch=batch_size))
+            agents.append(
+                NeuroFuzzyANFISAgent(
+                    input_dim=2,
+                    n_rules=4,
+                    lr=0.01,
+                    buffer_size=buffer_size,
+                    replay_enabled=replay_enabled,
+                    replay_batch=batch_size,
+                )
+            )
         env = SimpleContinuousEnv()  # Or another suitable env
     else:
         agents = [

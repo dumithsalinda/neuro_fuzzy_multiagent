@@ -1,5 +1,6 @@
 import torch
-import torch.nn as nn
+from torch import nn
+from src.core.neural_networks.fuzzy_system import FuzzyInferenceSystem
 
 
 class FusionNetwork(nn.Module):

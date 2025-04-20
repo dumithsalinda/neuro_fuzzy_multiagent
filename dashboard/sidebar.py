@@ -3,9 +3,9 @@ import streamlit as st
 import importlib
 import inspect
 from src.env.registry import get_registered_environments
-from src.core.agent_registry import get_registered_agents
+from src.core.agents.agent_registry import get_registered_agents
+from src.core.agents.agent import Agent 
 from src.plugins.registry import get_registered_sensors, get_registered_actuators
-import streamlit as st
 
 def render_sidebar():
     st.sidebar.title("Plug-and-Play System Controls")

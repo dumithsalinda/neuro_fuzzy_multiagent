@@ -2,13 +2,20 @@
 test_leader_election.py
 Minimal test for group leader election in MultiAgentSystem.
 """
+
 import numpy as np
-from src.core.agent import Agent
-from src.core.multiagent import MultiAgentSystem
+
+from src.core.agents.agent import Agent
+from src.core.management.multiagent import MultiAgentSystem
 
 # Create dummy agents with positions
 agents = [Agent(model=None) for _ in range(4)]
-positions = [np.array([0,0]), np.array([0.5,0]), np.array([3,3]), np.array([3.2,2.8])]
+positions = [
+    np.array([0, 0]),
+    np.array([0.5, 0]),
+    np.array([3, 3]),
+    np.array([3.2, 2.8]),
+]
 for agent, pos in zip(agents, positions):
     agent.position = pos
 

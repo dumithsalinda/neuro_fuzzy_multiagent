@@ -1,4 +1,5 @@
 import streamlit as st
+from src.core.agents.agent import Agent
 from dashboard_env import initialize_env_and_agents
 
 def setup_agents_and_env():

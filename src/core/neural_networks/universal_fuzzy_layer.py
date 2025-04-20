@@ -5,7 +5,7 @@ A universal fuzzy logic layer that can be attached to any agent type (classic, n
 Supports dynamic rule management, fuzzy set configuration, and explainability.
 """
 
-from .fuzzy_system import FuzzyInferenceSystem, FuzzyRule
+from src.core.neural_networks.fuzzy_system import FuzzyInferenceSystem, FuzzyRule
 
 
 class UniversalFuzzyLayer:

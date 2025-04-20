@@ -4,7 +4,7 @@ Allows user to interact with NeuroFuzzyFusionAgent via chat UI in the dashboard.
 """
 import streamlit as st
 import numpy as np
-from src.core.neuro_fuzzy_fusion_agent import NeuroFuzzyFusionAgent
+from src.core.agents.neuro_fuzzy_fusion_agent import NeuroFuzzyFusionAgent
 
 def chat_panel(agent):
     st.markdown("## 🤖 Agent Chat Panel")
@@ -66,7 +66,7 @@ def handle_agent_command(cmd, agent):
                 obs_vals = [float(x.strip()) for x in obs_str.split(",") if x.strip()]
                 action_val = int(action_match.group(1))
                 # Demo fuzzy sets: for each input, Low/High sets
-                from src.core.fuzzy_system import FuzzySet
+                from src.core.neural_networks.fuzzy_system import FuzzySet
                 fuzzy_sets_per_input = [[FuzzySet('Low', [0, 1]), FuzzySet('High', [1, 1])] for _ in obs_vals]
                 agent.add_fuzzy_rule_from_feedback(obs_vals, action_val, fuzzy_sets_per_input)
                 # Show updated rules

@@ -1,5 +1,5 @@
 import numpy as np
-from src.core.agent import NeuroFuzzyAgent
+from src.core.agents.agent import NeuroFuzzyAgent
 
 def test_self_organize_changes_rules():
     nn_config = {'input_dim': 1, 'hidden_dim': 2, 'output_dim': 1}

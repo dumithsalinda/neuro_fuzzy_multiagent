@@ -7,7 +7,7 @@ Runs multiple agents for several episodes, collects rewards, and plots learning 
 
 import numpy as np
 import matplotlib.pyplot as plt
-from src.core.agent import Agent, NeuroFuzzyAgent
+from src.core.agents.agent import Agent, NeuroFuzzyAgent
 from src.environment.abstraction import SimpleEnvironment
 from src.environment.transfer_learning import FeatureExtractor
 

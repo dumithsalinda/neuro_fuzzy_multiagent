@@ -1,6 +1,6 @@
 import pytest
-from src.core.agent import Agent
-from src.core.online_learning import OnlineLearnerMixin
+from src.core.agents.agent import Agent
+from src.core.management.online_learning import OnlineLearnerMixin
 import json
 
 class DummyAgent(Agent, OnlineLearnerMixin):

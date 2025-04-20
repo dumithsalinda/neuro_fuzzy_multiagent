@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 from .agent import Agent
-from .fusion import FusionNetwork
+from src.core.neural_networks.fusion import FusionNetwork
 
 
 class MultiModalDQNAgent(Agent):

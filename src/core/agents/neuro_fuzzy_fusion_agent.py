@@ -1,8 +1,8 @@
 import numpy as np
 import torch
 import torch.nn as nn
-from .fusion import FusionNetwork
-from .fuzzy_system import FuzzyInferenceSystem
+from src.core.neural_networks.fusion import FusionNetwork
+from src.core.neural_networks.fuzzy_system import FuzzyInferenceSystem
 
 
 class NeuroFuzzyFusionAgent:

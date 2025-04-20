@@ -18,7 +18,6 @@ class MultiAgentSystem:
         self.group_leaders = {}  # group_id -> agent index
         self.group_modules = {}  # group_id -> group-specific module (rules/subnetwork)
 
-    def share_group_knowledge(self, mode="average"):
         """
         For each group, aggregate and distribute knowledge among group members.
         mode: 'average' (default), 'copy_leader', or custom.
@@ -127,7 +126,7 @@ class MultiAgentSystem:
             num_iteration: number of training iterations for SOM
         Each SOM node becomes a group; agents mapped to the same node are grouped together.
         """
-        from src.core.som_cluster import SOMClusterer
+        from src.core.neural_networks.som_cluster import SOMClusterer
 
         feature_matrix = np.array(feature_matrix)
         som = SOMClusterer(
@@ -257,7 +256,7 @@ class MultiAgentSystem:
         actions = self.step_all(observations, states)
         import numpy as np
 
-        from src.core.laws import enforce_laws
+        from src.core.agents.laws import enforce_laws
 
         result = None
         if method == "mean":
@@ -303,7 +302,7 @@ class MultiAgentSystem:
         - 'group-only': share within sender's group
         - 'recipient-list': share with specified recipients
         """
-        from src.core.laws import LawViolation, enforce_laws
+        from src.core.agents.laws import LawViolation, enforce_laws
 
         privacy = (
             knowledge.get("privacy", "public")

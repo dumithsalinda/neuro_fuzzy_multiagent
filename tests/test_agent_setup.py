@@ -1,6 +1,8 @@
 import pytest
 from unittest.mock import patch, MagicMock
 import streamlit as st
+from src.core.agents.agent import Agent
+
 from dashboard.agent_setup import setup_agents_and_env
 
 def test_setup_agents_and_env_initializes_state():

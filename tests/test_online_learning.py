@@ -1,6 +1,6 @@
 import numpy as np
 import pytest
-from src.core.online_learning import OnlineLearnerMixin
+from src.core.management.online_learning import OnlineLearnerMixin
 
 class DummyOnlineAgent(OnlineLearnerMixin):
     def __init__(self):

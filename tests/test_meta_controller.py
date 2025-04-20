@@ -1,7 +1,7 @@
 import numpy as np
-from src.core.agent import NeuroFuzzyAgent
-from src.core.meta_controller import MetaController
-from src.core.fuzzy_system import FuzzySet
+from src.core.agents.agent import NeuroFuzzyAgent
+from src.core.management.meta_controller import MetaController
+from src.core.neural_networks.fuzzy_system import FuzzySet
 
 def make_agent():
     nn_config = {'input_dim': 2, 'hidden_dim': 2, 'output_dim': 1}

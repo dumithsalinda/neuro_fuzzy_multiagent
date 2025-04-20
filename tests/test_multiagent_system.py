@@ -1,16 +1,21 @@
 import numpy as np
 import pytest
-from src.core.multiagent_system import MultiAgentSystem
-from src.core.agent import Agent
+
+from src.core.agents.agent import Agent
+from src.core.management.multiagent_system import MultiAgentSystem
+
 
 class DummyAgent(Agent):
     def __init__(self):
         super().__init__(model=None)
         self.received = []
+
     def act(self, observation, state=None):
         return observation
+
     def reset(self):
         self.received = []
+
 
 def test_multiagent_step_and_reset():
     agents = [DummyAgent() for _ in range(3)]
@@ -24,6 +29,7 @@ def test_multiagent_step_and_reset():
     for agent in agents:
         assert agent.received == []
 
+
 def test_multiagent_direct_message():
     agents = [DummyAgent() for _ in range(2)]
     mas = MultiAgentSystem(agents)
@@ -34,6 +40,7 @@ def test_multiagent_direct_message():
     assert msgs[0]["type"] == "INFO"
     assert msgs[0]["content"] == "direct-msg"
     assert mas.get_messages(0) == []
+
 
 def test_multiagent_broadcast_message():
     agents = [DummyAgent() for _ in range(3)]
@@ -47,6 +54,7 @@ def test_multiagent_broadcast_message():
         assert msgs[0]["content"] == "hello-all"
     assert mas.get_messages(0) == []
 
+
 def test_multiagent_message_type_filtering():
     agents = [DummyAgent() for _ in range(2)]
     mas = MultiAgentSystem(agents)
@@ -56,6 +64,7 @@ def test_multiagent_message_type_filtering():
     msgs_data = mas.get_messages(1, msg_type="DATA")
     assert len(msgs_info) == 1 and msgs_info[0]["content"] == "foo"
     assert len(msgs_data) == 1 and msgs_data[0]["content"] == "bar"
+
 
 def test_multiagent_message_history():
     agents = [DummyAgent() for _ in range(2)]

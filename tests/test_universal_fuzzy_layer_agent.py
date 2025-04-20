@@ -1,8 +1,8 @@
 import numpy as np
 import pytest
-from src.core.agent import Agent
-from src.core.universal_fuzzy_layer import UniversalFuzzyLayer
-from src.core.fuzzy_system import FuzzySet
+from src.core.agents.agent import Agent
+from src.core.neural_networks.universal_fuzzy_layer import UniversalFuzzyLayer
+from src.core.neural_networks.fuzzy_system import FuzzySet
 
 def make_agent_with_fuzzy():
     # Dummy model and policy

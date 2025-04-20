@@ -1,6 +1,9 @@
 import pytest
 from unittest.mock import patch, MagicMock
 import streamlit as st
+from src.core.agents.agent import Agent
+from src.core.agents.neuro_fuzzy_fusion_agent import NeuroFuzzyFusionAgent
+
 from dashboard.main import main
 
 def test_main_unauthenticated_shows_login():

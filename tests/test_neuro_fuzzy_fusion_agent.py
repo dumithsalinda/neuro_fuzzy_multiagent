@@ -1,6 +1,6 @@
 import numpy as np
 import pytest
-from src.core.neuro_fuzzy_fusion_agent import NeuroFuzzyFusionAgent
+from src.core.agents.neuro_fuzzy_fusion_agent import NeuroFuzzyFusionAgent
 
 class DummyFuzzySystem:
     """Minimal dummy fuzzy system for testing."""

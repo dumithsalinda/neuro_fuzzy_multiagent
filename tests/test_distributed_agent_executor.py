@@ -4,7 +4,7 @@ test_distributed_agent_executor.py
 Test for distributed agent execution utility using Ray.
 """
 import numpy as np
-from src.core.distributed_agent_executor import run_agents_distributed
+from src.core.management.distributed_agent_executor import run_agents_distributed
 
 class DummyAgent:
     def __init__(self, idx):

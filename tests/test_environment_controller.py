@@ -3,8 +3,8 @@ from src.env.environment_controller import EnvironmentController
 from src.env.environment_factory import EnvironmentFactory
 from src.env.iot_sensor_fusion_env import IoTSensorFusionEnv
 from src.env.multiagent_gridworld_env import MultiAgentGridworldEnv
-from src.core.agent import Agent
-from src.core.multiagent_system import MultiAgentSystem
+from src.core.agents.agent import Agent
+from src.core.management.multiagent import MultiAgentSystem
 
 class DummyAgent(Agent):
     def __init__(self):

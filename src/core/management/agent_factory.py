@@ -1,13 +1,13 @@
 import json
 import yaml
-from src.core.agent import NeuroFuzzyAgent
-from src.core.meta_controller import MetaController
-from src.core.universal_fuzzy_layer import UniversalFuzzyLayer
-from src.core.neuro_fuzzy_fusion_agent import NeuroFuzzyFusionAgent
-from src.core.dqn_agent import DQNAgent
-from src.core.multimodal_dqn_agent import MultiModalDQNAgent
-from src.core.anfis_agent import NeuroFuzzyANFISAgent
-from src.core.multimodal_fusion_agent import MultiModalFusionAgent
+from src.core.agents.agent import NeuroFuzzyAgent
+from src.core.management.meta_controller import MetaController
+from src.core.neural_networks.universal_fuzzy_layer import UniversalFuzzyLayer
+from src.core.agents.neuro_fuzzy_fusion_agent import NeuroFuzzyFusionAgent
+from src.core.agents.dqn_agent import DQNAgent
+from src.core.agents.multimodal_dqn_agent import MultiModalDQNAgent
+from src.core.agents.anfis_agent import NeuroFuzzyANFISAgent
+from src.core.agents.multimodal_fusion_agent import MultiModalFusionAgent
 
 
 def create_agent_from_config(config):

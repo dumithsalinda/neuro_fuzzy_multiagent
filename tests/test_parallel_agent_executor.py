@@ -4,7 +4,7 @@ test_parallel_agent_executor.py
 Test for parallel agent execution utility.
 """
 import numpy as np
-from src.core.parallel_agent_executor import run_agents_parallel
+from src.core.management.parallel_agent_executor import run_agents_parallel
 
 class DummyAgent:
     def __init__(self, idx):

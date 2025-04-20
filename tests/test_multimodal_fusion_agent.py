@@ -5,7 +5,7 @@ Test for MultiModalFusionAgent with synthetic multi-modal data (image + text).
 """
 import numpy as np
 import torch
-from src.core.multimodal_fusion_agent import MultiModalFusionAgent
+from src.core.agents.multimodal_fusion_agent import MultiModalFusionAgent
 
 def test_multimodal_fusion_agent_forward():
     # Two modalities: image (4-dim), text (3-dim)

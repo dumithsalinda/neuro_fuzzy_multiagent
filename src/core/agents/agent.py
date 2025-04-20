@@ -7,9 +7,9 @@ Supports integration with neuro-fuzzy models, transfer learning, and various env
 
 
 from .laws import enforce_laws
-from .neuro_fuzzy import NeuroFuzzyHybrid
-from .online_learning import OnlineLearnerMixin
-from .universal_fuzzy_layer import UniversalFuzzyLayer
+from src.core.neuro_fuzzy import NeuroFuzzyHybrid
+from src.core.management.online_learning import OnlineLearnerMixin
+from src.core.neural_networks.universal_fuzzy_layer import UniversalFuzzyLayer
 from typing import Callable, Optional, Dict, Any
 
 
@@ -267,7 +267,7 @@ class NeuroFuzzyAgent(Agent):
         super().__init__(model, policy)
         # Embedded meta-controller (agent-local)
         if meta_controller is None:
-            from .meta_controller import MetaController
+            from src.core.management.meta_controller import MetaController
 
             self.meta_controller = MetaController()
 
@@ -301,11 +301,11 @@ class NeuroFuzzyAgent(Agent):
         if fis_config:
             self.model.update_fis_config(fis_config)
         if meta_cfg is not None:
-            from .meta_controller import MetaController
+            from src.core.management.meta_controller import MetaController
 
             self.meta_controller = MetaController(**meta_cfg) if meta_cfg else None
         if fuzzy_cfg is not None:
-            from .universal_fuzzy_layer import UniversalFuzzyLayer
+            from src.core.neural_networks.universal_fuzzy_layer import UniversalFuzzyLayer
 
             self._fuzzy_layer = UniversalFuzzyLayer(**fuzzy_cfg) if fuzzy_cfg else None
 

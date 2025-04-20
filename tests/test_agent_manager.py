@@ -1,7 +1,7 @@
 import pytest
-from src.core.agent_manager import AgentManager
-from src.core.message_bus import MessageBus
-from src.core.agent import Agent
+from src.core.management.agent_manager import AgentManager
+from src.core.management.message_bus import MessageBus
+from src.core.agents.agent import Agent
 
 from tests.dummy_agent import DummyAgent
 

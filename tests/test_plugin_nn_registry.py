@@ -3,7 +3,7 @@ Test plug-and-play neural network registry and config-driven instantiation.
 """
 import pytest
 import numpy as np
-from src.core.neural_network import (
+from src.core.neural_networks.neural_network import (
     get_registered_networks,
     create_network_by_name,
     FeedforwardNeuralNetwork,

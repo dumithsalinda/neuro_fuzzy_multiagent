@@ -1,6 +1,6 @@
 import pytest
-from src.core.message_bus import MessageBus
-from src.core.agent import Agent
+from src.core.management.message_bus import MessageBus
+from src.core.agents.agent import Agent
 
 class DummyAgent(Agent):
     def __init__(self, name):

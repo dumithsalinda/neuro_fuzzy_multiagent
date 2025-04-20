@@ -6,6 +6,7 @@ import networkx as nx
 import pandas as pd
 import streamlit as st
 from dashboard.sidebar import render_sidebar
+from src.core.agents.agent import Agent
 from dashboard.chat import chat_panel
 from dashboard.login import login_form
 from dashboard.simulation import run_batch_experiments, simulate_step, som_group_agents
@@ -16,7 +17,8 @@ from dashboard.visualization import (
     render_group_modules,
     render_som_grid_with_agents,
 )
-from src.core.neuro_fuzzy_fusion_agent import NeuroFuzzyFusionAgent
+from src.core.agents.agent_registry import get_registered_agents
+from src.core.agents.neuro_fuzzy_fusion_agent import NeuroFuzzyFusionAgent
 
 # --- Unified Plug-and-Play Sidebar ---
 def main():

@@ -10,7 +10,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 
 import numpy as np
 import pytest
-from src.core.agent import Agent, NeuroFuzzyAgent
+from src.core.agents.agent import Agent, NeuroFuzzyAgent
 from src.environment.abstraction import SimpleEnvironment
 from src.environment.transfer_learning import FeatureExtractor
 

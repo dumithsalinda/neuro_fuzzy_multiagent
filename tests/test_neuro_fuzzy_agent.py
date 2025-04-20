@@ -5,7 +5,7 @@ Tests for NeuroFuzzyAgent integration and action selection.
 """
 import numpy as np
 import pytest
-from src.core.agent import NeuroFuzzyAgent
+from src.core.agents.agent import NeuroFuzzyAgent
 
 def test_neuro_fuzzy_agent_action():
     nn_config = {"input_dim": 1, "output_dim": 2, "hidden_dim": 4}

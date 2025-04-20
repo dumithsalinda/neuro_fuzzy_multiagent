@@ -4,7 +4,7 @@ Runs each experiment scenario in parallel as a Ray task.
 """
 import ray
 import numpy as np
-from src.core.agent_factory import create_agent_from_config
+from src.core.management.agent_factory import create_agent_from_config
 from src.core.experiment_manager import ExperimentManager
 from src.core.scenario_generator import ScenarioGenerator
 from src.env.environment_factory import EnvironmentFactory

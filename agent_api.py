@@ -4,7 +4,7 @@ from pydantic import BaseModel
 from typing import List, Any, Optional
 import numpy as np
 import logging
-from src.core.agent import Agent
+from src.core.agents.agent import Agent
 from src.core.tabular_q_agent import TabularQLearningAgent
 from src.core.dqn_agent import DQNAgent
 from src.core.neuro_fuzzy import NeuroFuzzyHybrid

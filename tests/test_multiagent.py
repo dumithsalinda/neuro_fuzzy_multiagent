@@ -4,15 +4,19 @@ test_multiagent.py
 Tests for multiagent simulation, agent-environment interface, and reward aggregation.
 """
 
-import sys
 import os
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+import sys
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 import numpy as np
-from src.core.agent import Agent
+
+from src.core.agents.agent import Agent
+from src.core.agents.laws import clear_laws
+from src.core.management.multiagent import MultiAgentSystem
 from src.environment.abstraction import SimpleEnvironment
 from src.environment.transfer_learning import FeatureExtractor
-from src.laws import clear_laws
+
 
 def test_multiagent_simulation_runs():
     clear_laws()  # Only allow_all law remains, so no restriction
@@ -36,7 +40,9 @@ def test_multiagent_simulation_runs():
         for agent in agents:
             agent.reset()
         for step in range(steps_per_episode):
-            for i, (agent, env, extractor) in enumerate(zip(agents, envs, feat_extractors)):
+            for i, (agent, env, extractor) in enumerate(
+                zip(agents, envs, feat_extractors)
+            ):
                 state = env.perceive()
                 features = extractor.extract(state)
                 action = agent.act(features)
@@ -47,7 +53,8 @@ def test_multiagent_simulation_runs():
     # Check reward array shape
     assert rewards.shape == (num_agents, episodes, steps_per_episode)
     # Check that at least one reward is nonzero for each agent
-    assert np.any(rewards != 0, axis=(1,2)).all()
+    assert np.any(rewards != 0, axis=(1, 2)).all()
+
 
 def test_agent_reset_and_reuse():
     clear_laws()  # Only allow_all law remains

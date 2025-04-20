@@ -2,14 +2,14 @@
 Agent Registry: Dynamically discovers and registers all agent classes in src/core/.
 
 Usage:
-    from .agent_registry import get_registered_agents
+    from src.core.agents.agent_registry import get_registered_agents
     agents = get_registered_agents()
     # agents is a dict: {class_name: class_obj}
 """
 import importlib
 import pkgutil
 import os
-from .agent import Agent
+from src.core.agents.agent import Agent
 
 _REGISTRY = {}
 
@@ -17,7 +17,7 @@ _REGISTRY = {}
 _core_dir = os.path.dirname(__file__)
 for _, modname, _ in pkgutil.iter_modules([_core_dir]):
     if modname in ("agent_registry", "__init__"): continue
-    module = importlib.import_module(f"src.core.{modname}")
+    module = importlib.import_module(f"src.core.agents.{modname}")
     for attr in dir(module):
         obj = getattr(module, attr)
         if (

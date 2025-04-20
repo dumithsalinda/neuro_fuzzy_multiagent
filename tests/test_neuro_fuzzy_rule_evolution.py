@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 from src.core.neuro_fuzzy import NeuroFuzzyHybrid
-from src.core.fuzzy_system import FuzzySet
+from src.core.neural_networks.fuzzy_system import FuzzySet
 
 def make_simple_nf():
     nn_config = {'input_dim': 2, 'hidden_dim': 2, 'output_dim': 2}

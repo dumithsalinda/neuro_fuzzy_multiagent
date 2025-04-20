@@ -1,5 +1,5 @@
 import pytest
-from src.core.multiagent import MultiAgentSystem
+from src.core.management.multiagent import MultiAgentSystem
 
 class DummyAgent:
     def __init__(self):

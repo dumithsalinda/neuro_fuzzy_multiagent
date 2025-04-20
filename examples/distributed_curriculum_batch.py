@@ -4,7 +4,7 @@ Each curriculum stage yields harder scenarios for distributed benchmarking.
 """
 import ray
 import numpy as np
-from src.core.agent_factory import create_agent_from_config
+from src.core.management.agent_factory import create_agent_from_config
 from src.core.experiment_manager import ExperimentManager
 from src.core.curriculum_scenario_generator import CurriculumScenarioGenerator
 from src.env.environment_factory import EnvironmentFactory

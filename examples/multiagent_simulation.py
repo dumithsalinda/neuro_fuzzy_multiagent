@@ -6,7 +6,7 @@ Agents use random or greedy policies and accumulate rewards.
 """
 
 import numpy as np
-from src.core.agent import Agent
+from src.core.agents.agent import Agent
 from src.environment.abstraction import SimpleEnvironment
 from src.environment.transfer_learning import FeatureExtractor
 

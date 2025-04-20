@@ -2,8 +2,8 @@ import os
 import tempfile
 import yaml
 import json
-from src.core.agent_factory import create_agent_from_config, create_agent_from_file
-from src.core.agent import Agent
+from src.core.management.agent_factory import create_agent_from_config, create_agent_from_file
+from src.core.agents.agent import Agent
 
 from tests.dummy_agent import DummyAgent
 

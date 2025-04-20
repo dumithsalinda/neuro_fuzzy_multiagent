@@ -2,8 +2,8 @@
 test_group_management.py
 Minimal test for dynamic group formation, joining, leaving, and dissolution in MultiAgentSystem.
 """
-from src.core.agent import Agent
-from src.core.multiagent import MultiAgentSystem
+from src.core.agents.agent import Agent
+from src.core.management.multiagent import MultiAgentSystem
 
 # Create dummy agents
 agents = [Agent(model=None) for _ in range(4)]

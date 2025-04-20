@@ -1,9 +1,7 @@
 import numpy as np
 
-try:
-    from .anfis_hybrid import ANFISHybrid
-except ImportError:
-    from anfis_hybrid import ANFISHybrid
+from src.core.agents.agent import Agent
+from src.core.agents.anfis_hybrid import ANFISHybrid
 
 
 class NeuroFuzzyANFISAgent:

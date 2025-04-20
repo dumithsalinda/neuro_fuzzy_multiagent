@@ -4,7 +4,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 
 import numpy as np
 import pytest
-from src.core.neural_network import FeedforwardNeuralNetwork
+from src.core.neural_networks.neural_network import FeedforwardNeuralNetwork
 
 def test_feedforward_neural_network_forward():
     nn = FeedforwardNeuralNetwork(input_dim=2, hidden_dim=3, output_dim=1)

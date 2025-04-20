@@ -4,8 +4,8 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 
 import numpy as np
 import pytest
-from src.core.fuzzy_system import FuzzySet, FuzzyInferenceSystem
-from src.core.neural_network import FeedforwardNeuralNetwork
+from src.core.neural_networks.fuzzy_system import FuzzySet, FuzzyInferenceSystem
+from src.core.neural_networks.neural_network import FeedforwardNeuralNetwork
 from src.core.neuro_fuzzy import NeuroFuzzyHybrid
 
 def test_neuro_fuzzy_hybrid_forward():

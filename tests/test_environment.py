@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 from src.environment.abstraction import SimpleEnvironment
 from src.environment.transfer_learning import FeatureExtractor, transfer_learning
-from src.core.neural_network import FeedforwardNeuralNetwork
+from src.core.neural_networks.neural_network import FeedforwardNeuralNetwork
 
 def test_simple_environment():
     env = SimpleEnvironment(dim=4)

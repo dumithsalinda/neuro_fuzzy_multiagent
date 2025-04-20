@@ -4,7 +4,7 @@ multiagent_system.py
 Defines MultiAgentSystem for managing and coordinating multiple agents.
 """
 
-from typing import List, Any, Optional
+from typing import Any, List, Optional
 
 
 class MultiAgentSystem:

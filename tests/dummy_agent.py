@@ -1,4 +1,4 @@
-from src.core.agent import Agent
+from src.core.agents.agent import Agent
 
 class DummyAgent(Agent):
     def __init__(self, model=None, group=None):

@@ -11,8 +11,8 @@ This module is central to experiments in adaptive, interpretable, and robust lea
 """
 
 import numpy as np
-from .neural_network import create_network_by_name, FeedforwardNeuralNetwork
-from .fuzzy_system import FuzzyInferenceSystem
+from src.core.neural_networks.neural_network import create_network_by_name, FeedforwardNeuralNetwork
+from src.core.neural_networks.fuzzy_system import FuzzyInferenceSystem
 
 
 class NeuroFuzzyHybrid:
@@ -143,7 +143,7 @@ class NeuroFuzzyHybrid:
         consequent: output value or class label
         as_core: if True, add as core rule; otherwise, as dynamic rule
         """
-        from .fuzzy_system import FuzzyRule
+        from src.core.neural_networks.fuzzy_system import FuzzyRule
 
         rule = FuzzyRule(antecedents, consequent)
         self.fis.add_rule(rule, as_core=as_core)
