@@ -252,6 +252,121 @@ See `src/core/agents/meta_agent.py` and `src/core/agents/hpo.py` for details and
   ```
 - Can be extended to connect to real hardware (MQTT, HTTP, serial, etc).
 
+## General IoT Device Integration
+- Use the `IoTDevice` class for most smart devices (simulated, MQTT, HTTP/REST, etc).
+- Supports reading data and sending commands.
+
+### Simulated Device Example
+```python
+from src.core.plugins.iot_common import IoTDevice
+def cb(name, value):
+    print(f"Simulated {name}: {value}")
+device = IoTDevice('sim_sensor', mode='sim', interval=1.0, callback=cb)
+device.start()
+# ...
+device.stop()
+```
+
+### MQTT Device Example
+```python
+from src.core.plugins.iot_common import IoTDevice
+def cb(name, value):
+    print(f"MQTT {name}: {value}")
+mqtt_conf = {'broker': 'localhost', 'topic': 'home/livingroom/temperature'}
+device = IoTDevice('livingroom_temp', mode='mqtt', mqtt_config=mqtt_conf, callback=cb)
+device.start()
+# To send a command:
+device.send_command('ON')
+```
+
+### HTTP Device Example
+```python
+from src.core.plugins.iot_common import IoTDevice
+def cb(name, value):
+    print(f"HTTP {name}: {value}")
+http_conf = {'url': 'http://device_ip/api/temperature', 'method': 'GET'}
+device = IoTDevice('temp_sensor', mode='http', http_config=http_conf, interval=10, callback=cb)
+device.start()
+# To send a command:
+device.send_command(22)  # e.g., set thermostat to 22°C
+```
+- Extend or subclass for advanced protocols (Zigbee, BLE, etc).
+
+---
+
+# Deployment Guide: Self-Driving Car & Smart Home Integration
+
+This guide explains how to deploy the Neuro-Fuzzy Multi-Agent System in both a self-driving car and a smart home, and how to enable communication between them.
+
+## 1. Self-Driving Car Deployment
+
+- **Platform:** Onboard computer (e.g., NVIDIA Jetson, Raspberry Pi, or automotive PC) running Linux.
+- **Integration:**
+  - Use the `ROSBridge` plugin to connect agents to the car’s ROS (Robot Operating System) stack.
+  - Agents can subscribe to topics like `/camera/image_raw`, `/lidar/points`, `/vehicle/odometry`, and publish to `/vehicle/cmd_vel`, `/vehicle/steering`.
+  - Use `IoTSensor` for non-ROS sensors (CAN bus, GPS, IMU, etc).
+- **Deployment:**
+  - Package agents and environments as a ROS node or standalone Python process.
+  - Launch via ROS launch files or systemd.
+
+**Example:**
+```python
+from src.core.plugins.ros_bridge import ROSBridge
+bridge = ROSBridge(node_name='car_agent')
+def steering_callback(topic, msg):
+    # Process incoming sensor data
+    ...
+bridge.create_subscriber('/vehicle/odometry', steering_callback)
+bridge.create_publisher('/vehicle/cmd_vel')
+```
+
+## 2. Smart Home Deployment
+
+- **Platform:** Home server, Raspberry Pi, or cloud VM.
+- **Integration:**
+  - Use `IoTSensor` to connect to smart devices (thermostats, lights, security sensors) via MQTT, HTTP, or GPIO.
+  - Use `ROSBridge` if the smart home uses ROS.
+- **Deployment:**
+  - Run agents as background services, Docker containers, or integrate with home automation (e.g., Home Assistant).
+
+**Example:**
+```python
+from src.core.plugins.iot_sensor import IoTSensor
+def temp_callback(name, value):
+    # Adjust thermostat or notify agent
+    ...
+sensor = IoTSensor('living_room_temp', interval=5, callback=temp_callback)
+sensor.start()
+```
+
+## 3. Communication Between Car and Smart Home
+
+- **Option 1: ROS Network**
+  - Both systems use ROS and share a ROS master/network (VPN or LAN).
+  - Agents publish/subscribe to shared topics (e.g., `/home/alert`, `/car/status`).
+- **Option 2: MQTT Broker**
+  - Both systems connect to a shared MQTT broker (local or cloud).
+  - Publish/subscribe to topics like `car/status`, `home/alert`, `energy/usage`.
+  - Use `IoTSensor` or a custom MQTT plugin.
+- **Option 3: REST API/Webhooks**
+  - Each system exposes HTTP endpoints for event-driven communication.
+  - Agents send POST requests to each other for actions or alerts.
+
+**Example: ROS/MQTT Cross-Communication**
+```python
+# Car agent publishes status to /car/status (ROS or MQTT)
+# Home agent subscribes and adjusts home settings
+# Home agent publishes alerts to /home/alert, car agent receives and reacts
+```
+
+## 4. Security & Reliability
+- Use secure communication: VPN, TLS for MQTT, authentication for APIs.
+- Monitor system health and logs.
+- Consider fail-safe and fallback strategies (emergency stop, manual override).
+
+## 5. Will They Communicate?
+**Yes**—with ROS, MQTT, or HTTP, agents in the car and smart home can communicate, share data, and coordinate actions in real time or asynchronously.
+
 ## Example Usage
 ```python
 from core.agent import Agent
