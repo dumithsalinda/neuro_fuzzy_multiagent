@@ -226,6 +226,32 @@ See `src/core/agents/meta_agent.py` and `src/core/agents/hpo.py` for details and
 - Allows integration with robotics middleware and real-world sensors/actuators.
 - Requires `rospy` (ROS Python client library).
 
+---
+
+## Meta-Reinforcement Learning
+- Agents that adapt their own learning strategies over time using meta-feedback.
+- Example:
+  ```python
+  from src.core.agents.meta_rl_agent import MetaRLAgent
+  meta_agent = MetaRLAgent(base_agent_cls=TabularQLearningAgent, base_agent_kwargs={'lr': 0.1}, meta_lr=0.05, meta_window=5)
+  # Use meta_agent in place of any agent; it will adjust its learning rate based on reward trends.
+  ```
+- Supports meta-learning of hyperparameters such as learning rate, exploration policy, etc.
+
+## IoT Sensor Integration
+- Simulated or real IoT sensors for smart environment demos and agent interaction.
+- Example:
+  ```python
+  from src.core.plugins.iot_sensor import IoTSensor
+  def my_callback(name, value):
+      print(f"Sensor {name}: {value}")
+  sensor = IoTSensor('temp_sensor', interval=1.0, callback=my_callback)
+  sensor.start()
+  # ...
+  sensor.stop()
+  ```
+- Can be extended to connect to real hardware (MQTT, HTTP, serial, etc).
+
 ## Example Usage
 ```python
 from core.agent import Agent
