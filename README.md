@@ -298,6 +298,44 @@ device.send_command(22)  # e.g., set thermostat to 22°C
 
 This guide explains how to deploy the Neuro-Fuzzy Multi-Agent System in both a self-driving car and a smart home, and how to enable communication between them.
 
+---
+
+## Plugin Auto-Discovery & Versioning
+- Plugins in the `src/core/plugins/` directory are auto-discovered, versioned, and can be hot-reloaded at runtime.
+- Each plugin should define `__plugin_name__` and `__version__` attributes.
+
+**Example:**
+```python
+from src.core.plugins.auto_discovery import PluginRegistry
+registry = PluginRegistry(plugin_dir='src/core/plugins', base_package='src.core.plugins')
+registry.discover_plugins()
+print(registry.list_plugins())  # [(name, version), ...]
+plugin = registry.get_plugin('MyPlugin')
+registry.reload_plugin('MyPlugin')  # Hot-reload
+```
+
+## Plugin Hot-Reloading
+- Reload plugin code at runtime without restarting the dashboard or main process.
+- Use `reload_plugin('PluginName')` or `reload_all()` on the registry.
+- Useful for rapid development and production updates.
+
+## Distributed Experiment Orchestration
+- Run large-scale experiments using Ray for distributed agent/environment management.
+- Launch multiple agents/environments as Ray actors; collect results in parallel.
+
+**Example:**
+```python
+from src.core.management.distributed_orchestrator import DistributedExperimentOrchestrator
+from src.core.agents.dummy_agent import DummyAgent
+from src.core.environments.gym_env_wrapper import GymEnvWrapper
+orchestrator = DistributedExperimentOrchestrator(DummyAgent, GymEnvWrapper, agent_kwargs={}, env_kwargs={'env_name': 'CartPole-v1'}, num_agents=8)
+orchestrator.launch()
+results = orchestrator.run_episode(steps=100)
+print(results)
+orchestrator.shutdown()
+```
+- Scales to clusters for research or production workloads.
+
 ## 1. Self-Driving Car Deployment
 
 - **Platform:** Onboard computer (e.g., NVIDIA Jetson, Raspberry Pi, or automotive PC) running Linux.
