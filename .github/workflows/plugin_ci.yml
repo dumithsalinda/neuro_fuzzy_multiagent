@@ -1,0 +1,42 @@
+name: Plugin System CI
+
+on:
+  push:
+    paths:
+      - 'src/core/plugins/**'
+      - 'src/plugins/**'
+      - 'src/env/**'
+      - 'src/core/agents/**'
+      - 'tests/plugins/**'
+      - 'PLUGIN_DOCS.md'
+      - '.github/workflows/plugin_ci.yml'
+  pull_request:
+    paths:
+      - 'src/core/plugins/**'
+      - 'src/plugins/**'
+      - 'src/env/**'
+      - 'src/core/agents/**'
+      - 'tests/plugins/**'
+      - 'PLUGIN_DOCS.md'
+      - '.github/workflows/plugin_ci.yml'
+
+jobs:
+  test-plugin-system:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install pytest
+      - name: Run plugin system tests
+        run: pytest tests/plugins/test_plugin_system.py
+      - name: Generate plugin docs
+        run: PYTHONPATH=. python3 src/core/plugins/generate_plugin_docs.py
+      - name: Check plugin docs up to date
+        run: |
+          git diff --exit-code PLUGIN_DOCS.md || (echo 'PLUGIN_DOCS.md is out of date. Please regenerate.' && exit 1)
