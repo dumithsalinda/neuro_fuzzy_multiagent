@@ -32,9 +32,13 @@ registered_agents = get_registered_agents()
 import importlib
 
 # --- Plugin Hot-Reload Button ---
+from src.core.plugins.hot_reload import reload_all_plugins
 if st.sidebar.button("🔄 Reload Plugins"):
-    importlib.invalidate_caches()
-    importlib.reload(importlib.import_module("src.plugins.registry"))
+    result = reload_all_plugins()
+    if result['errors']:
+        st.sidebar.error(f"Reloaded with errors: {result['errors']}")
+    else:
+        st.sidebar.success("All plugins reloaded successfully!")
     st.experimental_rerun()
 
 registered_sensors = get_registered_sensors()
