@@ -85,7 +85,18 @@ for ptype in PLUGIN_TYPES:
     remote_not_installed = [p for p in remote_plugins[ptype] if p['name'] not in local_plugins[ptype]]
     for plugin in remote_not_installed:
         desc = plugin.get('description', 'No description.')
-        st.sidebar.markdown(f"- ⚪️ **{plugin['name']}** (available): {desc}")
+        with st.sidebar.expander(f"⚪️ {plugin['name']} (available)"):
+            st.markdown(desc)
+            if st.button(f"Install {plugin['name']}", key=f"install_{ptype}_{plugin['name']}"):
+                from src.core.plugins.marketplace import download_and_save_plugin
+                from src.core.plugins.hot_reload import reload_all_plugins
+                success, msg, path = download_and_save_plugin(plugin)
+                if success:
+                    reload_all_plugins()
+                    st.success(msg)
+                    st.experimental_rerun()
+                else:
+                    st.error(msg)
 
 
 registered_sensors = get_registered_sensors()
