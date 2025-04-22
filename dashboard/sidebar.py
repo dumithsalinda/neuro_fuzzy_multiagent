@@ -68,26 +68,30 @@ def render_sidebar():
     st.session_state["selected_agent_names"] = selected_agent_names
     st.session_state["agent_kwargs_list"] = agent_kwargs_list
 
-    # --- Sensor Selection ---
+    # --- Sensor Selection (Multi) ---
     sensor_names = list(registered_sensors.keys())
-    selected_sensor_name = st.sidebar.selectbox("Sensor Plugin", ["None"] + sensor_names)
-    sensor_kwargs = {}
-    if selected_sensor_name != "None":
-        sensor_cls = registered_sensors[selected_sensor_name]
-        st.sidebar.caption(f"**Sensor Doc:** {sensor_cls.__doc__}")
+    selected_sensor_names = st.sidebar.multiselect("Sensor Plugins", sensor_names)
+    sensor_kwargs_list = []
+    for i, sensor_name in enumerate(selected_sensor_names):
+        sensor_cls = registered_sensors[sensor_name]
+        st.sidebar.caption(f"**Sensor {i+1} Doc:** {sensor_cls.__doc__}")
+        kwargs = {}
         for param in get_init_params(sensor_cls):
-            sensor_kwargs[param.name] = get_param_value(param, label_prefix="Sensor: ")
-    st.session_state["selected_sensor_name"] = selected_sensor_name
-    st.session_state["sensor_kwargs"] = sensor_kwargs
+            kwargs[param.name] = get_param_value(param, label_prefix=f"Sensor {i+1}: ")
+        sensor_kwargs_list.append(kwargs)
+    st.session_state["selected_sensor_names"] = selected_sensor_names
+    st.session_state["sensor_kwargs_list"] = sensor_kwargs_list
 
-    # --- Actuator Selection ---
+    # --- Actuator Selection (Multi) ---
     actuator_names = list(registered_actuators.keys())
-    selected_actuator_name = st.sidebar.selectbox("Actuator Plugin", ["None"] + actuator_names)
-    actuator_kwargs = {}
-    if selected_actuator_name != "None":
-        actuator_cls = registered_actuators[selected_actuator_name]
-        st.sidebar.caption(f"**Actuator Doc:** {actuator_cls.__doc__}")
+    selected_actuator_names = st.sidebar.multiselect("Actuator Plugins", actuator_names)
+    actuator_kwargs_list = []
+    for i, actuator_name in enumerate(selected_actuator_names):
+        actuator_cls = registered_actuators[actuator_name]
+        st.sidebar.caption(f"**Actuator {i+1} Doc:** {actuator_cls.__doc__}")
+        kwargs = {}
         for param in get_init_params(actuator_cls):
-            actuator_kwargs[param.name] = get_param_value(param, label_prefix="Actuator: ")
-    st.session_state["selected_actuator_name"] = selected_actuator_name
-    st.session_state["actuator_kwargs"] = actuator_kwargs
+            kwargs[param.name] = get_param_value(param, label_prefix=f"Actuator {i+1}: ")
+        actuator_kwargs_list.append(kwargs)
+    st.session_state["selected_actuator_names"] = selected_actuator_names
+    st.session_state["actuator_kwargs_list"] = actuator_kwargs_list

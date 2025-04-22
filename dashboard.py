@@ -82,10 +82,134 @@ def version_tuple(v):
     # Convert version string to tuple of ints for comparison
     return tuple(int(x) for x in v.split(".") if x.isdigit()) if v else ()
 
+# --- Admin/Reviewer: Pending Submissions ---
+with st.sidebar.expander("📝 Review Pending Plugin Submissions"):
+    from src.core.plugins.plugin_submission import load_submissions, save_submissions
+    pending = load_submissions()
+    if not pending:
+        st.info("No pending plugin submissions.")
+    else:
+        for idx, sub in enumerate(pending):
+            with st.expander(f"{sub['type'].capitalize()} - {sub['name']} v{sub['version']} by {sub['author']} ({sub['timestamp'][:10]})"):
+                st.markdown(f"**Description:** {sub['description']}")
+                st.markdown(f"**Source URL:** {sub['source_url']}")
+                if sub.get("readme"): st.markdown(f"**README:**\n{sub['readme']}")
+                # Automated validation
+                try:
+                    from src.core.plugins.plugin_validation import validate_plugin_from_url
+                    with st.spinner("Validating plugin..."):
+                        report = validate_plugin_from_url(sub['source_url'], sub['type'], sub['name'])
+                    if report["passed"]:
+                        st.success("Automated validation: PASSED")
+                    else:
+                        st.error("Automated validation: FAILED")
+                    if report["issues"]:
+                        st.markdown("**Issues:**")
+                        for issue in report["issues"]:
+                            st.error(issue)
+                    if report["warnings"]:
+                        st.markdown("**Warnings:**")
+                        for warn in report["warnings"]:
+                            st.warning(warn)
+                except Exception as e:
+                    st.warning(f"Validation could not be performed: {e}")
+                approve = st.button(f"Approve", key=f"approve_{idx}")
+                reject = st.button(f"Reject", key=f"reject_{idx}")
+                if approve:
+                    from src.core.plugins.plugin_submission import post_submission_to_remote
+                    ok, msg = post_submission_to_remote(sub)
+                    new_pending = pending[:idx] + pending[idx+1:]
+                    save_submissions(new_pending)
+                    if ok:
+                        st.success(f"Submission approved and sent to remote API: {msg}")
+                    else:
+                        st.warning(f"Submission approved locally but NOT sent to remote API: {msg}")
+                    st.experimental_rerun()
+                if reject:
+                    new_pending = pending[:idx] + pending[idx+1:]
+                    save_submissions(new_pending)
+                    st.warning("Submission rejected and removed from pending list.")
+                    st.experimental_rerun()
+
+# --- Plugin Submission Section ---
+with st.sidebar.expander("🚀 Submit a Plugin to the Marketplace"):
+    from src.core.plugins.plugin_submission import add_submission
+    st.markdown("Fill out the form below to submit your plugin for review.")
+    with st.form("plugin_submission_form", clear_on_submit=True):
+        sub_type = st.selectbox("Plugin Type", PLUGIN_TYPES)
+        sub_name = st.text_input("Plugin Name")
+        sub_desc = st.text_area("Description")
+        sub_version = st.text_input("Version (e.g., 1.0.0)")
+        sub_author = st.text_input("Author")
+        sub_url = st.text_input("Source URL (e.g., GitHub)")
+        sub_readme = st.text_area("README/Usage (optional)")
+        submit = st.form_submit_button("Submit Plugin")
+        # Validation
+        import re
+        errors = []
+        if submit:
+            if not sub_name.strip():
+                errors.append("Name is required.")
+            if not sub_desc.strip():
+                errors.append("Description is required.")
+            if not sub_version.strip() or not re.match(r"^\\d+\\.\\d+\\.\\d+$", sub_version.strip()):
+                errors.append("Version must be in format X.Y.Z.")
+            if not sub_author.strip():
+                errors.append("Author is required.")
+            if not sub_url.strip():
+                errors.append("Source URL is required.")
+            if errors:
+                for e in errors:
+                    st.error(e)
+            else:
+                add_submission({
+                    "type": sub_type,
+                    "name": sub_name.strip(),
+                    "description": sub_desc.strip(),
+                    "version": sub_version.strip(),
+                    "author": sub_author.strip(),
+                    "source_url": sub_url.strip(),
+                    "readme": sub_readme.strip() if sub_readme else None
+                })
+                st.success("Plugin submission saved! It will be reviewed for inclusion in the marketplace.")
+
+# --- Developer Guide ---
+with st.sidebar.expander("📚 Plugin Developer Guide"):
+    import os
+    devguide_path = os.path.join(os.path.dirname(__file__), "PLUGIN_DEV_GUIDE.md")
+    if os.path.exists(devguide_path):
+        with open(devguide_path, "r", encoding="utf-8") as f:
+            st.markdown(f.read())
+    else:
+        st.info("Developer guide not found.")
+
+# Marketplace UI (sorted, badges)
+from src.core.plugins.plugin_reviews import get_average_rating
 for ptype in PLUGIN_TYPES:
     st.sidebar.markdown(f"**{ptype.capitalize()} Plugins**")
-    # Local
-    for name in sorted(local_plugins[ptype]):
+    # Combine local and remote for sorting
+    plugin_objs = []
+    for name in set(local_plugins[ptype]) | {p['name'] for p in remote_plugins[ptype]}:
+        local = name in local_plugins[ptype]
+        remote = next((p for p in remote_plugins[ptype] if p['name'] == name), None)
+        avg_rating = get_average_rating(ptype, name) or 0
+        plugin_objs.append({"name": name, "local": local, "remote": remote, "avg_rating": avg_rating})
+    # Sort by rating desc, then name
+    plugin_objs.sort(key=lambda x: (-x["avg_rating"], x["name"]))
+    for pobj in plugin_objs:
+        name = pobj["name"]
+        local = pobj["local"]
+        remote = pobj["remote"]
+        badge = ""
+        if remote and remote.get("official", False):
+            badge = "🟢 Official"
+        elif remote:
+            badge = "⚠️ Unofficial"
+        elif local:
+            badge = "(local)"
+        # Show as before (UI below will still use the main logic)
+        st.sidebar.markdown(f"{badge} {name}")
+
         local_ver = get_local_plugin_version(ptype, name)
         # Check if also in remote index
         remote_plugin = next((p for p in remote_plugins[ptype] if p['name'] == name), None)

@@ -32,6 +32,7 @@ def main():
         "Interventions",
         "Collaboration",
         "Settings",
+        "Plugins & Docs",
     ]
     tabs = st.tabs(tab_labels)
     with tabs[0]:
@@ -48,6 +49,8 @@ def main():
         collaboration()
     with tabs[6]:
         settings()
+    with tabs[7]:
+        plugins_and_docs()
 
 # (Keep all other functions as before, but ensure they use st.session_state for selected plugins/config)
 
@@ -763,6 +766,48 @@ def main():
                 st.info(f"Group analytics unavailable: {e}")
         # (Other dashboard panels and logic will be called here)
 
+
+def plugins_and_docs():
+    import inspect
+    from src.env.registry import get_registered_environments
+    from src.core.agents.agent_registry import get_registered_agents
+    from src.plugins.registry import get_registered_sensors, get_registered_actuators
+    st.header("Plugin Registry & Developer Docs")
+    st.subheader("Environments")
+    envs = get_registered_environments()
+    for name, cls in envs.items():
+        with st.expander(f"{name}"):
+            st.markdown(f"**Docstring:** {cls.__doc__}")
+            sig = inspect.signature(cls.__init__)
+            st.code(str(sig), language="python")
+    st.subheader("Agents")
+    agents = get_registered_agents()
+    for name, cls in agents.items():
+        with st.expander(f"{name}"):
+            st.markdown(f"**Docstring:** {cls.__doc__}")
+            sig = inspect.signature(cls.__init__)
+            st.code(str(sig), language="python")
+    st.subheader("Sensors")
+    sensors = get_registered_sensors()
+    for name, cls in sensors.items():
+        with st.expander(f"{name}"):
+            st.markdown(f"**Docstring:** {cls.__doc__}")
+            sig = inspect.signature(cls.__init__)
+            st.code(str(sig), language="python")
+    st.subheader("Actuators")
+    actuators = get_registered_actuators()
+    for name, cls in actuators.items():
+        with st.expander(f"{name}"):
+            st.markdown(f"**Docstring:** {cls.__doc__}")
+            sig = inspect.signature(cls.__init__)
+            st.code(str(sig), language="python")
+    st.subheader("Developer Documentation")
+    st.markdown("""
+    - **How to add new plugins:** See registry auto-discovery in `src/env/registry.py`, `src/core/agents/agent_registry.py`, `src/plugins/registry.py`.
+    - **Best practices:** Use clear docstrings, type hints, and follow the base class interfaces.
+    - **Advanced Controls:** Meta-learning, experiment management, explainability, and human-in-the-loop features are under development. See `roadmap2.md` for progress.
+    - **Troubleshooting:** Use the plugin hot-reload button in the sidebar if new plugins do not appear.
+    """)
 
 if __name__ == "__main__":
     main()
