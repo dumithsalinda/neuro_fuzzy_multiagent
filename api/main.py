@@ -6,6 +6,7 @@ import hashlib
 
 from src.plugins.registry import get_registered_plugins
 from src.core.experiment.mlflow_tracker import ExperimentTracker
+from src.core.experiment.result_analysis import ResultAnalyzer
 
 app = FastAPI(title="Neuro-Fuzzy Multiagent Backend API")
 
@@ -44,6 +45,13 @@ def submit_experiment(req: ExperimentRequest):
     # MLflow tracking
     tracker = ExperimentTracker("neuro-fuzzy-experiments")
     run_id = tracker.start_run(run_name=f"exp_{exp_id}", params={"agent": req.agent, "environment": req.environment, **req.config, "config_version": config_hash}, tags={"exp_id": exp_id})
+    # --- Automated Result Analysis ---
+    analyzer = ResultAnalyzer(output_dir="/tmp")
+    # For demo, use mock metrics. In real system, would use actual experiment results.
+    metrics = {"accuracy": 0.95, "loss": 0.1}
+    report_md = analyzer.generate_report(config={"agent": req.agent, "environment": req.environment, **req.config, "config_version": config_hash}, metrics=metrics, run_id=run_id)
+    report_path = analyzer.save_report(report_md, filename=f"report_{exp_id}.md")
+    tracker.log_artifact(report_path)
     tracker.end_run()
     experiment_status[exp_id] = {"status": "running", "result": None, "mlflow_run_id": run_id, "config_version": config_hash}
     return ExperimentStatus(id=exp_id, status="running")
