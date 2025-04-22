@@ -96,8 +96,26 @@ for ptype in PLUGIN_TYPES:
             ver_str += f" → v{remote_ver}"
             update_btn = True
         st.sidebar.markdown(f"- 🟢 **{name}** (installed) {ver_str}")
-        # Uninstall button
-        with st.sidebar.expander(f"Manage {name}"):
+        # Details/Manage expander
+        with st.sidebar.expander(f"Details & Manage: {name}"):
+            # Show metadata
+            st.markdown(f"**Type:** {ptype}")
+            st.markdown(f"**Name:** {name}")
+            st.markdown(f"**Installed Version:** {local_ver if local_ver else 'Unknown'}")
+            if remote_plugin:
+                st.markdown(f"**Remote Version:** {remote_ver if remote_ver else 'Unknown'}")
+                for field in ["author", "homepage", "repository"]:
+                    if remote_plugin.get(field):
+                        st.markdown(f"**{field.capitalize()}:** {remote_plugin[field]}")
+            # Docstring
+            from src.core.plugins.registration_utils import get_registered_plugins
+            plugin_cls = get_registered_plugins(ptype).get(name)
+            doc = plugin_cls.__doc__ if plugin_cls and plugin_cls.__doc__ else None
+            if doc:
+                st.markdown(f"**Docstring:**\n{doc}")
+            if remote_plugin and remote_plugin.get("readme"):
+                st.markdown(f"**README:**\n{remote_plugin['readme']}")
+            # Uninstall button
             if st.button(f"Uninstall {name}", key=f"uninstall_{ptype}_{name}"):
                 from src.core.plugins.marketplace import uninstall_plugin
                 from src.core.plugins.hot_reload import reload_all_plugins
