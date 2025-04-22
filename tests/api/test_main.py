@@ -31,3 +31,13 @@ def test_submit_and_status():
     stat = client.get(f"/experiment/status/{exp_id}")
     assert stat.status_code == 200
     assert stat.json()["status"] == "running"
+
+    # WebSocket test for streaming
+    with client.websocket_connect(f"/experiment/stream/{exp_id}") as ws:
+        received = []
+        for _ in range(5):
+            msg = ws.receive_json()
+            assert msg["id"] == exp_id
+            assert msg["status"] == "running"
+            received.append(msg)
+        assert len(received) == 5
