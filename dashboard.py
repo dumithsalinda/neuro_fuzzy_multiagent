@@ -96,6 +96,18 @@ for ptype in PLUGIN_TYPES:
             ver_str += f" → v{remote_ver}"
             update_btn = True
         st.sidebar.markdown(f"- 🟢 **{name}** (installed) {ver_str}")
+        # Uninstall button
+        with st.sidebar.expander(f"Manage {name}"):
+            if st.button(f"Uninstall {name}", key=f"uninstall_{ptype}_{name}"):
+                from src.core.plugins.marketplace import uninstall_plugin
+                from src.core.plugins.hot_reload import reload_all_plugins
+                success, msg, path = uninstall_plugin(ptype, name)
+                if success:
+                    reload_all_plugins()
+                    st.success(msg)
+                    st.experimental_rerun()
+                else:
+                    st.error(msg)
         if update_btn:
             with st.sidebar.expander(f"Update {name} to v{remote_ver}"):
                 desc = remote_plugin.get('description', 'No description.')
