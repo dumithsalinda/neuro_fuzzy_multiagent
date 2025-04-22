@@ -107,6 +107,9 @@ for ptype in PLUGIN_TYPES:
                 for field in ["author", "homepage", "repository"]:
                     if remote_plugin.get(field):
                         st.markdown(f"**{field.capitalize()}:** {remote_plugin[field]}")
+                # SECURITY WARNING if not official
+                if not remote_plugin.get("official", False):
+                    st.error("⚠️ This plugin is NOT from an official/trusted source. Install at your own risk.")
             # Docstring
             from src.core.plugins.registration_utils import get_registered_plugins
             plugin_cls = get_registered_plugins(ptype).get(name)
@@ -115,6 +118,25 @@ for ptype in PLUGIN_TYPES:
                 st.markdown(f"**Docstring:**\n{doc}")
             if remote_plugin and remote_plugin.get("readme"):
                 st.markdown(f"**README:**\n{remote_plugin['readme']}")
+            # Ratings & Reviews
+            from src.core.plugins.plugin_reviews import get_average_rating, get_reviews, add_review
+            avg_rating = get_average_rating(ptype, name)
+            if avg_rating:
+                st.markdown(f"**Average Rating:** {'⭐️'*int(round(avg_rating))} ({avg_rating:.2f}/5)")
+            reviews = get_reviews(ptype, name)
+            if reviews:
+                st.markdown("**Recent Reviews:**")
+                for r in reviews[-3:][::-1]:
+                    st.markdown(f"- {'⭐️'*r['rating']} by {r['user']} ({r['timestamp'][:10]}): {r['review']}")
+            # Review form
+            with st.form(f"review_form_{ptype}_{name}", clear_on_submit=True):
+                st.markdown("**Leave a Rating & Review:**")
+                rating = st.slider("Rating", 1, 5, 5)
+                review = st.text_input("Review")
+                submit = st.form_submit_button("Submit Review")
+                if submit and review.strip():
+                    add_review(ptype, name, rating, review)
+                    st.success("Thank you for your review!")
             # Uninstall button
             if st.button(f"Uninstall {name}", key=f"uninstall_{ptype}_{name}"):
                 from src.core.plugins.marketplace import uninstall_plugin
@@ -147,9 +169,14 @@ for ptype in PLUGIN_TYPES:
         remote_ver = plugin.get('version')
         with st.sidebar.expander(f"⚪️ {plugin['name']} (available) v{remote_ver if remote_ver else ''}"):
             st.markdown(desc)
+            # SECURITY WARNING if not official
+            if not plugin.get("official", False):
+                st.error("⚠️ This plugin is NOT from an official/trusted source. Install at your own risk.")
             if st.button(f"Install {plugin['name']}", key=f"install_{ptype}_{plugin['name']}"):
                 from src.core.plugins.marketplace import download_and_save_plugin
                 from src.core.plugins.hot_reload import reload_all_plugins
+                if not plugin.get("official", False):
+                    st.warning("You are installing a plugin from an untrusted source. Proceed with caution.")
                 success, msg, path = download_and_save_plugin(plugin)
                 if success:
                     reload_all_plugins()
