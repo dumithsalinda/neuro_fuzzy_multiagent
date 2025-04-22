@@ -9,6 +9,8 @@ class PluginSandboxResult:
         self.error = error
         self.traceback = traceback_str
 
+import logging
+
 def _sandbox_runner(plugin_callable, args, kwargs, result_queue):
     try:
         # Set resource limits (Unix only)
@@ -17,20 +19,28 @@ def _sandbox_runner(plugin_callable, args, kwargs, result_queue):
             resource.setrlimit(resource.RLIMIT_CPU, (30, 30))
             mem_bytes = 256 * 1024 * 1024
             resource.setrlimit(resource.RLIMIT_AS, (mem_bytes, mem_bytes))
-        except Exception:
-            pass  # Not available on all systems
+        except Exception as e:
+            logging.warning(f"Resource limits could not be set in plugin sandbox: {e}")
         result = plugin_callable(*args, **kwargs)
         # Only pass built-in types (tuple) through the queue
         result_queue.put((True, result, None, None))
     except Exception as e:
         tb = traceback.format_exc()
+        logging.error(f"Plugin execution failed: {e}\n{tb}")
         result_queue.put((False, None, str(e), tb))
 
 class PluginSandbox:
-    def __init__(self, timeout=10):
-        self.timeout = timeout
+    """
+    Provides a secure sandbox for running plugin callables in a subprocess with resource limits and a timeout.
+    """
+    def __init__(self, timeout: int = 10):
+        """
+        Args:
+            timeout (int): Timeout in seconds for plugin execution.
+        """
+        self.timeout: int = timeout
 
-    def run(self, plugin_callable, *args, **kwargs):
+    def run(self, plugin_callable: Any, *args: Any, **kwargs: Any) -> PluginSandboxResult:
         """
         Runs the given plugin_callable in a subprocess with a timeout.
         Returns PluginSandboxResult.
