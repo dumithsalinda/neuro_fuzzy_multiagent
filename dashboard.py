@@ -59,6 +59,21 @@ if plugin_docs_path.exists():
 else:
     st.sidebar.info("Plugin documentation not found. Run the generator to create PLUGIN_DOCS.md.")
 
+# --- Plugin Marketplace (Local Catalog) ---
+st.sidebar.markdown("---")
+st.sidebar.subheader("🛒 Plugin Marketplace")
+from src.core.plugins.registration_utils import get_registered_plugins
+PLUGIN_TYPES = ['environment', 'agent', 'sensor', 'actuator']
+for ptype in PLUGIN_TYPES:
+    st.sidebar.markdown(f"**{ptype.capitalize()} Plugins**")
+    plugins = get_registered_plugins(ptype)
+    if not plugins:
+        st.sidebar.markdown("_No plugins registered._")
+        continue
+    for name, cls in plugins.items():
+        doc = cls.__doc__.strip().split("\n")[0] if cls.__doc__ else "No description."
+        st.sidebar.markdown(f"- **{name}**: {doc}")
+
 
 registered_sensors = get_registered_sensors()
 registered_actuators = get_registered_actuators()
