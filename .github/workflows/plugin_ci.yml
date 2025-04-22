@@ -34,7 +34,7 @@ jobs:
           pip install -r requirements.txt
           pip install pytest
       - name: Run plugin system tests
-        run: pytest tests/plugins/test_plugin_system.py
+        run: PYTHONPATH=. pytest tests/plugins/test_plugin_system.py
       - name: Generate plugin docs
         run: PYTHONPATH=. python3 src/core/plugins/generate_plugin_docs.py
       - name: Check plugin docs up to date
