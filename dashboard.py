@@ -59,20 +59,33 @@ if plugin_docs_path.exists():
 else:
     st.sidebar.info("Plugin documentation not found. Run the generator to create PLUGIN_DOCS.md.")
 
-# --- Plugin Marketplace (Local Catalog) ---
+# --- Plugin Marketplace (Local + Remote) ---
 st.sidebar.markdown("---")
 st.sidebar.subheader("🛒 Plugin Marketplace")
 from src.core.plugins.registration_utils import get_registered_plugins
+from src.core.plugins.marketplace import fetch_remote_plugin_index, plugin_metadata_by_type
+import streamlit as st
+
 PLUGIN_TYPES = ['environment', 'agent', 'sensor', 'actuator']
+
+# Local plugins
+local_plugins = {ptype: set(get_registered_plugins(ptype).keys()) for ptype in PLUGIN_TYPES}
+
+# Fetch remote index (show spinner while loading)
+with st.sidebar.spinner("Fetching remote plugin index..."):
+    remote_plugins_raw = fetch_remote_plugin_index()
+remote_plugins = plugin_metadata_by_type(remote_plugins_raw)
+
 for ptype in PLUGIN_TYPES:
     st.sidebar.markdown(f"**{ptype.capitalize()} Plugins**")
-    plugins = get_registered_plugins(ptype)
-    if not plugins:
-        st.sidebar.markdown("_No plugins registered._")
-        continue
-    for name, cls in plugins.items():
-        doc = cls.__doc__.strip().split("\n")[0] if cls.__doc__ else "No description."
-        st.sidebar.markdown(f"- **{name}**: {doc}")
+    # Local
+    for name in sorted(local_plugins[ptype]):
+        st.sidebar.markdown(f"- 🟢 **{name}** (installed)")
+    # Remote (not installed)
+    remote_not_installed = [p for p in remote_plugins[ptype] if p['name'] not in local_plugins[ptype]]
+    for plugin in remote_not_installed:
+        desc = plugin.get('description', 'No description.')
+        st.sidebar.markdown(f"- ⚪️ **{plugin['name']}** (available): {desc}")
 
 
 registered_sensors = get_registered_sensors()
