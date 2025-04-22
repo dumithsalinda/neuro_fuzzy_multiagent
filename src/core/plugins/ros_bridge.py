@@ -3,6 +3,7 @@ try:
     from std_msgs.msg import String
 except ImportError:
     rospy = None
+    String = None
 
 class ROSBridge:
     """

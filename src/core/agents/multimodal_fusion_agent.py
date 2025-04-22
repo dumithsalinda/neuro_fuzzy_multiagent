@@ -1,8 +1,10 @@
 import torch
 import torch.nn as nn
-from src.core.neural_networks.fusion import FusionNetwork
+from core.plugins.registration_utils import register_plugin
+from core.neural_networks.fusion import FusionNetwork
 
 
+@register_plugin('agent')
 class MultiModalFusionAgent:
     """
     Agent that accepts multiple modalities as input and uses a fusion network for policy/Q-value computation.

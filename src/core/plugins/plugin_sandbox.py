@@ -1,6 +1,7 @@
 import multiprocessing
 import traceback
 import sys
+from typing import Any
 
 class PluginSandboxResult:
     def __init__(self, success, result=None, error=None, traceback_str=None):

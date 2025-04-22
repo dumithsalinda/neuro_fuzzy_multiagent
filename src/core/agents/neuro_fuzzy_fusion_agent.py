@@ -1,10 +1,12 @@
 import numpy as np
 import torch
 import torch.nn as nn
+from core.plugins.registration_utils import register_plugin
 from src.core.neural_networks.fusion import FusionNetwork
 from src.core.neural_networks.fuzzy_system import FuzzyInferenceSystem
 
 
+@register_plugin('agent')
 class NeuroFuzzyFusionAgent:
     """
     Multi-modal agent combining neural and fuzzy logic for decision making.

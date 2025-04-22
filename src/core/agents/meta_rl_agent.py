@@ -1,6 +1,8 @@
 import numpy as np
+from core.plugins.registration_utils import register_plugin
 from src.core.agents.agent import Agent
 
+@register_plugin('agent')
 class MetaRLAgent(Agent):
     """
     Meta-Reinforcement Learning Agent.

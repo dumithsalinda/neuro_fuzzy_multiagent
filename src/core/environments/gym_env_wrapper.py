@@ -1,5 +1,8 @@
 import gym
 
+from core.plugins.registration_utils import register_plugin
+
+@register_plugin('environment')
 class GymEnvWrapper:
     """
     Wraps an OpenAI Gym environment to make it compatible with the Neuro-Fuzzy Multi-Agent platform.

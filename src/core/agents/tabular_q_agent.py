@@ -1,8 +1,10 @@
 import numpy as np
+from core.plugins.registration_utils import register_plugin
 from .agent import Agent
 from .laws import enforce_laws, LawViolation
 
 
+@register_plugin('agent')
 class TabularQLearningAgent(Agent):
     def explain_action(self, observation):
         import numpy as np

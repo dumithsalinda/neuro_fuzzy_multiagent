@@ -1,6 +1,9 @@
 import numpy as np
 
 
+from core.plugins.registration_utils import register_plugin
+
+@register_plugin('agent')
 class ANFISHybrid:
     """
     Minimal Adaptive Neuro-Fuzzy Inference System (ANFIS) hybrid model.
@@ -34,6 +37,7 @@ class ANFISHybrid:
                 firing_strengths[r] *= self.membership(
                     x[d], self.centers[r, d], self.widths[r, d]
                 )
+
         # Store firing strengths for rule usage tracking
         self._last_firing_strengths = firing_strengths.copy()
         if firing_strengths.sum() == 0:

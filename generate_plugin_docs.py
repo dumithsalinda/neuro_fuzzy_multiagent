@@ -7,30 +7,54 @@ import inspect
 import importlib
 from pathlib import Path
 
-# Registry locations
-REGISTRIES = [
-    ("Environments", "src.env.registry", "get_registered_environments"),
-    ("Agents", "src.core.agent_registry", "get_registered_agents"),
-    ("Neural Networks", "src.core.neural_network", "get_registered_networks"),
-    ("Sensors", "src.plugins.registry", "get_registered_sensors"),
-    ("Actuators", "src.plugins.registry", "get_registered_actuators"),
-]
+import os
+import inspect
+from pathlib import Path
+import sys
 
-out_lines = ["# Plugin API Reference\n"]
+# Add src to sys.path for import compatibility
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), 'src')))
+import os
+import inspect
+from pathlib import Path
+import sys
+import importlib
+import glob
 
-for section, mod_path, func_name in REGISTRIES:
-    try:
-        mod = importlib.import_module(mod_path)
-        registry = getattr(mod, func_name)()
-    except Exception as e:
-        out_lines.append(f"\n## {section}\nCould not load registry: {e}\n")
-        continue
+# Add src to sys.path for import compatibility
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), 'src')))
+
+# Dynamically import all .py files in these directories (except __init__.py)
+def import_all_modules_from_dir(package, directory):
+    abs_dir = os.path.abspath(directory)
+    for file in glob.glob(os.path.join(abs_dir, '*.py')):
+        base = os.path.basename(file)
+        if base.startswith('__') or base == '__init__.py':
+            continue
+        module_name = os.path.splitext(base)[0]
+        importlib.import_module(f'{package}.{module_name}')
+
+import_all_modules_from_dir('core.agents', 'src/core/agents')
+import_all_modules_from_dir('core.environments', 'src/core/environments')
+import_all_modules_from_dir('core.sensors', 'src/core/sensors')
+import_all_modules_from_dir('core.actuators', 'src/core/actuators')
+import_all_modules_from_dir('core.plugins', 'src/core/plugins')
+
+from core.plugins.registration_utils import PLUGIN_REGISTRIES
+
+out_lines = ["# Plugin API Documentation\n"]
+
+for plugin_type, registry in PLUGIN_REGISTRIES.items():
+    section = plugin_type.capitalize() + " Plugins"
     out_lines.append(f"\n## {section}\n")
     if not registry:
-        out_lines.append("*(No plugins found)*\n")
+        out_lines.append("_No plugins registered._\n")
         continue
     for name, cls in registry.items():
         out_lines.append(f"### {name}\n")
+        version = getattr(cls, "__version__", None)
+        if version:
+            out_lines.append(f"**Version:** `{version}`  ")
         doc = inspect.getdoc(cls) or "No docstring."
         out_lines.append(f"{doc}\n")
         # List __init__ signature for config
@@ -40,7 +64,9 @@ for section, mod_path, func_name in REGISTRIES:
             if params:
                 out_lines.append("**Config options:**\n")
                 for p in params:
-                    out_lines.append(f"- `{p.name}`: {p.annotation if p.annotation != inspect._empty else 'Any'} (default: {p.default if p.default != inspect._empty else 'required'})")
+                    ann = p.annotation if p.annotation != inspect._empty else 'Any'
+                    default = p.default if p.default != inspect._empty else 'required'
+                    out_lines.append(f"- `{p.name}`: {ann} (default: {default})")
             out_lines.append("")
         except Exception:
             pass

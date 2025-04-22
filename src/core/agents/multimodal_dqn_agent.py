@@ -1,9 +1,9 @@
 import torch
 import torch.nn as nn
 from .agent import Agent
-from src.core.neural_networks.fusion import FusionNetwork
+from core.plugins.registration_utils import register_plugin
 
-
+@register_plugin('agent')
 class MultiModalDQNAgent(Agent):
     def explain_action(self, features):
         import torch

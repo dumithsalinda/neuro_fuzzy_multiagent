@@ -19,7 +19,10 @@ PLUGIN_TYPES = ['sensor', 'actuator', 'environment', 'agent']
 import os
 from pathlib import Path
 
-def reload_all_plugins():
+from typing import Dict, Any
+import logging
+
+def reload_all_plugins() -> Dict[str, Any]:
     """
     Clear all plugin registries and reload all plugin modules and all plugin files.
     Returns a dict with status and errors (if any).
@@ -36,6 +39,10 @@ def reload_all_plugins():
             else:
                 importlib.import_module(module_path)
             result['reloaded'].append(module_path)
+            logging.info(f"Reloaded plugin module: {module_path}")
+        except Exception as e:
+            logging.error(f"Failed to reload module {module_path}: {e}")
+            result['errors'].append((module_path, str(e)))
         except Exception as e:
             logging.error(f"Failed to reload {module_path}: {e}")
             result['errors'].append((module_path, str(e)))

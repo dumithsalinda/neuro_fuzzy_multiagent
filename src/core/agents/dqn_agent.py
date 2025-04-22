@@ -2,6 +2,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
+from core.plugins.registration_utils import register_plugin
 from .agent import Agent
 from .laws import enforce_laws, LawViolation
 
@@ -25,6 +26,7 @@ class QNetwork(nn.Module):
         return self.net(x)
 
 
+@register_plugin('agent')
 class DQNAgent(Agent):
     def explain_action(self, observation):
         import torch
