@@ -1,5 +1,8 @@
 from src.core.agents.agent import Agent
 
+from src.core.plugins.registration_utils import register_plugin
+
+@register_plugin('agent')
 class DummyAgent(Agent):
     """
     A minimal agent for testing plug-and-play registration.

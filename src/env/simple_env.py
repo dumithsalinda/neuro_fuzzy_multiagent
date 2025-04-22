@@ -3,6 +3,9 @@ import numpy as np
 from .base_env import BaseEnvironment
 
 
+from src.core.plugins.registration_utils import register_plugin
+
+@register_plugin('environment')
 class SimpleDiscreteEnv(BaseEnvironment):
     """
     Simple discrete environment for tabular Q-learning (e.g., N-state chain).
@@ -55,6 +58,7 @@ class SimpleDiscreteEnv(BaseEnvironment):
         return self.n_states
 
 
+@register_plugin('environment')
 class SimpleContinuousEnv(BaseEnvironment):
     """
     Simple continuous environment for DQN (e.g., 2D point to goal).

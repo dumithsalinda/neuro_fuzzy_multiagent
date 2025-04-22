@@ -10,6 +10,11 @@ def test_gym_env_wrapper_cartpole():
     steps = 0
     while not done and steps < 5:
         action = wrapper.action_space.sample()
-        obs, reward, done, info = wrapper.step(action)
+        result = wrapper.step(action)
+        if len(result) == 5:
+            obs, reward, terminated, truncated, info = result
+            done = terminated or truncated
+        else:
+            obs, reward, done, info = result
         steps += 1
     wrapper.close()
