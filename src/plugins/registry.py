@@ -6,26 +6,28 @@ Usage:
     sensors = get_registered_sensors()  # {class_name: class_obj}
     actuators = get_registered_actuators()  # {class_name: class_obj}
 """
-import importlib
-import pkgutil
-import os
-from .base_sensor import BaseSensor
-from .base_actuator import BaseActuator
+import logging
+from src.core.plugins.registration_utils import get_registered_plugins, register_plugin
 
-_SENSOR_REGISTRY = {}
-_ACTUATOR_REGISTRY = {}
+def get_registered_sensors():
+    """
+    Returns a dictionary {class_name: class_obj} of all registered sensor plugins.
+    """
+    try:
+        return get_registered_plugins('sensor')
+    except Exception as e:
+        logging.error(f"Failed to get registered sensors: {e}")
+        return {}
 
-_plugins_dir = os.path.dirname(__file__)
-for _, modname, _ in pkgutil.iter_modules([_plugins_dir]):
-    if modname in ("registry", "__init__", "base_sensor", "base_actuator"): continue
-    module = importlib.import_module(f"src.plugins.{modname}")
-    for attr in dir(module):
-        obj = getattr(module, attr)
-        if isinstance(obj, type):
-            if issubclass(obj, BaseSensor) and obj is not BaseSensor:
-                _SENSOR_REGISTRY[obj.__name__] = obj
-            if issubclass(obj, BaseActuator) and obj is not BaseActuator:
-                _ACTUATOR_REGISTRY[obj.__name__] = obj
+def get_registered_actuators():
+    """
+    Returns a dictionary {class_name: class_obj} of all registered actuator plugins.
+    """
+    try:
+        return get_registered_plugins('actuator')
+    except Exception as e:
+        logging.error(f"Failed to get registered actuators: {e}")
+        return {}
 
 def get_registered_sensors():
     """

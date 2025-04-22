@@ -1,6 +1,9 @@
 from abc import ABC, abstractmethod
 from typing import Any
 
+from src.core.plugins.registration_utils import register_plugin
+
+@register_plugin('environment')
 class BaseEnvironment(ABC):
     """
     Abstract base class for all environments (simulated, real-world, etc.).

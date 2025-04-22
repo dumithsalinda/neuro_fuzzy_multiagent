@@ -13,6 +13,9 @@ from src.core.neural_networks.universal_fuzzy_layer import UniversalFuzzyLayer
 from typing import Callable, Optional, Dict, Any
 
 
+from src.core.plugins.registration_utils import register_plugin
+
+@register_plugin('agent')
 class Agent(OnlineLearnerMixin):
     """
     Generic agent that interacts with an environment using a model and policy.
