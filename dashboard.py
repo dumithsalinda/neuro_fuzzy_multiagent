@@ -41,6 +41,25 @@ if st.sidebar.button("🔄 Reload Plugins"):
         st.sidebar.success("All plugins reloaded successfully!")
     st.experimental_rerun()
 
+# --- Plugin Documentation Viewer ---
+import pathlib
+plugin_docs_path = pathlib.Path("PLUGIN_DOCS.md")
+if plugin_docs_path.exists():
+    with plugin_docs_path.open("r") as f:
+        plugin_docs_md = f.read()
+    st.sidebar.markdown("---")
+    st.sidebar.subheader("📚 Plugin Documentation")
+    st.sidebar.markdown(plugin_docs_md, unsafe_allow_html=True)
+    st.sidebar.download_button(
+        label="Download Plugin Docs (Markdown)",
+        data=plugin_docs_md,
+        file_name="PLUGIN_DOCS.md",
+        mime="text/markdown"
+    )
+else:
+    st.sidebar.info("Plugin documentation not found. Run the generator to create PLUGIN_DOCS.md.")
+
+
 registered_sensors = get_registered_sensors()
 registered_actuators = get_registered_actuators()
 
