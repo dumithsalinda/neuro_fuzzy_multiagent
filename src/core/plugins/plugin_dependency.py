@@ -1,7 +1,9 @@
 import os
 import subprocess
 import sys
+import logging
 from pathlib import Path
+from src.core.plugins.plugin_linter import PluginLinter
 
 class PluginDependencyManager:
     """
