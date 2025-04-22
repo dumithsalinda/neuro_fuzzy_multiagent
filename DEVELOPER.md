@@ -20,16 +20,23 @@ src/
 
 ### Environments
 - Subclass `BaseEnvironment` in `src/env/`.
+- Use the `@register_plugin('environment')` decorator (already on base class).
 - Implement: `reset`, `step`, `get_observation`, `get_state`, `render`.
-- Add a docstring describing config options.
+- Add a docstring describing config options for auto-docs.
 
 ### Agents
-- Subclass `Agent` in `src/core/`.
-- Register using `@register_agent` decorator or base class scanning.
+- Subclass `Agent` in `src/core/agents/`.
+- Use the `@register_plugin('agent')` decorator (already on base class).
+- Add docstrings for config options and main methods.
+
+### Sensors/Actuators
+- Subclass `BaseSensor` or `BaseActuator` in `src/plugins/`.
+- Use the `@register_plugin('sensor')` or `@register_plugin('actuator')` decorator (already on base class).
+- Add docstrings for auto-docs.
 
 ### Neural Networks (Plug-and-Play)
 - Subclass `BaseNeuralNetwork` in `src/core/neural_network.py`.
-- Register using `@register_neural_network`.
+- Register using `@register_plugin('neural_network')` if you add this plugin type.
 - Required methods: `forward`, `backward`, `evolve` (optional), `__init__` with config params.
 - Add docstrings for config options.
 - Example config (YAML):
@@ -42,23 +49,64 @@ src/
     activation: tanh
   ```
 
-### Sensors/Actuators
-- Subclass `BaseSensor` or `BaseActuator` in `src/plugins/`.
-- Register using decorators or base class scanning.
-
 ---
 
 ## 3. Auto-Discovery & Registration
 - All plugins are auto-discovered by scanning their respective directories.
-- Use decorators (e.g., `@register_neural_network`) or ensure your class is a subclass of the appropriate base class.
+- Use the `@register_plugin` decorator (already on base classes) or ensure your class is a subclass of the appropriate base class.
 - No need to manually edit registries.
 
 ---
 
 ## 4. Config & Dashboard Integration
 - Plugins can be selected via YAML/JSON config files or interactively in the dashboard sidebar.
-- See `config/nn_config_example.yaml` for neural network config.
-- Use the dashboard “🔄 Reload Plugins” button after adding new files.
+- Use the dashboard “🔄 Reload Plugins” button after adding new files or making changes.
+- Plugin documentation is auto-generated and viewable/downloadable in the dashboard sidebar.
+
+---
+
+## 5. Plugin Auto-Documentation
+- Run `PYTHONPATH=. python3 src/core/plugins/generate_plugin_docs.py` to regenerate `PLUGIN_DOCS.md`.
+- The dashboard sidebar displays the latest plugin documentation and provides a download button.
+- Add docstrings to your plugin classes and methods for best documentation.
+
+---
+
+## 6. Hot-Reloading Plugins
+- Use the dashboard “🔄 Reload Plugins” button to reload all plugins at runtime.
+- This will clear and repopulate all plugin registries and update the dashboard UI.
+- Errors during reload are displayed in the sidebar.
+
+---
+
+## 7. Continuous Integration (CI)
+- All plugin system tests run automatically on push/PR via GitHub Actions (`.github/workflows/plugin_ci.yml`).
+- CI checks that `PLUGIN_DOCS.md` is up to date. Regenerate and commit if needed.
+
+---
+
+## 8. Best Practices
+- Always subclass the correct base and use the `@register_plugin` decorator (already present on base classes).
+- Add comprehensive docstrings for all classes and methods.
+- Test your plugin using the dashboard and `pytest tests/plugins/test_plugin_system.py`.
+- Keep your plugin config options clear and documented.
+- Use hot-reload to iterate quickly during development.
+
+---
+
+## 9. Troubleshooting
+- **Plugin not showing up?**
+  - Check for typos in class or file names.
+  - Ensure your class subclasses the correct base and is in the right directory.
+  - Ensure there are no import errors in your file (check dashboard sidebar for errors on reload).
+- **Dashboard not updating?**
+  - Use the “🔄 Reload Plugins” button.
+  - Check for errors in the sidebar after reload.
+- **Docs not updating?**
+  - Regenerate with `PYTHONPATH=. python3 src/core/plugins/generate_plugin_docs.py` and commit changes.
+- **CI failing?**
+  - Run tests locally with `pytest tests/plugins/test_plugin_system.py` and ensure docs are up to date.
+
 
 ---
 
