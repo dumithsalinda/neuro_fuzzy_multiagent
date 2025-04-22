@@ -89,6 +89,12 @@ src/
 - Always subclass the correct base and use the `@register_plugin` decorator (already present on base classes).
 - Add comprehensive docstrings for all classes and methods.
 - Test your plugin using the dashboard and `pytest tests/plugins/test_plugin_system.py`.
+- Use the CLI validator to check your plugin:
+  ```bash
+  python3 scripts/validate_plugins.py
+  ```
+  - [OK] means your plugin implements all required methods.
+  - [FAIL] means your plugin is missing required methods (see output for details).
 - Keep your plugin config options clear and documented.
 - Use hot-reload to iterate quickly during development.
 
@@ -106,37 +112,34 @@ src/
   - Regenerate with `PYTHONPATH=. python3 src/core/plugins/generate_plugin_docs.py` and commit changes.
 - **CI failing?**
   - Run tests locally with `pytest tests/plugins/test_plugin_system.py` and ensure docs are up to date.
-
-
----
-
-## 5. Auto-Generated Plugin Docs
-- See `PLUGIN_DOCS.md` (auto-generated) for a list of all available plugins, their docstrings, and config options.
-- To regenerate, run:
-  ```sh
-  python generate_plugin_docs.py
-  ```
+- **Validator failing?**
+  - Run `python3 scripts/validate_plugins.py` and check for [FAIL] lines. Fix missing methods as indicated.
 
 ---
 
-## 6. Best Practices
-- Add clear docstrings to every plugin class.
-- Specify all config options in `__init__` and docstring.
-- Use type hints for all parameters.
-- Test your plugin with `pytest` and the dashboard before sharing.
+## New Features
+- **Audit Logging:** Use `log_human_decision` from `core.plugins.human_approval_log` to record human approvals/denials for agent actions. See tests/plugins/test_human_approval_log.py for usage.
+- **Custom Explanation Registry:** Use `register_explanation` from `core.plugins.explanation_registry` to register custom explanation functions for agent types. See tests/plugins/test_explanation_registry.py for usage.
 
 ---
 
-## 7. Troubleshooting
-- If your plugin does not appear in the dashboard, check for typos, missing base class, or missing decorator.
-- Use the dashboard reload button after adding new files.
-- See `PLUGIN_DOCS.md` for a list of all discovered plugins.
-
+## Example: Agent Plugin
+```python
+from core.agents.agent import Agent
+class MyAgent(Agent):
+    """My custom agent."""
+    __version__ = "1.0"
+    def act(self, obs): ...
+    def explain_action(self, obs):
+        return "My explanation"
 ```
-src/
-  env/           # Environment plugins (BaseEnvironment subclasses)
-  core/          # Agent plugins (Agent subclasses)
-  plugins/       # (Future) Sensor/actuator plugins
+
+## Example: Sensor Plugin
+```python
+from core.plugins.base_sensor import BaseSensor
+class MySensor(BaseSensor):
+    __version__ = "1.0"
+    def read(self): ...
 ```
 
 ---
@@ -279,10 +282,14 @@ class MyActuator(BaseActuator):
 
 ### Example 3: Environment with Plugin Integration
 ```python
-from src.env.base_env import BaseEnvironment
+from core.env.base_env import BaseEnvironment
 class MyEnv(BaseEnvironment):
     """Integrates with sensor and actuator plugins."""
+    __version__ = "1.0"
     def __init__(self, ...):
+    def reset(self): ...
+    def step(self, action): ...
+```
         ...
     def step(self, action):
         sensor = st.session_state.get("sensor_plugin")
