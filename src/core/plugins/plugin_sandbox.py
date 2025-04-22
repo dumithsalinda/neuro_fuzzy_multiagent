@@ -11,11 +11,20 @@ class PluginSandboxResult:
 
 def _sandbox_runner(plugin_callable, args, kwargs, result_queue):
     try:
+        # Set resource limits (Unix only)
+        try:
+            import resource
+            resource.setrlimit(resource.RLIMIT_CPU, (30, 30))
+            mem_bytes = 256 * 1024 * 1024
+            resource.setrlimit(resource.RLIMIT_AS, (mem_bytes, mem_bytes))
+        except Exception:
+            pass  # Not available on all systems
         result = plugin_callable(*args, **kwargs)
-        result_queue.put(PluginSandboxResult(True, result=result))
+        # Only pass built-in types (tuple) through the queue
+        result_queue.put((True, result, None, None))
     except Exception as e:
         tb = traceback.format_exc()
-        result_queue.put(PluginSandboxResult(False, error=str(e), traceback_str=tb))
+        result_queue.put((False, None, str(e), tb))
 
 class PluginSandbox:
     def __init__(self, timeout=10):
@@ -35,7 +44,9 @@ class PluginSandbox:
             p.terminate()
             return PluginSandboxResult(False, error="Timeout", traceback_str=None)
         if not result_queue.empty():
-            return result_queue.get()
+            tup = result_queue.get()
+            # tup: (success, result, error, traceback)
+            return PluginSandboxResult(*tup)
         return PluginSandboxResult(False, error="No result returned", traceback_str=None)
 
 # Example usage (for test):
