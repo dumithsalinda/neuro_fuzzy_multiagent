@@ -76,16 +76,46 @@ with st.sidebar.spinner("Fetching remote plugin index..."):
     remote_plugins_raw = fetch_remote_plugin_index()
 remote_plugins = plugin_metadata_by_type(remote_plugins_raw)
 
+from src.core.plugins.marketplace import get_local_plugin_version
+
+def version_tuple(v):
+    # Convert version string to tuple of ints for comparison
+    return tuple(int(x) for x in v.split(".") if x.isdigit()) if v else ()
+
 for ptype in PLUGIN_TYPES:
     st.sidebar.markdown(f"**{ptype.capitalize()} Plugins**")
     # Local
     for name in sorted(local_plugins[ptype]):
-        st.sidebar.markdown(f"- 🟢 **{name}** (installed)")
+        local_ver = get_local_plugin_version(ptype, name)
+        # Check if also in remote index
+        remote_plugin = next((p for p in remote_plugins[ptype] if p['name'] == name), None)
+        remote_ver = remote_plugin.get('version') if remote_plugin else None
+        ver_str = f"v{local_ver}" if local_ver else ""
+        update_btn = False
+        if remote_ver and local_ver and version_tuple(remote_ver) > version_tuple(local_ver):
+            ver_str += f" → v{remote_ver}"
+            update_btn = True
+        st.sidebar.markdown(f"- 🟢 **{name}** (installed) {ver_str}")
+        if update_btn:
+            with st.sidebar.expander(f"Update {name} to v{remote_ver}"):
+                desc = remote_plugin.get('description', 'No description.')
+                st.markdown(desc)
+                if st.button(f"Update {name}", key=f"update_{ptype}_{name}"):
+                    from src.core.plugins.marketplace import download_and_save_plugin
+                    from src.core.plugins.hot_reload import reload_all_plugins
+                    success, msg, path = download_and_save_plugin(remote_plugin)
+                    if success:
+                        reload_all_plugins()
+                        st.success(msg)
+                        st.experimental_rerun()
+                    else:
+                        st.error(msg)
     # Remote (not installed)
     remote_not_installed = [p for p in remote_plugins[ptype] if p['name'] not in local_plugins[ptype]]
     for plugin in remote_not_installed:
         desc = plugin.get('description', 'No description.')
-        with st.sidebar.expander(f"⚪️ {plugin['name']} (available)"):
+        remote_ver = plugin.get('version')
+        with st.sidebar.expander(f"⚪️ {plugin['name']} (available) v{remote_ver if remote_ver else ''}"):
             st.markdown(desc)
             if st.button(f"Install {plugin['name']}", key=f"install_{ptype}_{plugin['name']}"):
                 from src.core.plugins.marketplace import download_and_save_plugin
