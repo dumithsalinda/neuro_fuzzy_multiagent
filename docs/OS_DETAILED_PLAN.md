@@ -8,6 +8,263 @@ This document outlines the architecture and development plan for a Neuro-Fuzzy M
 
 ## 2. High-Level Architecture
 
+### 2.1. Base System
+- **Linux Kernel**: Provides hardware abstraction, device drivers, process management, and security.
+- **Minimal Userland**: Alpine Linux, Buildroot, or custom minimal distribution for reduced footprint.
+
+### 2.2. Neuro-Fuzzy Multiagent Layer
+- **Agent Manager**: Orchestrates lifecycle and communication of agents.
+- **Neuro-Fuzzy Agents**: Each agent is responsible for specific tasks (e.g., device monitoring, resource allocation, user interaction).
+- **Adaptive Resource Management**: Agents use AI to dynamically allocate CPU, memory, and I/O based on workload, context, and predictions (energy efficiency, latency, user goals).
+- **Continual Learning**: Agents and the OS itself learn from experience, user behavior, and system feedback, supporting online learning and knowledge sharing.
+- **Inter-Agent Communication**: Message queues, sockets, or D-Bus for coordination and data sharing.
+
+### 2.3. Device Interaction
+- **USB & Device Support**: Leverage kernel drivers, access via `/dev` or libraries (libusb, pyusb).
+- **Hotplug Detection**: Use `udev` or systemd rules to trigger agents on device events.
+
+### 2.4. User Interface
+- **CLI**: Command-line tools for management and diagnostics.
+  - Example commands: `nfmaos-agent list`, `nfmaos-agent status <agent>`, `nfmaos-model install`, `nfmaos-model export`, `nfmaos-diagnostics`
+- **Optional GUI**: Lightweight desktop or web dashboard for monitoring and control.
+  - Features: agent status, model registry browser, device event logs, system health overview
+  - Built with Flask/Electron/Qt or similar for cross-platform compatibility
+
+### 2.5. AI Driver/Model Layer
+- **AI Drivers (Trained Models)**: Installable neural network or neuro-fuzzy models that enable the OS to recognize and process new devices or data types. These are managed similarly to traditional drivers but are used by agents for intelligent processing.
+- **Model Registry**: Central database or directory for installed models, including metadata, versioning, and compatibility information.
+- **Model Loader**: Component or agent responsible for loading and interfacing models with the rest of the system.
+
+### 2.6. Modularity & Extensibility
+- The OS is designed to be highly modular: agents, models, and device support can be added, updated, or removed at runtime without system restarts.
+- Plug-and-play AI “drivers” enable rapid support for new data types, devices, and intelligent tasks.
+
+---
+
+## 3. Core Components
+
+### 3.1. Kernel & Userland
+- Custom-configured Linux kernel (with required drivers)
+- Busybox or minimal shell utilities
+- Systemd or alternative init system
+
+### 3.2. Agent Framework
+- Written in Python (recommended for rapid prototyping) or C/C++ (for performance-critical agents)
+- Agent Manager daemon (systemd service)
+- Agent lifecycle: creation, registration, health monitoring, graceful termination, restart on failure
+- Agent registration and discovery protocol (agents register with the manager on startup; manager maintains a registry)
+- Inter-agent communication: UNIX sockets, ZeroMQ, or D-Bus; messages in JSON or Protobuf; agents can subscribe/publish to topics or send direct requests
+- Agent discovery: agents can query the manager for other agents' endpoints/capabilities
+- Logging and monitoring subsystem: centralized logging, agent health/status dashboard, event tracing
+- Example agent registration message (JSON):
+
+```json
+{
+  "agent_id": "usb_monitor_1",
+  "capabilities": ["usb_detection", "event_forwarding"],
+  "language": "python",
+  "status_endpoint": "/tmp/usb_monitor_1.sock"
+}
+```
+
+### 3.3. Device Handling
+- Use `libusb`/`pyusb` for USB device enumeration and control
+- Device event listeners (udev/systemd integration)
+- Device permission management (udev rules, group memberships)
+- Device simulation: support for virtual USB devices or replaying recorded device data for testing agents and models
+
+### 3.4. Inter-Agent Communication
+- UNIX sockets, ZeroMQ, or D-Bus
+- Define message formats and protocols (JSON or Protobuf)
+- Agents can be written in Python, C, or C++ and communicate using shared protocols (language-agnostic)
+- Example message (Protobuf or JSON): request/response, publish/subscribe, event notification
+
+### 3.5. Neuro-Fuzzy Logic
+- Integrate neuro-fuzzy libraries (e.g., scikit-fuzzy for Python)
+- Each agent can have its own neuro-fuzzy controller for adaptive decision-making
+
+### 3.6. AI Driver/Model Management
+- **Model Packaging**: Each model is packaged as a file or directory containing:
+  - The trained model file(s) (e.g., `.pt`, `.h5`, `.onnx`)
+  - Metadata (`model.json` or similar) specifying:
+    - Supported device/type
+    - Model version
+    - Author
+    - Description
+    - Input/output schema
+    - Hash/signature for security
+- **Model Validation & Compatibility**:
+  - On installation, the tool validates model file integrity, schema compatibility, and required metadata fields.
+  - Models are cryptographically signed; signature is checked before installation or export.
+  - Compatibility checks: agent queries model metadata to ensure it matches device and expected input/output formats.
+  - Error handling: failed installations are logged with descriptive error messages; partial installs are rolled back.
+- **Model Registry**: A directory (e.g., `/opt/nfmaos/models/`) or database tracks installed models and their metadata.
+- **Installation Tool**: CLI/GUI tool for installing, listing, updating, and removing models (e.g., `nfmaos-model install my_sensor_model.onnx`).
+- **Export Tool**: CLI/GUI tool for exporting trained models and metadata as portable driver packages (e.g., `nfmaos-model export`).
+- **Agent Integration**: When a device is detected, the agent queries the registry for a compatible model and loads it for processing.
+- **Security**: Models are signed or verified before installation or export. Agents are sandboxed with least privilege; model execution is isolated where possible.
+
+#### Example Directory Structure
+
+```
+/opt/nfmaos/models/
+  ├── usb_sensor_v1/
+  │     ├── model.onnx
+  │     └── model.json
+  ├── speech_recognizer/
+  │     ├── model.pt
+  │     └── model.json
+```
+
+#### Example Metadata (`model.json`)
+
+```json
+{
+  "name": "usb_sensor_v1",
+  "version": "1.0.0",
+  "author": "Your Name",
+  "description": "Model for recognizing USB sensor data.",
+  "supported_device": "usb_sensor_xyz",
+  "input_schema": "float32[128]",
+  "output_schema": "int",
+  "hash": "sha256:..."
+}
+```
+
+#### Example CLI Commands
+
+```
+nfmaos-model install ./models/usb_sensor_v1/
+nfmaos-model list
+nfmaos-model remove usb_sensor_v1
+nfmaos-model export --name usb_sensor_v1 --model ./models/usb_sensor_v1/model.onnx --metadata ./models/usb_sensor_v1/model.json
+```
+
+#### Model Usage Workflow
+
+1. Device is detected by agent.
+2. Agent queries model registry for compatible AI driver.
+3. Agent loads and applies the model to process device input/output.
+4. Results are used by the system or passed to other agents.
+
+### 3.7. Exportable Device Driver Tool
+- **Purpose**: Allow users, developers, or agents to package trained AI models and their metadata as exportable driver packages.
+- **Features**:
+  - Export model and metadata as a standardized archive (e.g., `.nfmaosdriver`, `.zip`)
+  - Auto-generate or validate metadata
+  - Optional signing/versioning for authenticity
+  - Simple CLI/GUI interface for exporting and managing drivers
+- **Example Workflow**:
+  1. Train a new model for a device.
+  2. Run `nfmaos-model export --name my_driver --model model.onnx --metadata model.json`
+  3. Share the exported package (`my_driver.nfmaosdriver`) for installation on other systems.
+
+---
+
+## 4. System Flows
+
+### 4.1. Agent Registration Flow
+- Agent starts up.
+- Registers with Agent Manager (sends registration message with ID, capabilities, endpoint).
+- Manager adds agent to registry, acknowledges registration.
+- Agent is now discoverable and can communicate with other agents.
+
+### 4.2. Device Recognition & Driver Installation Flow
+- New device is detected (e.g., USB device plugged in).
+- Device handler agent queries Model Registry for compatible AI driver/model.
+- If not present, user is prompted to install/approve new model.
+- Model is validated (signature, hash, compatibility).
+- Model is loaded and agent uses it to process device data.
+
+### 4.3. Inter-Agent Communication Flow
+- Agent A needs data/service from Agent B.
+- Agent A queries Agent Manager for B’s endpoint/capabilities.
+- Agent A sends message (JSON/Protobuf) to Agent B over UNIX socket/ZeroMQ/D-Bus.
+- Agent B processes request and responds.
+
+### 4.4. User Interaction Flow (Multi-Modal)
+- User issues a command (text, voice, gesture).
+- Input is processed (ASR for voice, vision model for gesture).
+- Intent is extracted and routed to appropriate agent.
+- Agent executes action, updates system/UI, and may respond via speech, notification, or visual update.
+
+### 4.5. Model Installation & Validation Flow
+- User/admin initiates model install (CLI/GUI).
+- Model package is scanned (signature, hash, metadata).
+- If valid, model is registered and made available to agents.
+- Audit log is updated.
+
+### 4.6. Security Flow (Model/Agent Revocation)
+- Threat/vulnerability is detected in a model/agent.
+- Admin issues revocation command.
+- OS disables model/agent, propagates revocation to distributed nodes.
+- Audit log records action.
+
+### 4.7. Continual Learning/Adaptation Flow
+- Agent collects new data during operation.
+- Triggers online learning or model retraining.
+- Updated model is validated and reloaded.
+- Optionally, new model is exported to the ecosystem.
+
+---
+
+### 3.1. Agent Registration Flow
+
+- Agent starts up.
+- Registers with Agent Manager (sends registration message with ID, capabilities, endpoint).
+- Manager adds agent to registry, acknowledges registration.
+- Agent is now discoverable and can communicate with other agents.
+
+### 3.2. Device Recognition & Driver Installation Flow
+
+- New device is detected (e.g., USB device plugged in).
+- Device handler agent queries Model Registry for compatible AI driver/model.
+- If not present, user is prompted to install/approve new model.
+- Model is validated (signature, hash, compatibility).
+- Model is loaded and agent uses it to process device data.
+
+### 3.3. Inter-Agent Communication Flow
+
+- Agent A needs data/service from Agent B.
+- Agent A queries Agent Manager for B’s endpoint/capabilities.
+- Agent A sends message (JSON/Protobuf) to Agent B over UNIX socket/ZeroMQ/D-Bus.
+- Agent B processes request and responds.
+
+### 3.4. User Interaction Flow (Multi-Modal)
+
+- User issues a command (text, voice, gesture).
+- Input is processed (ASR for voice, vision model for gesture).
+- Intent is extracted and routed to appropriate agent.
+- Agent executes action, updates system/UI, and may respond via speech, notification, or visual update.
+
+### 3.5. Model Installation & Validation Flow
+
+- User/admin initiates model install (CLI/GUI).
+- Model package is scanned (signature, hash, metadata).
+- If valid, model is registered and made available to agents.
+- Audit log is updated.
+
+### 3.6. Security Flow (Model/Agent Revocation)
+
+- Threat/vulnerability is detected in a model/agent.
+- Admin issues revocation command.
+- OS disables model/agent, propagates revocation to distributed nodes.
+- Audit log records action.
+
+### 3.7. Continual Learning/Adaptation Flow
+
+- Agent collects new data during operation.
+- Triggers online learning or model retraining.
+- Updated model is validated and reloaded.
+- Optionally, new model is exported to the ecosystem.
+
+---
+
+### 2.6. Modularity & Extensibility
+
+- The OS is designed to be highly modular: agents, models, and device support can be added, updated, or removed at runtime without system restarts.
+- Plug-and-play AI “drivers” enable rapid support for new data types, devices, and intelligent tasks.
+
 ### 2.5. AI Driver/Model Layer
 
 - **AI Drivers (Trained Models)**: Installable neural network or neuro-fuzzy models that enable the OS to recognize and process new devices or data types. These are managed similarly to traditional drivers but are used by agents for intelligent processing.
@@ -23,6 +280,8 @@ This document outlines the architecture and development plan for a Neuro-Fuzzy M
 
 - **Agent Manager**: Orchestrates lifecycle and communication of agents.
 - **Neuro-Fuzzy Agents**: Each agent is responsible for specific tasks (e.g., device monitoring, resource allocation, user interaction).
+- **Adaptive Resource Management**: Agents use AI to dynamically allocate CPU, memory, and I/O based on workload, context, and predictions (energy efficiency, latency, user goals).
+- **Continual Learning**: Agents and the OS itself learn from experience, user behavior, and system feedback, supporting online learning and knowledge sharing.
 - **Inter-Agent Communication**: Message queues, sockets, or D-Bus for coordination and data sharing.
 
 ### 2.3. Device Interaction
@@ -171,6 +430,41 @@ nfmaos-model export --name usb_sensor_v1 --model ./models/usb_sensor_v1/model.on
 
 ## 4. Advanced and Future Features
 
+### 4.17. Distributed Intelligence
+
+- Multiple AI-OS instances can communicate, share knowledge, and coordinate tasks across networks or the cloud.
+- Enables distributed learning, collaborative problem-solving, and resource balancing.
+
+### 4.18. Explainability & Transparency
+
+- Provide users with clear explanations for AI-driven decisions, resource allocations, and system behaviors.
+- Tools for visualizing agent/model reasoning and system state.
+
+### 4.19. Personalization & Accessibility
+
+- Learn and adapt to individual user preferences, accessibility needs, and contexts.
+- Offer per-user profiles, adaptive interfaces, and assistive technologies.
+
+### 4.20. Developer Experience
+
+- Provide SDKs, documentation, and templates to make it easy for third parties to build and share new agents, models, and integrations.
+- Support hot-reloading and live debugging of agents.
+
+### 4.21. Performance & Efficiency
+
+- Use lightweight, efficient AI models where possible.
+- Optimize for fast boot, low-latency response, and minimal resource usage—especially for edge and embedded devices.
+
+### 4.22. Resilience & Fault Tolerance
+
+- Agents and the OS recover gracefully from crashes, failed updates, or unexpected conditions.
+- Support state checkpointing, rollback, and automated recovery.
+
+### 4.23. Open Ecosystem & Community
+
+- Foster a community-driven ecosystem for sharing models, agents, and best practices.
+- Support open standards for interoperability with other systems and devices.
+
 ### 4.1. Online Model Training & Adaptation
 
 - Agents can continue learning and adapting models in real-time based on new data (online learning).
@@ -289,6 +583,7 @@ nfmaos-model export --name usb_sensor_v1 --model ./models/usb_sensor_v1/model.on
 - [ ] Set up inter-agent communication (sockets/D-Bus)
 - [ ] Logging and error handling
 - [ ] Write developer documentation and agent SDKs (Python, C/C++)
+- [ ] Implement hot-reloading and live debugging support for agents
 
 ### Phase 3: Device Support
 
@@ -307,17 +602,22 @@ nfmaos-model export --name usb_sensor_v1 --model ./models/usb_sensor_v1/model.on
 - [ ] Develop model registry and management tools
 - [ ] Enable agents to dynamically load and use installed models
 - [ ] Develop and test export tool for packaging and sharing AI drivers
+- [ ] Implement explainability tools for agent/model reasoning and system state visualization
+- [ ] Add support for continual/online learning and model retraining
 
 ### Phase 5: User Interface
 
 - [ ] Develop CLI tools for agent and device management
 - [ ] (Optional) Build lightweight GUI or web dashboard
+- [ ] Add support for multi-modal interaction (voice, vision, gesture, text)
+- [ ] Implement accessibility and personalization features
 
 ### Phase 6: Packaging & Deployment
 
 - [ ] Automate image building (e.g., with Buildroot or Yocto)
 - [ ] Test on real hardware and VMs
 - [ ] Documentation and user guides
+- [ ] Foster open ecosystem and community contributions
 
 ---
 
