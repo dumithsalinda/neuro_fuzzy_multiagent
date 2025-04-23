@@ -1,6 +1,10 @@
 import streamlit as st
 
-def get_drive(credentials_file):
+def get_drive(credentials_file: str):
+    """
+    Authenticate and return a GoogleDrive instance using the provided credentials file.
+    """
+
     from pydrive2.auth import GoogleAuth
     from pydrive2.drive import GoogleDrive
     gauth = GoogleAuth()
@@ -16,7 +20,12 @@ def get_drive(credentials_file):
     drive = GoogleDrive(gauth)
     return drive
 
-def collaborative_experiments_panel():
+def collaborative_experiments_panel() -> None:
+    """
+    Render the collaborative experiments panel for Google Drive integration.
+    Allows saving/loading experiments to/from Google Drive.
+    """
+
     st.sidebar.markdown('---')
     with st.sidebar.expander('Collaborative Experiments (Google Drive)', expanded=False):
         st.markdown('**Save or load experiments to Google Drive.**')

@@ -1,8 +1,16 @@
 import streamlit as st
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+import numpy as np
+import json
 
-def render_agent_positions(positions, agents):
+def render_agent_positions(positions: list, agents: list) -> None:
+    """
+    Visualize agent positions and group assignments in a dataframe and scatter plot.
+    """
+
     # Enhanced agent position visualization
-    import pandas as pd
     st.write("Agent positions:", positions)
     st.write("Agents:", agents)
     # If positions and groups available, plot scatter by group
@@ -16,29 +24,30 @@ def render_agent_positions(positions, agents):
     st.dataframe(df)
     # Scatter plot if positions are available
     if df['X'].notnull().all() and df['Y'].notnull().all():
-        import matplotlib.pyplot as plt
-        import seaborn as sns
         plt.figure(figsize=(6, 4))
         sns.scatterplot(x='X', y='Y', hue='Group', data=df, palette='tab10', s=100)
         plt.title('Agent Positions by Group')
         st.pyplot(plt)
 
-def render_group_modules(group_modules):
+def render_group_modules(group_modules: dict) -> None:
+    """
+    Display group module assignments in a dataframe.
+    """
+
     # Enhanced group module visualization
-    import pandas as pd
     if group_modules:
         st.write("Group Modules:")
         st.dataframe(pd.DataFrame.from_dict(group_modules, orient='index'))
     else:
         st.write("No group modules available.")
 
-def render_group_knowledge(mas):
+def render_group_knowledge(mas) -> None:
     """
     Display group-level knowledge for each group in the MultiAgentSystem.
     """
-    import json
     st.markdown("---")
     st.subheader("Group-Level Knowledge/Policy")
+
     for group_id, members in mas.groups.items():
         st.markdown(f"**Group {group_id}:** Members: {list(members)}")
         # Show leader's or aggregated knowledge
@@ -47,7 +56,13 @@ def render_group_knowledge(mas):
         st.write("Leader's Knowledge:")
         st.json(json.dumps(leader_knowledge, default=str, indent=2))
 
-def render_som_grid_with_agents(mas, som):
+def render_som_grid_with_agents(mas, som) -> None:
+    """
+    Visualize the SOM grid as a heatmap and show agent mappings (color-coded by group).
+    mas: MultiAgentSystem
+    som: SOMClusterer instance (must have get_weights() and som_shape)
+    """
+
     """
     Visualize the SOM grid as a heatmap and show agent mappings (color-coded by group).
     mas: MultiAgentSystem
@@ -78,7 +93,11 @@ def render_som_grid_with_agents(mas, som):
     plt.ylabel("SOM Y")
     st.pyplot(plt)
 
-def render_group_analytics(mas, reward_history=None):
+def render_group_analytics(mas, reward_history=None) -> None:
+    """
+    Display analytics for agent groups, optionally using reward history.
+    """
+
     """
     Display group-level analytics: average reward, group size, cohesion, diversity.
     reward_history: dict of agent_idx -> deque of recent rewards

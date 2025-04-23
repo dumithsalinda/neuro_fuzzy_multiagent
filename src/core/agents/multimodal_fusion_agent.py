@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
-from core.plugins.registration_utils import register_plugin
-from core.neural_networks.fusion import FusionNetwork
+from src.core.plugins.registration_utils import register_plugin
+from src.core.neural_networks.fusion import FusionNetwork
 
 
 @register_plugin('agent')

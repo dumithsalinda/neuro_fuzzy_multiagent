@@ -39,7 +39,8 @@ class PluginRegistry:
                 logging.info(f"Discovering plugin: {name}")
                 module = importlib.import_module(f"{self.base_package}.{name}")
                 version = getattr(module, "__version__", "unknown")
-                self.plugins[name] = PluginInfo(name, version, module)
+                plugin_name = getattr(module, '__plugin_name__', name)
+                self.plugins[plugin_name] = PluginInfo(plugin_name, version, module)
             except Exception as e:
                 logging.error(f"Failed to import plugin {name}: {e}")
                 full_name = f"{self.base_package}.{name}"

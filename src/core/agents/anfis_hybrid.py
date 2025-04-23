@@ -1,7 +1,7 @@
 import numpy as np
 
 
-from core.plugins.registration_utils import register_plugin
+from src.core.plugins.registration_utils import register_plugin
 
 @register_plugin('agent')
 class ANFISHybrid:

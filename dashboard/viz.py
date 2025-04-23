@@ -1,22 +1,26 @@
 import streamlit as st
 import matplotlib.pyplot as plt
 import numpy as np
+from typing import List, Dict, Any, Tuple
 
-def plot_group_leader_spatial(agents):
-    group_ids = list(set(agent.group for agent in agents))
+def plot_group_leader_spatial(agents: List[Any]) -> Tuple[list, dict]:
+    """
+    Plot agent positions by group and leader status. Returns group IDs and color mapping.
+    """
+    group_ids = list(set(getattr(agent, "group", "") for agent in agents))
     group_colors = {gid: plt.cm.tab10(i % 10) for i, gid in enumerate(group_ids)}
     fig2, ax2 = plt.subplots(figsize=(6, 6))
     for i, agent in enumerate(agents):
-        color = group_colors.get(agent.group, "gray")
-        x, y = agent.position if hasattr(agent, "position") else (0, 0)
+        color = group_colors.get(getattr(agent, "group", ""), "gray")
+        x, y = getattr(agent, "position", (0, 0))
         marker = "*" if getattr(agent, "is_leader", False) else "o"
         size = 250 if getattr(agent, "is_leader", False) else 100
-        ax2.scatter(x, y, c=[color], marker=marker, s=size, edgecolor="black", label=f"{agent.group}{' (Leader)' if getattr(agent, 'is_leader', False) else ''}")
+        ax2.scatter(x, y, c=[color], marker=marker, s=size, edgecolor="black", label=f"{getattr(agent, 'group', '')}{' (Leader)' if getattr(agent, 'is_leader', False) else ''}")
         ax2.text(x, y + 0.08, f"{i}", ha="center", fontsize=10)
     # Unique legend
     handles = []
     for gid in group_ids:
-        is_leader = any(getattr(agent, "is_leader", False) and agent.group == gid for agent in agents)
+        is_leader = any(getattr(agent, "is_leader", False) and getattr(agent, "group", "") == gid for agent in agents)
         marker = "*" if is_leader else "o"
         handles.append(
             plt.Line2D([0], [0], marker=marker, color="w", label=f"{gid}{' (Leader)' if is_leader else ''}",
@@ -30,7 +34,10 @@ def plot_group_leader_spatial(agents):
     st.pyplot(fig2)
     return group_ids, group_colors
 
-def plot_som_grid(group_ids, agents, group_colors):
+def plot_som_grid(group_ids: List[str], agents: List[Any], group_colors: Dict[str, Any]) -> None:
+    """
+    Plot a SOM grid showing agent cluster assignments by group.
+    """
     som_groups = [g for g in group_ids if isinstance(g, str) and g.startswith('som_')]
     if som_groups:
         som_coords = [tuple(map(int, g.split('_')[1:])) for g in som_groups]
@@ -42,7 +49,7 @@ def plot_som_grid(group_ids, agents, group_colors):
         ax_som.grid(True, which='both', color='lightgray', linestyle='--', linewidth=0.7)
         for g in som_groups:
             x, y = map(int, g.split('_')[1:])
-            members = [i for i, agent in enumerate(agents) if agent.group == g]
+            members = [i for i, agent in enumerate(agents) if getattr(agent, "group", "") == g]
             ax_som.scatter(x, y, s=200, c=[group_colors[g]], marker='s', edgecolor='black', label=f'{g} ({len(members)})')
             for i in members:
                 ax_som.text(x, y, str(i), color='black', fontsize=10, ha='center', va='center')

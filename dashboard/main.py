@@ -85,22 +85,35 @@ def simulation_controls():
     """
     Simulation controls tab.
     """
+    from dashboard.simulation import simulate_step
+    from dashboard.visualization import render_agent_positions
     st.header("Simulation Controls")
-    st.number_input(
+    n_steps = st.number_input(
         "Steps to Run", min_value=1, max_value=1000, value=10, step=1, key="n_steps"
     )
-    st.button("Run N Steps", key="run_n_steps")
-    st.checkbox("Auto-Run Simulation", value=False, key="auto_run")
-    st.button("Pause Auto-Run", key="pause_run")
-    # Place simulation logic and visualization here
-    # Example: render_agent_positions, simulate_step, etc.
-    # (Add your simulation panel code here)
+    run_clicked = st.button("Run N Steps", key="run_n_steps")
+    auto_run = st.checkbox("Auto-Run Simulation", value=False, key="auto_run")
+    pause_clicked = st.button("Pause Auto-Run", key="pause_run")
+
+    # Run simulation steps if requested
+    if run_clicked:
+        for _ in range(n_steps):
+            simulate_step()
+    # Optionally, implement auto-run logic here (not shown for brevity)
+
+    # Visualization
+    agents = st.session_state.get("agents", [])
+    positions = [getattr(agent, "position", None) for agent in agents]
+    if agents and positions:
+        render_agent_positions(positions, agents)
 
 
 def batch_experiments():
     """
     Batch experiments tab.
     """
+    from dashboard.simulation import run_batch_experiments
+    import pandas as pd
     st.header("Batch/Parallel Experiments")
     n_experiments = st.number_input(
         "Number of Experiments",
@@ -157,19 +170,14 @@ def analytics():
     """
     Analytics tab.
     """
+    from dashboard.analytics import render_batch_analytics, render_advanced_metrics
+
     st.header("Analytics")
-    # Place analytics/visualization code here
-    # Example: batch analytics, charts, render_group_modules, etc.
-    # (Add your analytics panel code here)
     batch_results = st.session_state.get("batch_results", None)
     if batch_results:
         df_batch = pd.DataFrame(batch_results)
-        if "max_reward" in df_batch.columns and "experiment" in df_batch.columns:
-            st.line_chart(df_batch.set_index("experiment")["max_reward"])
-        if "diversity" in df_batch.columns and "experiment" in df_batch.columns:
-            st.line_chart(df_batch.set_index("experiment")["diversity"])
-        if "group_stability" in df_batch.columns and "experiment" in df_batch.columns:
-            st.line_chart(df_batch.set_index("experiment")["group_stability"])
+        render_batch_analytics(df_batch)
+        render_advanced_metrics(df_batch)
         # Advanced metrics
         st.markdown("**Advanced Metrics**")
         if "intervention_count" in df_batch.columns:
@@ -768,6 +776,8 @@ def main():
 
 
 def plugins_and_docs():
+    from dashboard.plugin_marketplace import render_plugin_marketplace_sidebar
+    render_plugin_marketplace_sidebar()
     import inspect
     from src.env.registry import get_registered_environments
     from src.core.agents.agent_registry import get_registered_agents

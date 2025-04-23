@@ -51,6 +51,8 @@ def reload_all_plugins() -> Dict[str, Any]:
         ("src/plugins", "src.plugins"),
         ("src/env", "src.env"),
         ("src/core/agents", "src.core.agents"),
+        ("src/core/sensors", "src.core.sensors"),
+        ("src/core/actuators", "src.core.actuators"),
     ]
     for dir_path, pkg_base in plugin_dirs:
         for fname in os.listdir(dir_path):

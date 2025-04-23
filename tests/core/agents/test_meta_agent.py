@@ -4,7 +4,7 @@ import numpy as np
 import pytest
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../src')))
-from core.agents.meta_agent import MetaAgent
+from src.core.agents.meta_agent import MetaAgent
 
 class DummyAgent:
     def __init__(self, value=0):

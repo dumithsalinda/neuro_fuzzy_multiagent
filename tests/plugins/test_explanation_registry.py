@@ -2,7 +2,7 @@ import sys
 import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../src')))
 import pytest
-from core.plugins.explanation_registry import register_explanation, get_explanation, clear_explanations
+from src.core.plugins.explanation_registry import register_explanation, get_explanation, clear_explanations
 
 class DummyAgent:
     def explain_action(self, obs=None):

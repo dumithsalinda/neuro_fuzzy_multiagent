@@ -7,7 +7,7 @@ import pytest
 # Add src directory to sys.path for src-layout compatibility
 src_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../src'))
 sys.path.insert(0, src_path)
-from core.experiment.result_analysis import ResultAnalyzer
+from src.core.experiment.result_analysis import ResultAnalyzer
 
 def test_generate_report_and_save(tmp_path):
     analyzer = ResultAnalyzer(output_dir=tmp_path)

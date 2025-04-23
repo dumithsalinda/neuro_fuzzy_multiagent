@@ -2,7 +2,7 @@ import sys
 import os
 import tempfile
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../src')))
-from core.plugins.human_approval_log import log_human_decision, read_audit_log, clear_audit_log
+from src.core.plugins.human_approval_log import log_human_decision, read_audit_log, clear_audit_log
 
 def test_log_and_read_audit(tmp_path):
     # Patch the log path

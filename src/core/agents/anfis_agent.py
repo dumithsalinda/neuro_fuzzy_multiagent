@@ -1,6 +1,6 @@
 import numpy as np
 
-from core.plugins.registration_utils import register_plugin
+from src.core.plugins.registration_utils import register_plugin
 from src.core.agents.anfis_hybrid import ANFISHybrid
 
 @register_plugin('agent')

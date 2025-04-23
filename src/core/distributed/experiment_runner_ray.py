@@ -2,7 +2,7 @@
 Distributed experiment runner using Ray for parallel agent-environment execution.
 """
 import ray
-from core.plugins.registration_utils import get_registered_plugins
+from src.core.plugins.registration_utils import get_registered_plugins
 
 @ray.remote
 class ExperimentWorker:

@@ -2,7 +2,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from core.plugins.registration_utils import register_plugin
+from src.core.plugins.registration_utils import register_plugin
 from .agent import Agent
 from .laws import enforce_laws, LawViolation
 

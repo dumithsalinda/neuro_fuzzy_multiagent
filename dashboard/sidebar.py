@@ -95,3 +95,76 @@ def render_sidebar():
         actuator_kwargs_list.append(kwargs)
     st.session_state["selected_actuator_names"] = selected_actuator_names
     st.session_state["actuator_kwargs_list"] = actuator_kwargs_list
+
+    st.sidebar.markdown("---")
+    st.sidebar.caption("All configuration is hot-reloadable. Use the controls above to set up your simulation and agents.")
+
+    return (
+        selected_env_name,
+        env_kwargs,
+        agent_count,
+        selected_agent_names,
+        agent_kwargs_list,
+        selected_sensor_names,
+        sensor_kwargs_list,
+        selected_actuator_names,
+        actuator_kwargs_list,
+    )
+
+# --- Modular Sidebar Controls ---
+def anfis_replay_sidebar() -> tuple:
+    """
+    Render sidebar controls for ANFIS agent online/continual learning experience replay.
+    Returns a tuple of (replay_enabled, buffer_size, batch_size).
+    """
+    st.sidebar.markdown("---")
+    st.sidebar.markdown("**ANFIS Agent Online/Continual Learning**")
+    replay_enabled = st.sidebar.checkbox("Enable Experience Replay", value=True)
+    buffer_size = st.sidebar.number_input(
+        "Replay Buffer Size", min_value=10, max_value=1000, value=100, step=10
+    )
+    batch_size = st.sidebar.number_input(
+        "Replay Batch Size", min_value=1, max_value=128, value=8, step=1
+    )
+    return replay_enabled, buffer_size, batch_size
+
+def realworld_sidebar() -> None:
+    """
+    Render sidebar controls for real-world integration (robot, API, IoT sensor).
+    Handles observe/act modes and displays results.
+    """
+    import json
+    import requests
+    st.sidebar.markdown("---")
+    st.sidebar.markdown("**Real-World Integration**")
+    realworld_types = ["robot", "api", "iot_sensor"]
+    realworld_mode = st.sidebar.selectbox("Mode", ["Observe", "Act"])
+    realworld_type = st.sidebar.selectbox("Type", realworld_types)
+    realworld_url = st.sidebar.text_input(
+        "Endpoint URL", value="http://localhost:9000/data"
+    )
+    realworld_config = {"url": realworld_url}
+    realworld_config_json = json.dumps(realworld_config)
+    realworld_action = (
+        st.sidebar.text_input("Action (JSON)", value='{"move": "forward"}')
+        if realworld_mode == "Act"
+        else None
+    )
+    realworld_result_placeholder = st.sidebar.empty()
+    if st.sidebar.button(f"Real-World {realworld_mode}"):
+        try:
+            api_url = f"http://localhost:8000/realworld/{'observe' if realworld_mode == 'Observe' else 'act'}"
+            headers = {"X-API-Key": "mysecretkey"}
+            data = (
+                {"config": realworld_config_json, "source_type": realworld_type}
+                if realworld_mode == "Observe"
+                else {
+                    "config": realworld_config_json,
+                    "target_type": realworld_type,
+                    "action": realworld_action,
+                }
+            )
+            r = requests.post(api_url, data=data, headers=headers, timeout=3)
+            realworld_result_placeholder.success(f"Result: {r.text}")
+        except Exception as ex:
+            realworld_result_placeholder.error(f"Failed: {ex}")

@@ -2,7 +2,12 @@ import streamlit as st
 
 import uuid
 
-def login_form():
+def login_form() -> None:
+    """
+    Render a login form for the Multi-Agent System Dashboard.
+    Updates session state with authentication status.
+    """
+
     st.title("Login to Multi-Agent System Dashboard")
 
     unique_form_key = "fixed_login_form"

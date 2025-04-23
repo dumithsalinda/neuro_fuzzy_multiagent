@@ -6,7 +6,12 @@ import streamlit as st
 import numpy as np
 from src.core.agents.neuro_fuzzy_fusion_agent import NeuroFuzzyFusionAgent
 
-def chat_panel(agent):
+def chat_panel(agent) -> None:
+    """
+    Streamlit chat panel UI for human-agent collaboration.
+    Allows user to interact with the agent via chat interface.
+    """
+
     st.markdown("## 🤖 Agent Chat Panel")
     if "chat_history" not in st.session_state:
         st.session_state.chat_history = []
@@ -16,12 +21,16 @@ def chat_panel(agent):
         st.session_state.chat_history.append(("user", user_input))
         response = handle_agent_command(user_input, agent)
         st.session_state.chat_history.append(("agent", response))
-        st.experimental_rerun()
+        st.rerun()
     for speaker, msg in st.session_state.chat_history[-10:]:
         align = "left" if speaker == "user" else "right"
         st.markdown(f"<div style='text-align:{align};'><b>{speaker.title()}:</b> {msg}</div>", unsafe_allow_html=True)
 
-def handle_agent_command(cmd, agent):
+def handle_agent_command(cmd: str, agent) -> str:
+    """
+    Process a chat command and return the agent's response as a string (may contain HTML).
+    """
+
     cmd = cmd.lower().strip()
     if cmd == "help":
         return ("Commands:<br>"

@@ -26,20 +26,25 @@ class PluginDependencyManager:
 
     def check_requirements_installed(self) -> tuple:
         """
-        Checks if all requirements are installed by attempting a dry-run install.
+        Checks if all requirements are installed by attempting to import each package.
         Returns (bool, output)
         """
         if not self.has_requirements():
             return True, "No requirements.txt found."
-        cmd = [sys.executable, "-m", "pip", "install", "--dry-run", "-r", str(self.requirements_path)]
-        try:
-            proc = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-            needs_install = any(line.startswith("Would install") for line in proc.stdout.splitlines())
-            logging.info(f"Checked requirements for {self.plugin_dir}: needs_install={needs_install}")
-            return not needs_install, proc.stdout + proc.stderr
-        except Exception as e:
-            logging.error(f"Failed to check requirements for {self.plugin_dir}: {e}")
-            return False, str(e)
+        missing = []
+        with open(self.requirements_path, 'r') as f:
+            for line in f:
+                pkg = line.strip().split('==')[0].split('>=')[0].split('<=')[0]
+                if not pkg or pkg.startswith('#'):
+                    continue
+                try:
+                    __import__(pkg)
+                except ImportError:
+                    missing.append(pkg)
+        if missing:
+            return False, f"Missing packages: {', '.join(missing)}"
+        return True, "All requirements satisfied."
+
 
     def install_requirements(self) -> tuple:
         """

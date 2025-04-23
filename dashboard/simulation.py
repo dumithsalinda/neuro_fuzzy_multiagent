@@ -6,7 +6,12 @@ from src.core.management.multiagent import MultiAgentSystem
 from src.core.neural_networks.som_cluster import SOMClusterer
 
 
-def som_group_agents():
+def som_group_agents() -> None:
+    """
+    Cluster agents using SOM based on their current observation vectors.
+    Assign group labels and update MultiAgentSystem.
+    """
+
     """
     Cluster agents using SOM based on their current observation vectors.
     Assign group labels and update MultiAgentSystem.
@@ -31,7 +36,12 @@ def som_group_agents():
     st.success("Agents re-clustered using SOM!")
 
 
-def simulate_step():
+def simulate_step() -> None:
+    """
+    Run a simulation step with group knowledge sharing and collective actions.
+    Updates session state with new observations, rewards, and step count.
+    """
+
     # Integrated simulation logic with group knowledge sharing and collective actions
     import streamlit as st
 
@@ -97,8 +107,19 @@ def simulate_step():
 
 
 def run_batch_experiments(
-    n_experiments, agent_counts_list, seeds_list, n_steps, fast_mode=True
-):
+    n_experiments: int,
+    agent_counts_list: list,
+    seeds_list: list,
+    n_steps: int,
+    fast_mode: bool = True
+) -> list:
+    """
+    Run multiple experiments in batch/parallel with varying agent counts and seeds.
+    Returns a list of summary dicts for each experiment.
+    Calculates advanced metrics: diversity, group_stability, intervention_count.
+    If fast_mode is True, skips unnecessary UI/plotting for higher speed.
+    """
+
     """
     Run multiple experiments in batch/parallel with varying agent counts and seeds.
     Returns a list of summary dicts for each experiment.

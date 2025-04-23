@@ -1,6 +1,6 @@
 import gym
 
-from core.plugins.registration_utils import register_plugin
+from src.core.plugins.registration_utils import register_plugin
 
 @register_plugin('environment')
 class GymEnvWrapper:
