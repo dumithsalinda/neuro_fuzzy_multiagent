@@ -6,44 +6,188 @@ from src.core.management.multiagent import MultiAgentSystem
 from src.core.neural_networks.som_cluster import SOMClusterer
 
 
+from typing import Any, List
+
 def som_group_agents() -> None:
     """
     Cluster agents using SOM based on their current observation vectors.
     Assign group labels and update MultiAgentSystem.
+    Provides user feedback on errors or missing data.
     """
-
-    """
-    Cluster agents using SOM based on their current observation vectors.
-    Assign group labels and update MultiAgentSystem.
-    """
-    agents = st.session_state.get("agents", [])
+    agents: List[Any] = st.session_state.get("agents", [])
     if not agents or "obs" not in st.session_state:
         st.warning("No agents or observations found for clustering.")
         return
     obs = st.session_state["obs"]
-    # Ensure obs is a 2D array (n_agents, n_features)
     obs_matrix = np.array(obs)
     if obs_matrix.ndim == 1:
         obs_matrix = obs_matrix.reshape(-1, 1)
-    # Get MultiAgentSystem instance
     mas = st.session_state.get("multiagent_system")
     if mas is None:
         mas = MultiAgentSystem(agents)
         st.session_state["multiagent_system"] = mas
-    # Perform SOM-based grouping
-    mas.auto_group_by_som(obs_matrix)
-    st.session_state["groups"] = mas.groups
-    st.success("Agents re-clustered using SOM!")
+    try:
+        mas.auto_group_by_som(obs_matrix)
+        st.session_state["groups"] = mas.groups
+        st.success("Agents re-clustered using SOM!")
+    except Exception as e:
+        st.error(f"SOM clustering failed: {e}")
 
 
 def simulate_step() -> None:
+    """
+    Run a simulation step with adversarial perturbation, agent action selection, feedback, and online learning.
+    Updates session state with new observations, rewards, and step count.
+    Provides user feedback and robust error handling for all critical operations.
+    """
+    """
+    Run a simulation step with adversarial perturbation, agent action selection, feedback, and online learning.
+    Updates session state with new observations, rewards, and step count.
+    """
+    import numpy as np
+    import random
+    import requests
+    from src.core.agents.agent import Agent
+    from src.core.agents.multimodal_fusion_agent import MultiModalFusionAgent
+    # --- Get session state ---
+    try:
+        env = st.session_state.get('env', None)
+        agents = st.session_state.get('agents', [])
+        feedback = st.session_state.get('feedback', {})
+        online_learning_enabled = st.session_state.get('online_learning_enabled', True)
+        adversarial_enabled = st.session_state.get('adversarial_enabled', False)
+        adversarial_agents = st.session_state.get('adversarial_agents', [])
+        adversarial_type = st.session_state.get('adversarial_type', "None")
+        adversarial_strength = st.session_state.get('adversarial_strength', 0.1)
+        orig_obs = list(st.session_state.get('obs', []))
+        if env is None or not agents or not orig_obs:
+            st.error("Simulation state initialization failed: missing required session state.")
+            return
+    except Exception as e:
+        st.error(f"Simulation state initialization failed: {e}")
+        return
+    perturbed_obs = []
+    def to_scalar_action(a):
+        if isinstance(a, np.ndarray):
+            return int(a.item()) if a.size == 1 else int(a.flat[0])
+        return int(a) if isinstance(a, (np.integer, np.floating)) else a
+    for i, obs in enumerate(orig_obs):
+        is_dqn = getattr(agents[i], '__class__', type(agents[i])).__name__ == "DQNAgent"
+        if (
+            adversarial_enabled
+            and i in adversarial_agents
+            and adversarial_type != "None"
+        ):
+            obs_arr = np.array(obs, dtype=np.float32)
+            if adversarial_type == "Gaussian Noise":
+                obs_arr = obs_arr + np.random.normal(
+                    0, adversarial_strength, size=obs_arr.shape
+                )
+            elif adversarial_type == "Uniform Noise":
+                obs_arr = obs_arr + np.random.uniform(
+                    -adversarial_strength, adversarial_strength, size=obs_arr.shape
+                )
+            elif adversarial_type == "Zeros":
+                obs_arr = np.zeros_like(obs_arr)
+            elif adversarial_type == "Max Value":
+                obs_arr = np.ones_like(obs_arr) * adversarial_strength
+            elif adversarial_type == "FGSM (Targeted, DQN)" and is_dqn:
+                try:
+                    import torch
+                    obs_tensor = (
+                        torch.tensor(obs_arr, requires_grad=True).unsqueeze(0).float()
+                    )
+                    qvals = agents[i].model(obs_tensor)
+                    action = torch.argmax(qvals, dim=1)
+                    loss = -qvals[0, action]
+                    loss.backward()
+                    grad_sign = obs_tensor.grad.data.sign().squeeze(0).numpy()
+                    obs_arr = obs_arr + adversarial_strength * grad_sign
+                except Exception:
+                    obs_arr = obs_arr + np.random.normal(
+                        0, adversarial_strength, size=obs_arr.shape
+                    )
+            perturbed_obs.append(obs_arr.tolist())
+        else:
+            perturbed_obs.append(obs)
+    st.session_state.perturbed_obs = perturbed_obs
+    actions = []
+    for i, (agent, obs) in enumerate(zip(agents, perturbed_obs)):
+        if isinstance(agent, MultiModalFusionAgent) and not (
+            isinstance(obs, list) and len(obs) == 2
+        ):
+            img_dim, txt_dim = agent.model.input_dims
+            obs = [np.random.randn(img_dim), np.random.randn(txt_dim)]
+        fb = feedback.get(
+            i, {"approve": "Approve", "override_action": None, "custom_reward": None}
+        )
+        if fb["approve"] == "Reject":
+            action = getattr(agent, "last_action", 0)
+        elif fb["approve"] == "Override" and fb["override_action"] is not None:
+            try:
+                action = (
+                    type(obs[0])(fb["override_action"])
+                    if hasattr(obs, "__getitem__")
+                    else int(fb["override_action"])
+                )
+            except Exception:
+                action = fb["override_action"]
+        else:
+            action = to_scalar_action(agent.act(obs))
+        actions.append(action)
+    next_obs, rewards, done = env.step(actions)
+    # Apply custom rewards if provided
+    for i, fb in feedback.items():
+        if fb.get("custom_reward") is not None:
+            try:
+                rewards[i] = float(fb["custom_reward"])
+            except Exception:
+                pass
+    for i, agent in enumerate(st.session_state.agents):
+        agent.integrate_online_knowledge({"step": st.session_state.step})
+        agent.online_knowledge = {"step": st.session_state.step}
+        others = [a for a in st.session_state.agents if a is not agent]
+        if others:
+            recipient = random.choice(others)
+            msg = {
+                "from": i,
+                "step": st.session_state.step,
+                "knowledge": agent.online_knowledge,
+            }
+            agent.send_message(msg, recipient)
+        try:
+            agent.observe(rewards[i], next_obs[i], done)
+        except Exception as e:
+            if e.__class__.__name__ == "LawViolation":
+                if not hasattr(agent, "law_violations"):
+                    agent.law_violations = 0
+                agent.law_violations += 1
+            else:
+                raise
+        if online_learning_enabled:
+            try:
+                api_url = "http://localhost:8000/learn/online"
+                headers = {"X-API-Key": "mysecretkey"}
+                obs_str = ",".join(str(x) for x in st.session_state.obs[i])
+                next_obs_str = ",".join(str(x) for x in next_obs[i])
+                target_str = f"{rewards[i]},{next_obs_str},{int(done)}"
+                data = {"agent_id": i, "input": obs_str, "target": target_str}
+                requests.post(api_url, data=data, headers=headers, timeout=2)
+            except Exception as ex:
+                st.session_state["online_learning_log"] = (
+                    f"Online update failed for agent {i}: {ex}"
+                )
+    st.session_state.obs = next_obs
+    st.session_state.rewards = rewards
+    st.session_state.done = done
+    st.session_state.step += 1
+
     """
     Run a simulation step with group knowledge sharing and collective actions.
     Updates session state with new observations, rewards, and step count.
     """
 
     # Integrated simulation logic with group knowledge sharing and collective actions
-    import streamlit as st
 
     agents = st.session_state.get("agents", [])
     mas = st.session_state.get("multiagent_system")
@@ -103,8 +247,9 @@ def simulate_step() -> None:
                 "rule": agent_rules[i],
             }
         )
+    if "episode_memory" not in st.session_state:
+        st.session_state["episode_memory"] = []
     st.session_state["episode_memory"].append(step_data)
-
 
 def run_batch_experiments(
     n_experiments: int,

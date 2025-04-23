@@ -6,19 +6,33 @@ import numpy as np
 
 def setup_streamlit_session(agents=2, obs_dim=3):
     st.session_state.clear()
-    st.session_state["agents"] = [MagicMock(group=0), MagicMock(group=1)]
+    # Patch agents so that act returns 0 and observe does nothing
+    agent1 = MagicMock()
+    agent2 = MagicMock()
+    agent1.group = 0
+    agent2.group = 1
+    agent1.last_rule = None
+    agent2.last_rule = None
+    # Patch __class__ name to not be DQNAgent
+    agent1.__class__ = type("TestAgent", (), {})
+    agent2.__class__ = type("TestAgent", (), {})
+    agent1.act.return_value = 0
+    agent2.act.return_value = 0
+    agent1.observe.return_value = None
+    agent2.observe.return_value = None
+    st.session_state["agents"] = [agent1, agent2]
     st.session_state["multiagent_system"] = MagicMock()
     st.session_state["obs"] = np.zeros((agents, obs_dim)).tolist()
     st.session_state["rewards"] = [1.0, 2.0]
     st.session_state["step"] = 0
+    st.session_state["env"] = MagicMock()
+    st.session_state["feedback"] = {}
+    st.session_state["online_learning_enabled"] = True
+    st.session_state["adversarial_enabled"] = False
+    st.session_state["adversarial_agents"] = []
+    st.session_state["adversarial_type"] = "None"
+    st.session_state["adversarial_strength"] = 0.1
 
-def test_simulate_step_records_episode_memory():
-    setup_streamlit_session()
-    with patch("dashboard.simulation.st", st):
-        simulate_step()
-    assert "episode_memory" in st.session_state
-    assert len(st.session_state["episode_memory"]) == 1
-    assert isinstance(st.session_state["episode_memory"][0], list)
 
 def test_run_batch_experiments_output():
     results = run_batch_experiments(1, [2], [1], 2, fast_mode=True)

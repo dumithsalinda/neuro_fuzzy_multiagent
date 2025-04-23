@@ -25,4 +25,4 @@ def test_render_sidebar_sets_session_state():
         render_sidebar()
     assert st.session_state["selected_agent_names"] == ["Tabular Q-Learning"] * 3
     assert st.session_state["agent_count"] == 3
-    # n_obstacles is not set in render_sidebar; remove or adapt if not present
+    # Removed n_obstacles assertion: not always set in render_sidebar
