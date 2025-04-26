@@ -4,9 +4,7 @@ A modular, plug-and-play platform for building, experimenting with, and deployin
 
 ---
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE) [![Docs](https://img.shields.io/badge/docs-latest-blue.svg)](docs/)
-
-## 🚀 Quickstart
+## Quickstart & Requirements
 
 1. **Install requirements:**
    ```sh
@@ -24,6 +22,7 @@ A modular, plug-and-play platform for building, experimenting with, and deployin
 ---
 
 ## Key Features
+
 - Modular neuro-fuzzy agents, easy plug-and-play extension
 - Privacy-aware knowledge sharing and multi-agent collaboration
 - Online learning and knowledge integration
@@ -31,64 +30,12 @@ A modular, plug-and-play platform for building, experimenting with, and deployin
 - Model management, versioning, and batch experimentation
 - Robust dashboard for simulation, analytics, and HITL (human-in-the-loop)
 
-## Documentation
-- [Model Registry & Agent Integration](docs/MODEL_REGISTRY_AND_AGENT.md)
-- [Plugin API Reference](docs/PLUGIN_DOCS.md)
-- [Developer Guide](docs/DEVELOPER.md)
-- [Contribution Guide](docs/CONTRIBUTING.md)
-
-## Community & Support
-- Open an issue or discussion on GitHub for help or suggestions.
-- Contributions welcome! See [CONTRIBUTING.md](docs/CONTRIBUTING.md).
-
----
-
-## License
-MIT
-
-
----
-
-## 🟢 Beginner’s Guide
-
-### What is this project?
-This is a flexible platform for building, testing, and experimenting with teams of intelligent agents (like little robots or AI programs) that can sense, act, learn, and work together. It supports easy “plug-and-play” for new agent types, environments, sensors, and actuators—no need to change core code!
-
-### What can you do with it?
-- Simulate teams of smart agents in different environments.
-- Add your own agents, environments, sensors, or actuators with just a new file.
-- Use a friendly dashboard to run experiments, visualize results, and interact with agents in real time.
-- Integrate real-world data or human feedback for advanced experiments.
-
-### How do you use it?
-1. **Install requirements:**  
-   ```sh
-   pip install -r requirements.txt
-   ```
-2. **Start the dashboard:**  
-   ```sh
-   streamlit run dashboard.py
-   ```
-3. **Try it out:**  
-   - Select environments, agents, sensors, and actuators from the sidebar.
-   - Run simulations, see results, and interact live.
-   - Try adding your own plugin (see DEVELOPER.md for step-by-step instructions).
-
-### Where to learn more?
-- **PLUGIN_DOCS.md:** Full auto-generated list of all available environments, agents, neural networks, sensors, and actuators, including config options and docstrings. Regenerate with `python generate_plugin_docs.py` after adding plugins.
-- **DEVELOPER.md:** How to add new agents, environments, sensors, or actuators.
-- **CONTRIBUTING.md:** How to contribute your own plugins or improvements.
-- **Dashboard UI:** Tooltips and docstrings are shown for every selectable module.
-
-### Troubleshooting
-- If you see errors, check that all dependencies are installed.
-- Use the “🔄 Reload Plugins” button in the dashboard after adding new files.
-- For more help, open an issue or discussion on the project repository.
-
 ---
 
 ## Overview
+
 A robust, environment-independent, dynamic self-organizing neuro-fuzzy multi-agent system with:
+
 - **Unbreakable Laws:** Hard constraints on agent and group behavior.
 - **Modular Neuro-Fuzzy Agents:** Hybrid models, self-organization, and extensibility.
 - **Multi-Agent Collaboration:** Communication, consensus, and privacy-aware knowledge sharing.
@@ -96,50 +43,85 @@ A robust, environment-independent, dynamic self-organizing neuro-fuzzy multi-age
 - **Advanced Group Decision-Making:** Mean, weighted mean, majority vote, custom aggregation.
 - **Thorough Testing & Extensibility:** Easily add new laws, agent types, or aggregation methods.
 
-## Features
-- Law registration, enforcement, and compliance for all actions and knowledge.
-- Privacy-aware knowledge sharing (public, private, group-only, recipient-list).
-- Flexible group decision-making with law enforcement.
-- Online learning and knowledge integration from the internet.
-- Modular, extensible agent and system design.
-- **Multi-Modal Fusion Agent:** Accepts multiple modalities (e.g., text, image) as input, fuses features for action selection. Supports dashboard demo and simulation with random or real multi-modal data.
-- **Model Management & Versioning:** Save, load, list, and evaluate agent models directly from the dashboard. Compare agent versions on evaluation tasks.
-- **Batch Experimentation:** Run parameter sweeps and batch experiments; export and log results.
-- **Adversarial Testing:** Perturb agent observations with various adversarial methods for robustness analysis.
-- **Dashboard:** Interactive dashboard for simulation, analytics, manual feedback, batch experiments, model management, and multi-modal agent demo.
+---
 
-## Real-Time Data Integration & Human-in-the-Loop (HITL)
+## Advanced Integrations
 
-- **Live Data Sources:** Agents/environments can receive real-time values from REST APIs, MQTT streams, or mock sensors, injected directly via the dashboard.
-- **Human-in-the-Loop Controls:** Pause, resume, stop, override actions, and provide manual rewards or demonstrations during experiments.
-- **Plug-and-Play:** Supports seamless switching between simulated and real-world data sources for agent control and observation.
-- **Architecture:** Environments implement `set_external_input(agent_idx, value)` to accept live values (see `src/env/base_env.py`).
-- **Dashboard UI:** Select, connect, and monitor live data sources and human feedback in real time.
+### IoT Sensor Integration
 
-## Core Modules
-- `src/core/agent.py`: Agent logic, knowledge sharing, law compliance, extensibility.
-- `src/core/multiagent.py`: Multi-agent system, group decision, privacy-aware knowledge sharing.
-- `src/core/laws.py`: Law registration, enforcement, and compliance.
-- `src/core/online_learning.py`: Online learning mixin for web knowledge.
+- Simulated or real IoT sensors for smart environment demos and agent interaction.
+- Example:
+  ```python
+  from src.core.plugins.iot_sensor import IoTSensor
+  def my_callback(name, value):
+      print(f"Sensor {name}: {value}")
+  sensor = IoTSensor('temp_sensor', interval=1.0, callback=my_callback)
+  sensor.start()
+  # ...
+  sensor.stop()
+  ```
 
-## Multi-Modal Fusion Agent
+### ROS/IoT Integration
 
-### Overview
-Supports agents that take multiple modalities (e.g., text, image) as input and use a fusion network (concatenation; extensible to attention/gating) for action selection. Includes:
-- Dashboard demo tab for interactive testing with random multi-modal input.
-- Simulation support for multi-modal agents (random or real data).
-- Easily extendable to new fusion methods and modalities.
+- Minimal ROS bridge for agent-environment communication via ROS topics.
+- Example:
+  ```python
+  from src.core.plugins.ros_bridge import ROSBridge
+  bridge = ROSBridge(node_name='nfma_ros_bridge')
+  pub = bridge.create_publisher('/nfma/test', queue_size=1)
+  bridge.publish('/nfma/test', 'hello world')
+  ```
 
-### How to Use
-- Select "Multi-Modal Fusion Agent" in the dashboard sidebar to configure and simulate with multi-modal agents.
-- Use the "Multi-Modal Demo" tab to test agent action selection on random input.
-- To use real multi-modal data, update your environment to return `[modality1, modality2, ...]` per agent.
+### Meta-Reinforcement Learning
 
-### Quickstart
-1. Install dependencies:
-   ```sh
-   pip install -r requirements.txt
-   ```
+- Agents that adapt their own learning strategies over time using meta-feedback.
+- Example:
+  ```python
+  from src.core.agents.meta_rl_agent import MetaRLAgent
+  meta_agent = MetaRLAgent(base_agent_cls=TabularQLearningAgent, base_agent_kwargs={'lr': 0.1}, meta_lr=0.05, meta_window=5)
+  # Use meta_agent in place of any agent; it will adjust its learning rate based on reward trends.
+  ```
+
+### Distributed Multi-Agent Systems
+
+- Support for distributed agent deployment and communication.
+- Example:
+  ```python
+  from src.core.distributed import DistributedAgent
+  agent = DistributedAgent('agent_name', host='localhost', port=8080)
+  agent.start()
+  # ...
+  agent.stop()
+  ```
+
+---
+
+## Documentation & Community
+
+- [Model Registry & Agent Integration](docs/MODEL_REGISTRY_AND_AGENT.md)
+- [Plugin API Reference](docs/PLUGIN_DOCS.md)
+- [Developer Guide](docs/DEVELOPER.md)
+- [Contribution Guide](docs/CONTRIBUTING.md)
+- Open an issue or discussion on GitHub for help or suggestions.
+- Contributions welcome! See [CONTRIBUTING.md](docs/CONTRIBUTING.md).
+
+---
+
+## License
+
+MIT
+
+---
+
+## Running Tests
+
+To run all tests (requires pytest):
+
+```sh
+pytest tests/
+```
+
+All dashboard and core functions are covered by the test suite. If you encounter any errors, see the test output for details and troubleshooting.
 2. Run the dashboard:
    ```sh
    streamlit run dashboard/main.py
@@ -225,6 +207,7 @@ tests/
 The platform supports meta-learning and automated hyperparameter optimization for agents:
 
 ### MetaAgent
+
 - Dynamically selects the best-performing agent type (e.g., DQN, Q-Learning) based on recent performance.
 - Usage:
   ```python
@@ -234,6 +217,7 @@ The platform supports meta-learning and automated hyperparameter optimization fo
 - The MetaAgent tries each candidate for a set number of steps (exploration), then switches to the best.
 
 ### HyperparameterOptimizer
+
 - Simple optimizer for agent hyperparameters (random search; extensible to Bayesian/evolutionary).
 - Usage:
   ```python
@@ -250,6 +234,7 @@ See `src/core/agents/meta_agent.py` and `src/core/agents/hpo.py` for details and
 ## Interoperability
 
 ### OpenAI Gym/Env Compatibility
+
 - Use standard RL environments with the platform via `GymEnvWrapper`.
 - Example:
   ```python
@@ -262,6 +247,7 @@ See `src/core/agents/meta_agent.py` and `src/core/agents/hpo.py` for details and
 - Enables benchmarking and comparison with widely-used RL tasks.
 
 ### ROS/IoT Integration
+
 - Minimal ROS bridge for agent-environment communication via ROS topics.
 - Example:
   ```python
@@ -276,6 +262,7 @@ See `src/core/agents/meta_agent.py` and `src/core/agents/hpo.py` for details and
 ---
 
 ## Meta-Reinforcement Learning
+
 - Agents that adapt their own learning strategies over time using meta-feedback.
 - Example:
   ```python
@@ -286,6 +273,7 @@ See `src/core/agents/meta_agent.py` and `src/core/agents/hpo.py` for details and
 - Supports meta-learning of hyperparameters such as learning rate, exploration policy, etc.
 
 ## IoT Sensor Integration
+
 - Simulated or real IoT sensors for smart environment demos and agent interaction.
 - Example:
   ```python
@@ -300,10 +288,12 @@ See `src/core/agents/meta_agent.py` and `src/core/agents/hpo.py` for details and
 - Can be extended to connect to real hardware (MQTT, HTTP, serial, etc).
 
 ## General IoT Device Integration
+
 - Use the `IoTDevice` class for most smart devices (simulated, MQTT, HTTP/REST, etc).
 - Supports reading data and sending commands.
 
 ### Simulated Device Example
+
 ```python
 from src.core.plugins.iot_common import IoTDevice
 def cb(name, value):
@@ -315,6 +305,7 @@ device.stop()
 ```
 
 ### MQTT Device Example
+
 ```python
 from src.core.plugins.iot_common import IoTDevice
 def cb(name, value):
@@ -327,6 +318,7 @@ device.send_command('ON')
 ```
 
 ### HTTP Device Example
+
 ```python
 from src.core.plugins.iot_common import IoTDevice
 def cb(name, value):
@@ -337,6 +329,7 @@ device.start()
 # To send a command:
 device.send_command(22)  # e.g., set thermostat to 22°C
 ```
+
 - Extend or subclass for advanced protocols (Zigbee, BLE, etc).
 
 ---
@@ -348,10 +341,12 @@ This guide explains how to deploy the Neuro-Fuzzy Multi-Agent System in both a s
 ---
 
 ## Plugin Auto-Discovery & Versioning
+
 - Plugins in the `src/core/plugins/` directory are auto-discovered, versioned, and can be hot-reloaded at runtime.
 - Each plugin should define `__plugin_name__` and `__version__` attributes.
 
 **Example:**
+
 ```python
 from src.core.plugins.auto_discovery import PluginRegistry
 registry = PluginRegistry(plugin_dir='src/core/plugins', base_package='src.core.plugins')
@@ -362,15 +357,18 @@ registry.reload_plugin('MyPlugin')  # Hot-reload
 ```
 
 ## Plugin Hot-Reloading
+
 - Reload plugin code at runtime without restarting the dashboard or main process.
 - Use `reload_plugin('PluginName')` or `reload_all()` on the registry.
 - Useful for rapid development and production updates.
 
 ## Distributed Experiment Orchestration
+
 - Run large-scale experiments using Ray for distributed agent/environment management.
 - Launch multiple agents/environments as Ray actors; collect results in parallel.
 
 **Example:**
+
 ```python
 from src.core.management.distributed_orchestrator import DistributedExperimentOrchestrator
 from src.core.agents.dummy_agent import DummyAgent
@@ -381,6 +379,7 @@ results = orchestrator.run_episode(steps=100)
 print(results)
 orchestrator.shutdown()
 ```
+
 - Scales to clusters for research or production workloads.
 
 ## 1. Self-Driving Car Deployment
@@ -395,6 +394,7 @@ orchestrator.shutdown()
   - Launch via ROS launch files or systemd.
 
 **Example:**
+
 ```python
 from src.core.plugins.ros_bridge import ROSBridge
 bridge = ROSBridge(node_name='car_agent')
@@ -415,6 +415,7 @@ bridge.create_publisher('/vehicle/cmd_vel')
   - Run agents as background services, Docker containers, or integrate with home automation (e.g., Home Assistant).
 
 **Example:**
+
 ```python
 from src.core.plugins.iot_sensor import IoTSensor
 def temp_callback(name, value):
@@ -438,6 +439,7 @@ sensor.start()
   - Agents send POST requests to each other for actions or alerts.
 
 **Example: ROS/MQTT Cross-Communication**
+
 ```python
 # Car agent publishes status to /car/status (ROS or MQTT)
 # Home agent subscribes and adjusts home settings
@@ -445,14 +447,17 @@ sensor.start()
 ```
 
 ## 4. Security & Reliability
+
 - Use secure communication: VPN, TLS for MQTT, authentication for APIs.
 - Monitor system health and logs.
 - Consider fail-safe and fallback strategies (emergency stop, manual override).
 
 ## 5. Will They Communicate?
+
 **Yes**—with ROS, MQTT, or HTTP, agents in the car and smart home can communicate, share data, and coordinate actions in real time or asynchronously.
 
 ## Example Usage
+
 ```python
 from core.agent import Agent
 from core.multiagent import MultiAgentSystem
@@ -480,19 +485,23 @@ agents[0].share_knowledge(knowledge, system=system)
 ```
 
 ## Extensibility
+
 - **Add a new law:** Define a function and decorate with `@register_law`.
 - **Add a new agent type:** Subclass `Agent` and override methods as needed.
 - **Add a group aggregation method:** Use `MultiAgentSystem.group_decision(..., method="custom", custom_fn=...)`.
 
 ## Project Goals
+
 - Environment-independent, dynamic, and robust multi-agent learning.
 - Strict compliance with unbreakable laws.
 - Modular, extensible, and well-documented codebase.
 
 ---
+
 For more details, see module/class/method docstrings in the source code.
 trained_model = transfer_learning(env1, env2, model, feat, steps=10)
-```
+
+````
 
 ### Integration with Neuro-Fuzzy Hybrid Model
 You can use the `NeuroFuzzyHybrid` model in place of the neural network in transfer learning:
@@ -501,12 +510,14 @@ from src.core.neuro_fuzzy import NeuroFuzzyHybrid
 # ... setup fuzzy system and configs ...
 model = NeuroFuzzyHybrid(nn_config, fis_config)
 trained_model = transfer_learning(env1, env2, model, feat, steps=10)
-```
+````
 
 ### Testing
+
 - Run all tests with `pytest` in the project root.
 - See `tests/test_environment.py` for environment and transfer learning tests.
 - See `tests/test_neuro_fuzzy.py` for hybrid model tests.
 
 ## Requirements
+
 See requirements.txt
