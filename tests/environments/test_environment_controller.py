@@ -1,10 +1,10 @@
 import unittest
-from src.env.environment_controller import EnvironmentController
-from src.env.environment_factory import EnvironmentFactory
-from src.env.iot_sensor_fusion_env import IoTSensorFusionEnv
-from src.env.multiagent_gridworld_env import MultiAgentGridworldEnv
-from src.core.agents.agent import Agent
-from src.core.management.multiagent import MultiAgentSystem
+from neuro_fuzzy_multiagent.env.environment_controller import EnvironmentController
+from neuro_fuzzy_multiagent.env.environment_factory import EnvironmentFactory
+from neuro_fuzzy_multiagent.env.iot_sensor_fusion_env import IoTSensorFusionEnv
+from neuro_fuzzy_multiagent.env.multiagent_gridworld_env import MultiAgentGridworldEnv
+from neuro_fuzzy_multiagent.core.agents.agent import Agent
+from neuro_fuzzy_multiagent.core.management.multiagent import MultiAgentSystem
 
 
 class DummyAgent(Agent):

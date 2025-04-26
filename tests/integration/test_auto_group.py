@@ -5,8 +5,8 @@ Minimal test for auto_group_by_proximity in MultiAgentSystem.
 
 import numpy as np
 
-from src.core.agents.agent import Agent
-from src.core.management.multiagent import MultiAgentSystem
+from neuro_fuzzy_multiagent.core.agents.agent import Agent
+from neuro_fuzzy_multiagent.core.management.multiagent import MultiAgentSystem
 
 # Create dummy agents with positions
 agents = [Agent(model=None) for _ in range(4)]

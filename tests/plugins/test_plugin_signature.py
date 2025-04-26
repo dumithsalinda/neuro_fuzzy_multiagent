@@ -1,6 +1,7 @@
-import tempfile
 import os
-from src.core.plugins.plugin_signature import PluginSignatureVerifier
+import tempfile
+
+from neuro_fuzzy_multiagent.core.plugins.plugin_signature import PluginSignatureVerifier
 
 
 def test_signature_verification_valid():

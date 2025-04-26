@@ -1,6 +1,7 @@
-import tempfile
 import os
-from src.core.plugins.plugin_linter import PluginLinter
+import tempfile
+
+from neuro_fuzzy_multiagent.core.plugins.plugin_linter import PluginLinter
 
 
 def test_lint_file_pass():

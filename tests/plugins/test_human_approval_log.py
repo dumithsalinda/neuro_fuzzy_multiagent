@@ -1,14 +1,14 @@
-import sys
 import os
+import sys
 import tempfile
 
 sys.path.insert(
     0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../src"))
 )
-from src.core.plugins.human_approval_log import (
+from neuro_fuzzy_multiagent.core.plugins.human_approval_log import (
+    clear_audit_log,
     log_human_decision,
     read_audit_log,
-    clear_audit_log,
 )
 
 

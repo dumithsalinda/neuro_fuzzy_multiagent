@@ -7,7 +7,7 @@ TEMPLATES = {
 Environment Plugin Template
 Created: {date}
 """
-from src.env.base_environment import BaseEnvironment
+from neuro_fuzzy_multiagent.env.base_environment import BaseEnvironment
 
 class {name}(BaseEnvironment):
     """Custom environment plugin."""
@@ -24,7 +24,7 @@ class {name}(BaseEnvironment):
 Agent Plugin Template
 Created: {date}
 """
-from src.agents.base_agent import BaseAgent
+from neuro_fuzzy_multiagent.agents.base_agent import BaseAgent
 
 class {name}(BaseAgent):
     """Custom agent plugin."""
@@ -38,7 +38,7 @@ class {name}(BaseAgent):
 Sensor Plugin Template
 Created: {date}
 """
-from src.plugins.base_sensor import BaseSensor
+from neuro_fuzzy_multiagent.plugins.base_sensor import BaseSensor
 
 class {name}(BaseSensor):
     """Custom sensor plugin."""
@@ -52,7 +52,7 @@ class {name}(BaseSensor):
 Actuator Plugin Template
 Created: {date}
 """
-from src.plugins.base_actuator import BaseActuator
+from neuro_fuzzy_multiagent.plugins.base_actuator import BaseActuator
 
 class {name}(BaseActuator):
     """Custom actuator plugin."""

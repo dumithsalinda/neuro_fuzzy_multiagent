@@ -1,17 +1,15 @@
-import streamlit as st
-
 import importlib
 import inspect
-from src.env.registry import get_registered_environments
-from src.core.agents.agent_registry import get_registered_agents
-from src.core.agents.agent import Agent
-from src.plugins.registry import get_registered_sensors, get_registered_actuators
 
 import streamlit as st
-import inspect
-from src.env.registry import get_registered_environments
-from src.core.agents.agent_registry import get_registered_agents
-from src.plugins.registry import get_registered_sensors, get_registered_actuators
+
+from neuro_fuzzy_multiagent.core.agents.agent import Agent
+from neuro_fuzzy_multiagent.core.agents.agent_registry import get_registered_agents
+from neuro_fuzzy_multiagent.env.registry import get_registered_environments
+from neuro_fuzzy_multiagent.plugins.registry import (
+    get_registered_actuators,
+    get_registered_sensors,
+)
 
 
 def render_sidebar():
@@ -281,6 +279,7 @@ def realworld_sidebar() -> None:
     Handles observe/act modes and displays results.
     """
     import json
+
     import requests
 
     st.sidebar.markdown("---")

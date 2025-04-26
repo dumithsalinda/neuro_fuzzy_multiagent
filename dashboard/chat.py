@@ -3,9 +3,12 @@ Streamlit Chat Panel for Human-Agent Collaboration
 Allows user to interact with NeuroFuzzyFusionAgent via chat UI in the dashboard.
 """
 
-import streamlit as st
 import numpy as np
-from src.core.agents.neuro_fuzzy_fusion_agent import NeuroFuzzyFusionAgent
+import streamlit as st
+
+from neuro_fuzzy_multiagent.core.agents.neuro_fuzzy_fusion_agent import (
+    NeuroFuzzyFusionAgent,
+)
 
 
 def chat_panel(agent) -> None:
@@ -89,7 +92,9 @@ def handle_agent_command(cmd: str, agent) -> str:
                 obs_vals = [float(x.strip()) for x in obs_str.split(",") if x.strip()]
                 action_val = int(action_match.group(1))
                 # Demo fuzzy sets: for each input, Low/High sets
-                from src.core.neural_networks.fuzzy_system import FuzzySet
+                from neuro_fuzzy_multiagent.core.neural_networks.fuzzy_system import (
+                    FuzzySet,
+                )
 
                 fuzzy_sets_per_input = [
                     [FuzzySet("Low", [0, 1]), FuzzySet("High", [1, 1])]

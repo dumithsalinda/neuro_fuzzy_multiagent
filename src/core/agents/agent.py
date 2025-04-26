@@ -5,14 +5,16 @@ Defines a generic Agent class for single and multiagent scenarios.
 Supports integration with neuro-fuzzy models, transfer learning, and various environments.
 """
 
+from typing import Any, Callable, Dict, Optional
+
+from neuro_fuzzy_multiagent.core.management.online_learning import OnlineLearnerMixin
+from neuro_fuzzy_multiagent.core.neural_networks.universal_fuzzy_layer import (
+    UniversalFuzzyLayer,
+)
+from neuro_fuzzy_multiagent.core.neuro_fuzzy import NeuroFuzzyHybrid
+from neuro_fuzzy_multiagent.core.plugins.registration_utils import register_plugin
+
 from .laws import enforce_laws
-from src.core.neuro_fuzzy import NeuroFuzzyHybrid
-from src.core.management.online_learning import OnlineLearnerMixin
-from src.core.neural_networks.universal_fuzzy_layer import UniversalFuzzyLayer
-from typing import Callable, Optional, Dict, Any
-
-
-from src.core.plugins.registration_utils import register_plugin
 
 
 @register_plugin("agent")
@@ -276,7 +278,9 @@ class NeuroFuzzyAgent(Agent):
         super().__init__(model, policy)
         # Embedded meta-controller (agent-local)
         if meta_controller is None:
-            from src.core.management.meta_controller import MetaController
+            from neuro_fuzzy_multiagent.core.management.meta_controller import (
+                MetaController,
+            )
 
             self.meta_controller = MetaController()
 
@@ -310,11 +314,13 @@ class NeuroFuzzyAgent(Agent):
         if fis_config:
             self.model.update_fis_config(fis_config)
         if meta_cfg is not None:
-            from src.core.management.meta_controller import MetaController
+            from neuro_fuzzy_multiagent.core.management.meta_controller import (
+                MetaController,
+            )
 
             self.meta_controller = MetaController(**meta_cfg) if meta_cfg else None
         if fuzzy_cfg is not None:
-            from src.core.neural_networks.universal_fuzzy_layer import (
+            from neuro_fuzzy_multiagent.core.neural_networks.universal_fuzzy_layer import (
                 UniversalFuzzyLayer,
             )
 

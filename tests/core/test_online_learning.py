@@ -1,6 +1,7 @@
 import numpy as np
 import pytest
-from src.core.management.online_learning import OnlineLearnerMixin
+
+from neuro_fuzzy_multiagent.core.management.online_learning import OnlineLearnerMixin
 
 
 class DummyOnlineAgent(OnlineLearnerMixin):

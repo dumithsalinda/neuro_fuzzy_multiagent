@@ -1,7 +1,8 @@
 import numpy as np
 import pytest
-from src.core.agents.agent import NeuroFuzzyAgent
-from src.core.neural_networks.fuzzy_system import FuzzySet
+
+from neuro_fuzzy_multiagent.core.agents.agent import NeuroFuzzyAgent
+from neuro_fuzzy_multiagent.core.neural_networks.fuzzy_system import FuzzySet
 
 
 def make_nf_agent():

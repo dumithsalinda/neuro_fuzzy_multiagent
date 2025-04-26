@@ -1,6 +1,7 @@
 import os
-from src.utils.model_registry import ModelRegistry
-from src.utils.model_loader import ModelLoader
+
+from neuro_fuzzy_multiagent.utils.model_loader import ModelLoader
+from neuro_fuzzy_multiagent.utils.model_registry import ModelRegistry
 
 
 class ExampleAgent:
@@ -29,8 +30,8 @@ class ExampleAgent:
 
 # Example test usage
 def test_agent_with_model():
-    import tempfile
     import shutil
+    import tempfile
 
     temp_registry = tempfile.mkdtemp()
     temp_model = tempfile.mkdtemp()

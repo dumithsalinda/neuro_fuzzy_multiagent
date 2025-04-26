@@ -1,6 +1,8 @@
-from src.core.agents.agent import Agent
-from src.core.agents.neuro_fuzzy_fusion_agent import NeuroFuzzyFusionAgent
 from dashboard.main import merge_logs
+from neuro_fuzzy_multiagent.core.agents.agent import Agent
+from neuro_fuzzy_multiagent.core.agents.neuro_fuzzy_fusion_agent import (
+    NeuroFuzzyFusionAgent,
+)
 
 
 def test_merge_logs_merges_and_sorts():

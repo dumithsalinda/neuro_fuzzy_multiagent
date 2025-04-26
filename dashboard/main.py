@@ -5,10 +5,10 @@ import matplotlib.pyplot as plt
 import networkx as nx
 import pandas as pd
 import streamlit as st
-from dashboard.sidebar import render_sidebar
-from src.core.agents.agent import Agent
+
 from dashboard.chat import chat_panel
 from dashboard.login import login_form
+from dashboard.sidebar import render_sidebar
 from dashboard.simulation import run_batch_experiments, simulate_step, som_group_agents
 from dashboard.visualization import (
     render_agent_positions,
@@ -17,8 +17,11 @@ from dashboard.visualization import (
     render_group_modules,
     render_som_grid_with_agents,
 )
-from src.core.agents.agent_registry import get_registered_agents
-from src.core.agents.neuro_fuzzy_fusion_agent import NeuroFuzzyFusionAgent
+from neuro_fuzzy_multiagent.core.agents.agent import Agent
+from neuro_fuzzy_multiagent.core.agents.agent_registry import get_registered_agents
+from neuro_fuzzy_multiagent.core.agents.neuro_fuzzy_fusion_agent import (
+    NeuroFuzzyFusionAgent,
+)
 
 
 # --- Unified Plug-and-Play Sidebar ---
@@ -92,6 +95,7 @@ def simulation_controls():
     Simulation controls tab. Uses modular simulate_step from dashboard/simulation.py.
     """
     import streamlit as st
+
     from dashboard.simulation import simulate_step
 
     st.header("Simulation Controls")
@@ -135,8 +139,9 @@ def batch_experiments():
     """
     Batch experiments tab.
     """
-    from dashboard.simulation import run_batch_experiments
     import pandas as pd
+
+    from dashboard.simulation import run_batch_experiments
 
     st.header("Batch/Parallel Experiments")
     n_experiments = st.number_input(
@@ -195,6 +200,7 @@ def analytics():
     Analytics tab.
     """
     import streamlit as st
+
     from dashboard.visualization import render_group_analytics
 
     st.header("Analytics & Explainability")
@@ -214,7 +220,7 @@ def analytics():
     """
     Analytics tab.
     """
-    from dashboard.analytics import render_batch_analytics, render_advanced_metrics
+    from dashboard.analytics import render_advanced_metrics, render_batch_analytics
 
     st.header("Analytics")
     batch_results = st.session_state.get("batch_results", None)
@@ -786,9 +792,13 @@ def plugins_and_docs():
 
     render_plugin_marketplace_sidebar()
     import inspect
-    from src.env.registry import get_registered_environments
-    from src.core.agents.agent_registry import get_registered_agents
-    from src.plugins.registry import get_registered_sensors, get_registered_actuators
+
+    from neuro_fuzzy_multiagent.core.agents.agent_registry import get_registered_agents
+    from neuro_fuzzy_multiagent.env.registry import get_registered_environments
+    from neuro_fuzzy_multiagent.plugins.registry import (
+        get_registered_actuators,
+        get_registered_sensors,
+    )
 
     st.header("Plugin Registry & Developer Docs")
     st.subheader("Environments")

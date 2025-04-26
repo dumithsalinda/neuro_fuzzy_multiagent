@@ -2,12 +2,13 @@
 Test plug-and-play neural network registry and config-driven instantiation.
 """
 
-import pytest
 import numpy as np
-from src.core.neural_networks.neural_network import (
-    get_registered_networks,
-    create_network_by_name,
+import pytest
+
+from neuro_fuzzy_multiagent.core.neural_networks.neural_network import (
     FeedforwardNeuralNetwork,
+    create_network_by_name,
+    get_registered_networks,
 )
 
 
@@ -62,7 +63,7 @@ def test_nn_config_loader(tmp_path):
     """
     config_file = tmp_path / "nn_config.yaml"
     config_file.write_text(yaml_content)
-    from src.utils.config_loader import load_nn_config
+    from neuro_fuzzy_multiagent.utils.config_loader import load_nn_config
 
     nn_config = load_nn_config(str(config_file))
     assert nn_config["nn_type"] == "FeedforwardNeuralNetwork"

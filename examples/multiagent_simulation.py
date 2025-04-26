@@ -6,9 +6,10 @@ Agents use random or greedy policies and accumulate rewards.
 """
 
 import numpy as np
-from src.core.agents.agent import Agent
-from src.environment.abstraction import SimpleEnvironment
-from src.environment.transfer_learning import FeatureExtractor
+
+from neuro_fuzzy_multiagent.core.agents.agent import Agent
+from neuro_fuzzy_multiagent.environment.abstraction import SimpleEnvironment
+from neuro_fuzzy_multiagent.environment.transfer_learning import FeatureExtractor
 
 
 class DummyModel:

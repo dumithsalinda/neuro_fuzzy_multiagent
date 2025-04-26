@@ -3,12 +3,15 @@ Distributed Batch Experiment Runner using Ray
 Runs each experiment scenario in parallel as a Ray task.
 """
 
-import ray
 import numpy as np
-from src.core.management.agent_factory import create_agent_from_config
-from src.core.experiment_manager import ExperimentManager
-from src.core.scenario_generator import ScenarioGenerator
-from src.env.environment_factory import EnvironmentFactory
+import ray
+
+from neuro_fuzzy_multiagent.core.experiment_manager import ExperimentManager
+from neuro_fuzzy_multiagent.core.management.agent_factory import (
+    create_agent_from_config,
+)
+from neuro_fuzzy_multiagent.core.scenario_generator import ScenarioGenerator
+from neuro_fuzzy_multiagent.env.environment_factory import EnvironmentFactory
 
 # Map scenario env names to factory keys
 ENV_MAP = {

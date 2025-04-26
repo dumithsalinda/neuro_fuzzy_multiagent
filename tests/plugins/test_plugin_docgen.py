@@ -1,7 +1,8 @@
-import tempfile
 import os
+import tempfile
 import textwrap
-from src.core.plugins.plugin_docgen import generate_plugin_docs
+
+from neuro_fuzzy_multiagent.core.plugins.plugin_docgen import generate_plugin_docs
 
 
 def test_generate_plugin_docs_basic():

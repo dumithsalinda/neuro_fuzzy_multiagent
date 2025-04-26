@@ -5,9 +5,9 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 
 import numpy as np
 import pytest
-from src.environment.abstraction import SimpleEnvironment
-from src.environment.transfer_learning import FeatureExtractor, transfer_learning
-from src.core.neural_networks.neural_network import FeedforwardNeuralNetwork
+from neuro_fuzzy_multiagent.env.abstraction import SimpleEnvironment
+from neuro_fuzzy_multiagent.environment.transfer_learning import FeatureExtractor, transfer_learning
+from neuro_fuzzy_multiagent.core.neural_networks.neural_network import FeedforwardNeuralNetwork
 
 
 def test_simple_environment():

@@ -11,11 +11,11 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 
 import numpy as np
 
-from src.core.agents.agent import Agent
-from src.core.agents.laws import clear_laws
-from src.core.management.multiagent import MultiAgentSystem
-from src.environment.abstraction import SimpleEnvironment
-from src.environment.transfer_learning import FeatureExtractor
+from neuro_fuzzy_multiagent.core.agents.agent import Agent
+from neuro_fuzzy_multiagent.core.agents.laws import clear_laws
+from neuro_fuzzy_multiagent.core.management.multiagent import MultiAgentSystem
+from neuro_fuzzy_multiagent.env.abstraction import SimpleEnvironment, NoisyEnvironment
+from neuro_fuzzy_multiagent.environment.transfer_learning import FeatureExtractor
 
 
 def test_multiagent_simulation_runs():

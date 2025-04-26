@@ -1,5 +1,6 @@
 import numpy as np
-from src.core.agents.meta_rl_agent import MetaRLAgent
+
+from neuro_fuzzy_multiagent.core.agents.meta_rl_agent import MetaRLAgent
 
 
 class DummyBaseAgent:

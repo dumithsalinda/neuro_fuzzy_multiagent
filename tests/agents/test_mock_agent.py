@@ -1,4 +1,4 @@
-from src.agents.mock_agent import MockAgent
+from neuro_fuzzy_multiagent.agents.mock_agent import MockAgent
 
 
 def test_mock_agent_act():

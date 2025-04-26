@@ -1,12 +1,13 @@
+from typing import Any, List
+
 import numpy as np
 import streamlit as st
 
-from src.core.management.distributed_agent_executor import run_agents_distributed
-from src.core.management.multiagent import MultiAgentSystem
-from src.core.neural_networks.som_cluster import SOMClusterer
-
-
-from typing import Any, List
+from neuro_fuzzy_multiagent.core.management.distributed_agent_executor import (
+    run_agents_distributed,
+)
+from neuro_fuzzy_multiagent.core.management.multiagent import MultiAgentSystem
+from neuro_fuzzy_multiagent.core.neural_networks.som_cluster import SOMClusterer
 
 
 def som_group_agents() -> None:
@@ -45,11 +46,15 @@ def simulate_step() -> None:
     Run a simulation step with adversarial perturbation, agent action selection, feedback, and online learning.
     Updates session state with new observations, rewards, and step count.
     """
-    import numpy as np
     import random
+
+    import numpy as np
     import requests
-    from src.core.agents.agent import Agent
-    from src.core.agents.multimodal_fusion_agent import MultiModalFusionAgent
+
+    from neuro_fuzzy_multiagent.core.agents.agent import Agent
+    from neuro_fuzzy_multiagent.core.agents.multimodal_fusion_agent import (
+        MultiModalFusionAgent,
+    )
 
     # --- Get session state ---
     try:
@@ -283,8 +288,8 @@ def run_batch_experiments(
 
     import numpy as np
 
-    from src.core.agents.agent import Agent
-    from src.core.management.multiagent import MultiAgentSystem
+    from neuro_fuzzy_multiagent.core.agents.agent import Agent
+    from neuro_fuzzy_multiagent.core.management.multiagent import MultiAgentSystem
 
     results = []
     exp_id = 0

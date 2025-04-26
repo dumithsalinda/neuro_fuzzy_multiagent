@@ -1,7 +1,10 @@
-import tempfile
 import os
+import tempfile
 from pathlib import Path
-from src.core.plugins.plugin_dependency import PluginDependencyManager
+
+from neuro_fuzzy_multiagent.core.plugins.plugin_dependency import (
+    PluginDependencyManager,
+)
 
 
 def test_no_requirements():

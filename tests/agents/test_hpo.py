@@ -1,5 +1,6 @@
 import numpy as np
-from src.core.agents.hpo import HyperparameterOptimizer
+
+from neuro_fuzzy_multiagent.core.agents.hpo import HyperparameterOptimizer
 
 
 def test_hpo_finds_best():

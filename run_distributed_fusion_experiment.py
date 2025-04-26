@@ -3,8 +3,11 @@ Example script: Distributed inference with NeuroFuzzyFusionAgent using Ray
 """
 
 import numpy as np
-from src.core.neuro_fuzzy_fusion_agent import NeuroFuzzyFusionAgent
-from src.core.distributed_agent_executor import run_agents_distributed
+
+from neuro_fuzzy_multiagent.core.distributed_agent_executor import (
+    run_agents_distributed,
+)
+from neuro_fuzzy_multiagent.core.neuro_fuzzy_fusion_agent import NeuroFuzzyFusionAgent
 
 # Example configs for 3 agents (can scale up)
 input_dims = [4, 3]  # e.g., two modalities: 4-dim and 3-dim

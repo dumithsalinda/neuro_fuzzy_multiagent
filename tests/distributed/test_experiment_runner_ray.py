@@ -1,5 +1,6 @@
-import sys
 import os
+import sys
+
 import pytest
 
 sys.path.insert(
@@ -13,11 +14,15 @@ pytestmark = pytest.mark.skipif(
 
 
 def test_run_distributed_experiments():
-    from src.core.distributed.experiment_runner_ray import run_distributed_experiments
+    from neuro_fuzzy_multiagent.core.distributed.experiment_runner_ray import (
+        run_distributed_experiments,
+    )
 
     # Use a minimal agent and environment already registered
     # Replace with actual names in your project
-    from src.core.plugins.registration_utils import get_registered_plugins
+    from neuro_fuzzy_multiagent.core.plugins.registration_utils import (
+        get_registered_plugins,
+    )
 
     agent_name = next(iter(get_registered_plugins("agent")))
     env_name = next(iter(get_registered_plugins("environment")))

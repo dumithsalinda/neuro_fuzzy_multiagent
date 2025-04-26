@@ -1,10 +1,12 @@
-import pytest
 import sys
+
+import pytest
 
 ros_installed = False
 try:
     import rospy
-    from src.core.plugins.ros_bridge import ROSBridge
+
+    from neuro_fuzzy_multiagent.core.plugins.ros_bridge import ROSBridge
 
     ros_installed = True
 except ImportError:

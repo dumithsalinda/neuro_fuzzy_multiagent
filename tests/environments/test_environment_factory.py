@@ -1,5 +1,5 @@
 import pytest
-from src.env.environment_factory import EnvironmentFactory
+from neuro_fuzzy_multiagent.env.environment_factory import EnvironmentFactory
 
 
 def test_factory_creates_noisy_env():

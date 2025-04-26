@@ -1,9 +1,13 @@
 import numpy as np
 import pytest
 
-from src.core.agents.agent import Agent
-from src.core.agents.laws import LawViolation, clear_laws, register_law
-from src.core.management.multiagent import MultiAgentSystem
+from neuro_fuzzy_multiagent.core.agents.agent import Agent
+from neuro_fuzzy_multiagent.core.agents.laws import (
+    LawViolation,
+    clear_laws,
+    register_law,
+)
+from neuro_fuzzy_multiagent.core.management.multiagent import MultiAgentSystem
 
 
 def test_group_decision_mean():

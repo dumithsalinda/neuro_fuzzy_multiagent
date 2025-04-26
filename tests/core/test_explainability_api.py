@@ -1,5 +1,6 @@
 from fastapi.testclient import TestClient
-from src.core.explainability_api import app
+
+from neuro_fuzzy_multiagent.core.explainability_api import app
 
 
 def test_agent_action_explanation():

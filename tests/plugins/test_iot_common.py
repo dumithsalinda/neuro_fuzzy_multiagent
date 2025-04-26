@@ -1,6 +1,8 @@
 import time
+
 import pytest
-from src.core.plugins.iot_common import IoTDevice
+
+from neuro_fuzzy_multiagent.core.plugins.iot_common import IoTDevice
 
 
 def test_sim_mode():

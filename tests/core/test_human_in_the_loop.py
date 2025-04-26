@@ -1,6 +1,7 @@
 import pytest
 from fastapi.testclient import TestClient
-from src.core.human_in_the_loop import app, approval_data
+
+from neuro_fuzzy_multiagent.core.human_in_the_loop import app, approval_data
 
 
 def test_human_approval_flow():

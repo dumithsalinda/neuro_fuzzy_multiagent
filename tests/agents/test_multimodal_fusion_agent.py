@@ -6,7 +6,10 @@ Test for MultiModalFusionAgent with synthetic multi-modal data (image + text).
 
 import numpy as np
 import torch
-from src.core.agents.multimodal_fusion_agent import MultiModalFusionAgent
+
+from neuro_fuzzy_multiagent.core.agents.multimodal_fusion_agent import (
+    MultiModalFusionAgent,
+)
 
 
 def test_multimodal_fusion_agent_forward():

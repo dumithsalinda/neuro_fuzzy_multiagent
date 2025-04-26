@@ -1,5 +1,6 @@
-from src.core.plugins.plugin_sandbox import PluginSandbox
 import time
+
+from neuro_fuzzy_multiagent.core.plugins.plugin_sandbox import PluginSandbox
 
 
 def plugin_success(x):
@@ -17,7 +18,7 @@ def plugin_timeout(x):
     return x
 
 
-from src.core.plugins.plugin_sandbox import PluginSandbox
+from neuro_fuzzy_multiagent.core.plugins.plugin_sandbox import PluginSandbox
 
 
 def test_plugin_success():

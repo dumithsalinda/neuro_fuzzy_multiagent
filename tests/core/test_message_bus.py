@@ -1,6 +1,7 @@
 import pytest
-from src.core.management.message_bus import MessageBus
-from src.core.agents.agent import Agent
+
+from neuro_fuzzy_multiagent.core.agents.agent import Agent
+from neuro_fuzzy_multiagent.core.management.message_bus import MessageBus
 
 
 class DummyAgent(Agent):

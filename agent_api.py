@@ -1,19 +1,20 @@
-from fastapi import FastAPI, Request, HTTPException, Depends, File, UploadFile, Form
-from fastapi.security import APIKeyHeader
-from pydantic import BaseModel
-from typing import List, Any, Optional
-import numpy as np
 import logging
-from src.core.agents.agent import Agent
-from src.core.tabular_q_agent import TabularQLearningAgent
-from src.core.dqn_agent import DQNAgent
-from src.core.neuro_fuzzy import NeuroFuzzyHybrid
-from src.env.multiagent_gridworld import MultiAgentGridworldEnv
-import speech_recognition as sr
-from PIL import Image
-from src.core.multimodal_dqn_agent import MultiModalDQNAgent
-from src.core.neuro_fuzzy import NeuroFuzzyHybrid
+from typing import Any, List, Optional
+
 import cv2
+import numpy as np
+import speech_recognition as sr
+from fastapi import Depends, FastAPI, File, Form, HTTPException, Request, UploadFile
+from fastapi.security import APIKeyHeader
+from PIL import Image
+from pydantic import BaseModel
+
+from neuro_fuzzy_multiagent.core.agents.agent import Agent
+from neuro_fuzzy_multiagent.core.dqn_agent import DQNAgent
+from neuro_fuzzy_multiagent.core.multimodal_dqn_agent import MultiModalDQNAgent
+from neuro_fuzzy_multiagent.core.neuro_fuzzy import NeuroFuzzyHybrid
+from neuro_fuzzy_multiagent.core.tabular_q_agent import TabularQLearningAgent
+from neuro_fuzzy_multiagent.env.multiagent_gridworld import MultiAgentGridworldEnv
 
 app = FastAPI()
 
@@ -71,7 +72,7 @@ def build_agents(agent_types, n_agents):
     return agents
 
 
-from src.env.environment_factory import EnvironmentFactory
+from neuro_fuzzy_multiagent.env.environment_factory import EnvironmentFactory
 
 
 def build_env(env_type, n_agents, n_obstacles):
@@ -179,8 +180,8 @@ def observe_text(text: str = Form(...)):
 
 @app.post("/observe/audio", dependencies=[Depends(verify_api_key)])
 def observe_audio(file: UploadFile = File(...)):
-    import tempfile
     import os
+    import tempfile
 
     with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmp:
         tmp.write(file.file.read())
@@ -217,8 +218,9 @@ def observe_image(file: UploadFile = File(...)):
 
 @app.post("/observe/video", dependencies=[Depends(verify_api_key)])
 def observe_video(file: UploadFile = File(...)):
-    import tempfile
     import os
+    import tempfile
+
     import cv2
 
     with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as tmp:
@@ -243,7 +245,7 @@ def observe_video(file: UploadFile = File(...)):
     return {"action": action, "feature_dim": len(feature)}
 
 
-from src.integration.real_world_interface import RealWorldInterface
+from neuro_fuzzy_multiagent.integration.real_world_interface import RealWorldInterface
 
 real_world = RealWorldInterface()
 
@@ -292,6 +294,7 @@ def explain_action(agent_id: int = Form(...), observation: str = Form(...)):
     Returns: explanation dict
     """
     import json
+
     import numpy as np
 
     try:
@@ -338,6 +341,7 @@ def learn_online(
     - target: comma-separated floats or JSON-encoded list/array
     """
     import json
+
     import numpy as np
 
     try:
@@ -380,7 +384,10 @@ def observe_multimodal(
     audio: UploadFile = File(...),
     video: UploadFile = File(...),
 ):
-    import tempfile, os, cv2
+    import os
+    import tempfile
+
+    import cv2
 
     # Text feature (BERT)
     inputs = nlp_tokenizer(text, return_tensors="pt", truncation=True, padding=True)

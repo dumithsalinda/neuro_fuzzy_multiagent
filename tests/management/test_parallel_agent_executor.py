@@ -5,7 +5,10 @@ Test for parallel agent execution utility.
 """
 
 import numpy as np
-from src.core.management.parallel_agent_executor import run_agents_parallel
+
+from neuro_fuzzy_multiagent.core.management.parallel_agent_executor import (
+    run_agents_parallel,
+)
 
 
 class DummyAgent:

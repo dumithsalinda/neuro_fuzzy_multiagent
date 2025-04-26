@@ -1,8 +1,9 @@
 import numpy as np
 import pytest
-from src.core.agents.meta_agent import MetaAgent
-from src.core.agents.tabular_q_agent import TabularQLearningAgent
-from src.core.agents.dqn_agent import DQNAgent
+
+from neuro_fuzzy_multiagent.core.agents.dqn_agent import DQNAgent
+from neuro_fuzzy_multiagent.core.agents.meta_agent import MetaAgent
+from neuro_fuzzy_multiagent.core.agents.tabular_q_agent import TabularQLearningAgent
 
 
 class DummyEnv:

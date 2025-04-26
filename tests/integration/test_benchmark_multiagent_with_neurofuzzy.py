@@ -5,16 +5,17 @@ Test multiagent benchmarking with NeuroFuzzyAgent and baseline agents.
 Ensures simulation runs, rewards are collected, and shapes are correct.
 """
 
-import sys
 import os
+import sys
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 import numpy as np
 import pytest
-from src.core.agents.agent import Agent, NeuroFuzzyAgent
-from src.environment.abstraction import SimpleEnvironment
-from src.environment.transfer_learning import FeatureExtractor
+
+from neuro_fuzzy_multiagent.core.agents.agent import Agent, NeuroFuzzyAgent
+from neuro_fuzzy_multiagent.env.abstraction import SimpleEnvironment, NoisyEnvironment
+from neuro_fuzzy_multiagent.environment.transfer_learning import FeatureExtractor
 
 
 def test_benchmark_with_neurofuzzy_agent():

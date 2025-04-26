@@ -3,11 +3,14 @@ Streamlit sidebar UI and logic for the Plugin Marketplace (local + remote plugin
 """
 
 import streamlit as st
-from src.core.plugins.registration_utils import get_registered_plugins
-from src.core.plugins.marketplace import (
+
+from neuro_fuzzy_multiagent.core.plugins.marketplace import (
     fetch_remote_plugin_index,
-    plugin_metadata_by_type,
     get_local_plugin_version,
+    plugin_metadata_by_type,
+)
+from neuro_fuzzy_multiagent.core.plugins.registration_utils import (
+    get_registered_plugins,
 )
 
 PLUGIN_TYPES = ["environment", "agent", "sensor", "actuator"]
@@ -56,7 +59,9 @@ def render_plugin_marketplace_sidebar():
                 for e in errors:
                     st.error(e)
             else:
-                from src.core.plugins.plugin_submission import add_submission
+                from neuro_fuzzy_multiagent.core.plugins.plugin_submission import (
+                    add_submission,
+                )
 
                 add_submission(
                     {
@@ -85,7 +90,7 @@ def render_plugin_marketplace_sidebar():
             st.info("Developer guide not found.")
 
     # Marketplace UI (sorted, badges)
-    from src.core.plugins.plugin_reviews import get_average_rating
+    from neuro_fuzzy_multiagent.core.plugins.plugin_reviews import get_average_rating
 
     def version_tuple(v):
         return tuple(int(x) for x in v.split(".") if x.isdigit()) if v else ()
@@ -154,7 +159,9 @@ def render_plugin_marketplace_sidebar():
                         st.error(
                             "⚠️ This plugin is NOT from an official/trusted source. Install at your own risk."
                         )
-                from src.core.plugins.registration_utils import get_registered_plugins
+                from neuro_fuzzy_multiagent.core.plugins.registration_utils import (
+                    get_registered_plugins,
+                )
 
                 plugin_cls = get_registered_plugins(ptype).get(name)
                 doc = plugin_cls.__doc__ if plugin_cls and plugin_cls.__doc__ else None
@@ -162,10 +169,10 @@ def render_plugin_marketplace_sidebar():
                     st.markdown(f"**Docstring:**\n{doc}")
                 if remote_plugin and remote_plugin.get("readme"):
                     st.markdown(f"**README:**\n{remote_plugin['readme']}")
-                from src.core.plugins.plugin_reviews import (
+                from neuro_fuzzy_multiagent.core.plugins.plugin_reviews import (
+                    add_review,
                     get_average_rating,
                     get_reviews,
-                    add_review,
                 )
 
                 avg_rating = get_average_rating(ptype, name)
@@ -189,8 +196,12 @@ def render_plugin_marketplace_sidebar():
                         add_review(ptype, name, rating, review)
                         st.success("Thank you for your review!")
                 if st.button(f"Uninstall {name}", key=f"uninstall_{ptype}_{name}"):
-                    from src.core.plugins.marketplace import uninstall_plugin
-                    from src.core.plugins.hot_reload import reload_all_plugins
+                    from neuro_fuzzy_multiagent.core.plugins.hot_reload import (
+                        reload_all_plugins,
+                    )
+                    from neuro_fuzzy_multiagent.core.plugins.marketplace import (
+                        uninstall_plugin,
+                    )
 
                     success, msg, path = uninstall_plugin(ptype, name)
                     if success:
@@ -204,10 +215,12 @@ def render_plugin_marketplace_sidebar():
                     desc = remote_plugin.get("description", "No description.")
                     st.markdown(desc)
                     if st.button(f"Update {name}", key=f"update_{ptype}_{name}"):
-                        from src.core.plugins.marketplace import (
+                        from neuro_fuzzy_multiagent.core.plugins.hot_reload import (
+                            reload_all_plugins,
+                        )
+                        from neuro_fuzzy_multiagent.core.plugins.marketplace import (
                             download_and_save_plugin,
                         )
-                        from src.core.plugins.hot_reload import reload_all_plugins
 
                         success, msg, path = download_and_save_plugin(remote_plugin)
                         if success:
@@ -233,8 +246,12 @@ def render_plugin_marketplace_sidebar():
                 if st.button(
                     f"Install {plugin['name']}", key=f"install_{ptype}_{plugin['name']}"
                 ):
-                    from src.core.plugins.marketplace import download_and_save_plugin
-                    from src.core.plugins.hot_reload import reload_all_plugins
+                    from neuro_fuzzy_multiagent.core.plugins.hot_reload import (
+                        reload_all_plugins,
+                    )
+                    from neuro_fuzzy_multiagent.core.plugins.marketplace import (
+                        download_and_save_plugin,
+                    )
 
                     if not plugin.get("official", False):
                         st.warning(

@@ -1,7 +1,8 @@
 import numpy as np
-from src.core.agents.agent import NeuroFuzzyAgent
-from src.core.management.meta_controller import MetaController
-from src.core.neural_networks.fuzzy_system import FuzzySet
+
+from neuro_fuzzy_multiagent.core.agents.agent import NeuroFuzzyAgent
+from neuro_fuzzy_multiagent.core.management.meta_controller import MetaController
+from neuro_fuzzy_multiagent.core.neural_networks.fuzzy_system import FuzzySet
 
 
 def make_agent():

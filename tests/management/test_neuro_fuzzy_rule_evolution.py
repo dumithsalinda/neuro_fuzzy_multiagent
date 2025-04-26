@@ -1,7 +1,8 @@
 import numpy as np
 import pytest
-from src.core.neuro_fuzzy import NeuroFuzzyHybrid
-from src.core.neural_networks.fuzzy_system import FuzzySet
+
+from neuro_fuzzy_multiagent.core.neural_networks.fuzzy_system import FuzzySet
+from neuro_fuzzy_multiagent.core.neuro_fuzzy import NeuroFuzzyHybrid
 
 
 def make_simple_nf():

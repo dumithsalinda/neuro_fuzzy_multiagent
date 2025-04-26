@@ -3,11 +3,12 @@ Test the unified plug-and-play system: registration, loading, error handling, ho
 """
 
 import pytest
-from src.core.plugins.registration_utils import (
-    get_registered_plugins,
+
+from neuro_fuzzy_multiagent.core.plugins.hot_reload import reload_all_plugins
+from neuro_fuzzy_multiagent.core.plugins.registration_utils import (
     clear_plugin_registry,
+    get_registered_plugins,
 )
-from src.core.plugins.hot_reload import reload_all_plugins
 
 PLUGIN_TYPES = ["environment", "agent", "sensor", "actuator"]
 
@@ -15,23 +16,31 @@ PLUGIN_TYPES = ["environment", "agent", "sensor", "actuator"]
 def test_plugin_registration():
     # Ensure at least one environment plugin is registered
     try:
-        from src.core.agents.neuro_fuzzy_fusion_agent import NeuroFuzzyFusionAgent
+        from neuro_fuzzy_multiagent.core.agents.neuro_fuzzy_fusion_agent import (
+            NeuroFuzzyFusionAgent,
+        )
     except ImportError:
         pass
     try:
-        from src.core.environments.gym_env_wrapper import GymEnvWrapper
+        from neuro_fuzzy_multiagent.core.environments.gym_env_wrapper import (
+            GymEnvWrapper,
+        )
     except ImportError:
         pass
     try:
-        from src.core.sensors.example_sensor import ExampleSensor
+        from neuro_fuzzy_multiagent.core.sensors.example_sensor import ExampleSensor
     except ImportError:
         pass
     try:
-        from src.core.actuators.example_actuator import ExampleActuator
+        from neuro_fuzzy_multiagent.core.actuators.example_actuator import (
+            ExampleActuator,
+        )
     except ImportError:
         pass
     """All plugin types should have at least one registered plugin."""
-    from src.core.plugins.registration_utils import get_registered_plugins
+    from neuro_fuzzy_multiagent.core.plugins.registration_utils import (
+        get_registered_plugins,
+    )
 
     print("Registered agent plugins:", get_registered_plugins("agent"))
     for ptype in PLUGIN_TYPES:
@@ -62,7 +71,7 @@ def test_plugin_hot_reload():
 
 def test_plugin_error_handling(monkeypatch):
     """Simulate a plugin import error and ensure it is logged, not fatal."""
-    from src.core.plugins import hot_reload
+    from neuro_fuzzy_multiagent.core.plugins import hot_reload
 
     def bad_reload():
         raise ImportError("Simulated error")

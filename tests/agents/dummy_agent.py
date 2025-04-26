@@ -1,4 +1,4 @@
-from src.core.agents.agent import Agent
+from neuro_fuzzy_multiagent.core.agents.agent import Agent
 
 
 class DummyAgent(Agent):

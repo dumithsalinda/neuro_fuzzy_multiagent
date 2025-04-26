@@ -1,8 +1,8 @@
 import numpy as np
 import pytest
 
-from src.core.agents.agent import Agent
-from src.core.agents.laws import (
+from neuro_fuzzy_multiagent.core.agents.agent import Agent
+from neuro_fuzzy_multiagent.core.agents.laws import (
     LawViolation,
     clear_laws,
     enforce_laws,
@@ -10,7 +10,7 @@ from src.core.agents.laws import (
     register_law,
     remove_law,
 )
-from src.core.management.multiagent import MultiAgentSystem
+from neuro_fuzzy_multiagent.core.management.multiagent import MultiAgentSystem
 
 
 def test_register_and_list_laws():

@@ -1,8 +1,8 @@
 import pytest
-
-from src.core.agents.agent import Agent
-from src.core.management.multiagent import MultiAgentSystem
 from agents.dummy_agent import DummyAgent
+
+from neuro_fuzzy_multiagent.core.agents.agent import Agent
+from neuro_fuzzy_multiagent.core.management.multiagent import MultiAgentSystem
 
 
 def test_public_knowledge_sharing():

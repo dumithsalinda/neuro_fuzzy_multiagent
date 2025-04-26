@@ -5,11 +5,12 @@ Benchmarking and visualization for multiagent scenarios.
 Runs multiple agents for several episodes, collects rewards, and plots learning curves.
 """
 
-import numpy as np
 import matplotlib.pyplot as plt
-from src.core.agents.agent import Agent, NeuroFuzzyAgent
-from src.environment.abstraction import SimpleEnvironment
-from src.environment.transfer_learning import FeatureExtractor
+import numpy as np
+
+from neuro_fuzzy_multiagent.core.agents.agent import Agent, NeuroFuzzyAgent
+from neuro_fuzzy_multiagent.environment.abstraction import SimpleEnvironment
+from neuro_fuzzy_multiagent.environment.transfer_learning import FeatureExtractor
 
 
 def run_benchmark(agent_types, episodes=20, steps_per_episode=30):

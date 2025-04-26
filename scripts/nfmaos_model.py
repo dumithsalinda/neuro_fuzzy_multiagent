@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 import argparse
-import sys
 import os
-from src.utils.model_registry import ModelRegistry
+import sys
+
+from neuro_fuzzy_multiagent.utils.model_registry import ModelRegistry
 
 REGISTRY_DIR = os.environ.get("NFMAOS_MODEL_REGISTRY", "/opt/nfmaos/registry")
 

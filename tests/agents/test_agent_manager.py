@@ -1,9 +1,9 @@
 import pytest
-from src.core.management.agent_manager import AgentManager
-from src.core.management.message_bus import MessageBus
-from src.core.agents.agent import Agent
 
-from .dummy_agent import DummyAgent
+from neuro_fuzzy_multiagent.core.agents.agent import Agent
+from neuro_fuzzy_multiagent.core.agents.dummy_agent import DummyAgent
+from neuro_fuzzy_multiagent.core.management.agent_manager import AgentManager
+from neuro_fuzzy_multiagent.core.management.message_bus import MessageBus
 
 
 def minimal_agent_config(name):

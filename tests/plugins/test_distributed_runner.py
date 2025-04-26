@@ -1,5 +1,6 @@
 import time
-from src.core.plugins.distributed_runner import DistributedTaskRunner
+
+from neuro_fuzzy_multiagent.core.plugins.distributed_runner import DistributedTaskRunner
 
 
 def test_run_distributed():

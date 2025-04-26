@@ -6,7 +6,8 @@ Tests for NeuroFuzzyAgent integration and action selection.
 
 import numpy as np
 import pytest
-from src.core.agents.agent import NeuroFuzzyAgent
+
+from neuro_fuzzy_multiagent.core.agents.agent import NeuroFuzzyAgent
 
 
 def test_neuro_fuzzy_agent_action():

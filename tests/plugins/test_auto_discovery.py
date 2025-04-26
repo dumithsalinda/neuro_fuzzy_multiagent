@@ -1,5 +1,6 @@
 import os
-from src.core.plugins.auto_discovery import PluginRegistry
+
+from neuro_fuzzy_multiagent.core.plugins.auto_discovery import PluginRegistry
 
 
 def test_plugin_auto_discovery():

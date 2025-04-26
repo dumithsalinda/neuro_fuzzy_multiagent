@@ -1,5 +1,6 @@
 import pytest
-from src.core.management.distributed_orchestrator import (
+
+from neuro_fuzzy_multiagent.core.management.distributed_orchestrator import (
     DistributedExperimentOrchestrator,
 )
 

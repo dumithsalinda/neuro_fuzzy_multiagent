@@ -1,9 +1,7 @@
 import numpy as np
 
-from .base_env import BaseEnvironment
-
-
-from src.core.plugins.registration_utils import register_plugin
+from neuro_fuzzy_multiagent.core.plugins.registration_utils import register_plugin
+from neuro_fuzzy_multiagent.env.base_env import BaseEnvironment
 
 
 @register_plugin("environment")

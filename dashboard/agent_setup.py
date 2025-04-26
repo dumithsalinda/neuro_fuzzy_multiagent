@@ -1,5 +1,6 @@
 import streamlit as st
-from src.core.agents.agent import Agent
+
+from neuro_fuzzy_multiagent.core.agents.agent import Agent
 
 
 def initialize_env_and_agents(agent_type, agent_count, n_obstacles):
@@ -9,8 +10,8 @@ def initialize_env_and_agents(agent_type, agent_count, n_obstacles):
     """
     # TODO: Replace the following stub with actual initialization logic as per your project structure
     # Example:
-    # from src.core.environments.example_env import ExampleEnv
-    # from src.core.agents.agent import Agent
+    # from neuro_fuzzy_multiagent.core.environments.example_env import ExampleEnv
+    # from neuro_fuzzy_multiagent.core.agents.agent import Agent
     # env = ExampleEnv(n_obstacles=n_obstacles)
     # agents = [Agent(agent_type=agent_type) for _ in range(agent_count)]
     # return env, agents

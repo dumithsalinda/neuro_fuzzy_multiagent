@@ -1,14 +1,14 @@
-import os
-import tempfile
-import shutil
-import time
-import json
-import threading
-from src.utils.model_registry import ModelRegistry
-from src.utils.model_loader import ModelLoader
-from examples.agent_with_model_hot_reload import HotReloadAgent
-
 import hashlib
+import json
+import os
+import shutil
+import tempfile
+import threading
+import time
+
+from examples.agent_with_model_hot_reload import HotReloadAgent
+from neuro_fuzzy_multiagent.utils.model_loader import ModelLoader
+from neuro_fuzzy_multiagent.utils.model_registry import ModelRegistry
 
 
 def make_model_dir(

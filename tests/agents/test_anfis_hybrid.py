@@ -1,6 +1,8 @@
 import unittest
+
 import numpy as np
-from src.core.agents.anfis_hybrid import ANFISHybrid
+
+from neuro_fuzzy_multiagent.core.agents.anfis_hybrid import ANFISHybrid
 
 
 class TestANFISHybrid(unittest.TestCase):

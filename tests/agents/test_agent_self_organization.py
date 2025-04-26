@@ -1,5 +1,6 @@
 import numpy as np
-from src.core.agents.agent import NeuroFuzzyAgent
+
+from neuro_fuzzy_multiagent.core.agents.agent import NeuroFuzzyAgent
 
 
 def test_self_organize_changes_rules():

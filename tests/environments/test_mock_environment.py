@@ -1,4 +1,4 @@
-from src.env.mock_environment import MockEnvironment
+from neuro_fuzzy_multiagent.env.mock_environment import MockEnvironment
 
 
 def test_mock_environment_step_and_reset():

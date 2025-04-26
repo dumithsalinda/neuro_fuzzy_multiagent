@@ -1,5 +1,6 @@
 import numpy as np
-from .base_env import BaseEnvironment
+
+from neuro_fuzzy_multiagent.env.base_env import BaseEnvironment
 
 
 class RealWorldAPIEnv(BaseEnvironment):

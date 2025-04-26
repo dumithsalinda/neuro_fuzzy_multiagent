@@ -1,7 +1,7 @@
 import pytest
 
-from src.core.agents.agent import Agent
-from src.core.management.multiagent_system import MultiAgentSystem
+from neuro_fuzzy_multiagent.core.agents.agent import Agent
+from neuro_fuzzy_multiagent.core.management.multiagent_system import MultiAgentSystem
 
 
 class DummyAgent(Agent):

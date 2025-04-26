@@ -1,7 +1,9 @@
 import torch
 import torch.nn as nn
+
+from neuro_fuzzy_multiagent.core.plugins.registration_utils import register_plugin
+
 from .agent import Agent
-from src.core.plugins.registration_utils import register_plugin
 
 
 @register_plugin("agent")

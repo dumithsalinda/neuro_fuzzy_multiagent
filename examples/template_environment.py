@@ -4,7 +4,7 @@ Template Environment Plugin
 Subclass BaseEnvironment and use the @register_plugin('environment') decorator (already on base class).
 """
 
-from src.env.base_env import BaseEnvironment
+from neuro_fuzzy_multiagent.env.base_env import BaseEnvironment
 
 
 class MyTemplateEnv(BaseEnvironment):

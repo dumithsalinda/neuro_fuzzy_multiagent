@@ -4,7 +4,7 @@ Template Actuator Plugin
 Subclass BaseActuator and use the @register_plugin('actuator') decorator (already on base class).
 """
 
-from src.plugins.base_actuator import BaseActuator
+from neuro_fuzzy_multiagent.plugins.base_actuator import BaseActuator
 
 
 class MyTemplateActuator(BaseActuator):

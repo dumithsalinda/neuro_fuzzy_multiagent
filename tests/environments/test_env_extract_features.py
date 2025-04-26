@@ -1,6 +1,6 @@
 import numpy as np
 import pytest
-from src.env.environment_factory import EnvironmentFactory
+from neuro_fuzzy_multiagent.env.environment_factory import EnvironmentFactory
 
 
 def test_simple_discrete_extract_features():

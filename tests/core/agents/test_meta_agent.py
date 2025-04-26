@@ -1,12 +1,13 @@
-import sys
 import os
+import sys
+
 import numpy as np
 import pytest
 
 sys.path.insert(
     0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../src"))
 )
-from src.core.agents.meta_agent import MetaAgent
+from neuro_fuzzy_multiagent.core.agents.meta_agent import MetaAgent
 
 
 class DummyAgent:

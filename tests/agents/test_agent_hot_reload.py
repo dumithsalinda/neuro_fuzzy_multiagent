@@ -1,8 +1,10 @@
 import os
 import tempfile
+
 import yaml
-from src.core.management.agent_manager import AgentManager
-from src.core.management.message_bus import MessageBus
+
+from neuro_fuzzy_multiagent.core.management.agent_manager import AgentManager
+from neuro_fuzzy_multiagent.core.management.message_bus import MessageBus
 
 
 def test_agent_hot_reload():

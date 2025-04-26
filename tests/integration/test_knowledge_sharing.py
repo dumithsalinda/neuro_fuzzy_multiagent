@@ -1,9 +1,13 @@
 import pytest
-
-from src.core.agents.agent import Agent
-from src.core.agents.laws import LawViolation, clear_laws, register_law
-from src.core.management.multiagent import MultiAgentSystem
 from agents.dummy_agent import DummyAgent
+
+from neuro_fuzzy_multiagent.core.agents.agent import Agent
+from neuro_fuzzy_multiagent.core.agents.laws import (
+    LawViolation,
+    clear_laws,
+    register_law,
+)
+from neuro_fuzzy_multiagent.core.management.multiagent import MultiAgentSystem
 
 
 def test_agent_knowledge_sharing_and_receiving():
@@ -33,7 +37,7 @@ def test_knowledge_sharing_blocked_by_law():
 
 def test_multiagent_broadcast_knowledge_and_aggregation():
     # Only register group law for numeric actions, not for knowledge sharing
-    from src.core.agents.laws import clear_laws
+    from neuro_fuzzy_multiagent.core.agents.laws import clear_laws
 
     clear_laws("group")
     a1 = DummyAgent()

@@ -4,7 +4,7 @@ Template Agent Plugin
 Subclass Agent and use the @register_plugin('agent') decorator (already on base class).
 """
 
-from src.core.agents.agent import Agent
+from neuro_fuzzy_multiagent.core.agents.agent import Agent
 
 
 class MyTemplateAgent(Agent):

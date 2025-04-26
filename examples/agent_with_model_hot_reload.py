@@ -1,8 +1,9 @@
 import os
 import time
-from src.utils.model_registry import ModelRegistry
-from src.utils.model_loader import ModelLoader
-from src.utils.registry_watcher import RegistryWatcher
+
+from neuro_fuzzy_multiagent.utils.model_loader import ModelLoader
+from neuro_fuzzy_multiagent.utils.model_registry import ModelRegistry
+from neuro_fuzzy_multiagent.utils.registry_watcher import RegistryWatcher
 
 
 class HotReloadAgent:

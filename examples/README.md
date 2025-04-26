@@ -9,6 +9,7 @@ This folder contains example scripts and demonstration code for the Neuro-Fuzzy 
 The following YAML files demonstrate how to instantiate each supported agent type dynamically using the agent factory. Each config can be loaded with `create_agent_from_file`.
 
 ### 1. [agent_config_example.yaml](./agent_config_example.yaml)
+
 - **Type:** NeuroFuzzyAgent
 - **Required fields:**
   - `agent_type: NeuroFuzzyAgent`
@@ -18,6 +19,7 @@ The following YAML files demonstrate how to instantiate each supported agent typ
   - `universal_fuzzy_layer` (optional)
 
 ### 2. [agent_config_fusion.yaml](./agent_config_fusion.yaml)
+
 - **Type:** NeuroFuzzyFusionAgent
 - **Required fields:**
   - `input_dims` (list of int)
@@ -26,6 +28,7 @@ The following YAML files demonstrate how to instantiate each supported agent typ
 - **Optional:** `fusion_type`, `fuzzy_config`, `fusion_alpha`, `device`
 
 ### 3. [agent_config_dqn.yaml](./agent_config_dqn.yaml)
+
 - **Type:** DQNAgent
 - **Required fields:**
   - `state_dim` (int)
@@ -33,6 +36,7 @@ The following YAML files demonstrate how to instantiate each supported agent typ
 - **Optional:** `alpha`, `gamma`, `epsilon`
 
 ### 4. [agent_config_multimodal_dqn.yaml](./agent_config_multimodal_dqn.yaml)
+
 - **Type:** MultiModalDQNAgent
 - **Required fields:**
   - `input_dims` (list of int)
@@ -40,6 +44,7 @@ The following YAML files demonstrate how to instantiate each supported agent typ
 - **Optional:** `alpha`, `gamma`, `epsilon`
 
 ### 5. [agent_config_anfis.yaml](./agent_config_anfis.yaml)
+
 - **Type:** NeuroFuzzyANFISAgent
 - **Required fields:**
   - `input_dim` (int)
@@ -47,6 +52,7 @@ The following YAML files demonstrate how to instantiate each supported agent typ
 - **Optional:** `lr`, `buffer_size`, `replay_enabled`, `replay_batch`, `meta_update_fn`
 
 ### 6. [agent_config_multimodal_fusion.yaml](./agent_config_multimodal_fusion.yaml)
+
 - **Type:** MultiModalFusionAgent
 - **Required fields:**
   - `input_dims` (list of int)
@@ -57,8 +63,9 @@ The following YAML files demonstrate how to instantiate each supported agent typ
 ---
 
 **Usage:**
+
 ```python
-from src.core.agent_factory import create_agent_from_file
+from neuro_fuzzy_multiagent.core.agent_factory import create_agent_from_file
 agent = create_agent_from_file('examples/agent_config_fusion.yaml')
 ```
 

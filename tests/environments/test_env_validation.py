@@ -5,8 +5,8 @@ Tests for the environment validation utility.
 """
 
 import pytest
-from src.env.validate_env import validate_environment
-from src.env.environment_factory import EnvironmentFactory
+from neuro_fuzzy_multiagent.env.validate_env import validate_environment
+from neuro_fuzzy_multiagent.env.environment_factory import EnvironmentFactory
 
 
 @pytest.mark.parametrize(

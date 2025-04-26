@@ -6,12 +6,13 @@ Compares baseline transfer learning (no adaptation) with CORAL-aligned transfer 
 """
 
 import numpy as np
-from src.environment.abstraction import SimpleEnvironment
-from src.environment.transfer_learning import (
+
+from neuro_fuzzy_multiagent.environment.abstraction import SimpleEnvironment
+from neuro_fuzzy_multiagent.environment.transfer_learning import (
     FeatureExtractor,
-    transfer_learning,
     coral,
     mmd,
+    transfer_learning,
 )
 
 

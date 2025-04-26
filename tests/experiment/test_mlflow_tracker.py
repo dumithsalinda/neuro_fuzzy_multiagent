@@ -1,6 +1,7 @@
 import os
 import tempfile
-from src.core.experiment.mlflow_tracker import ExperimentTracker
+
+from neuro_fuzzy_multiagent.core.experiment.mlflow_tracker import ExperimentTracker
 
 
 def test_mlflow_experiment_tracker():

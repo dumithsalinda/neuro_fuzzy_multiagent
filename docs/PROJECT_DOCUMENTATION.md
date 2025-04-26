@@ -31,26 +31,31 @@ neuro_fuzzy_multiagent/
 ## 3. Main Modules & Their Roles
 
 ### A. src/core/
-- **neuro_fuzzy_fusion_agent.py:**  Implements the NeuroFuzzyFusionAgent, combining neural and fuzzy logic for multi-modal input and decision-making.
-- **fuzzy_system.py:**  Fuzzy inference system, supporting immutable core rules, append-only dynamic rules, and human-in-the-loop updates.
-- **robustness_wrappers.py:**  Observation noise, action perturbation, and runtime safety monitoring wrappers for robustness and safety.
-- **Other files:**  Utilities for federated aggregation, fuzzy logic primitives, etc.
+
+- **neuro_fuzzy_fusion_agent.py:** Implements the NeuroFuzzyFusionAgent, combining neural and fuzzy logic for multi-modal input and decision-making.
+- **fuzzy_system.py:** Fuzzy inference system, supporting immutable core rules, append-only dynamic rules, and human-in-the-loop updates.
+- **robustness_wrappers.py:** Observation noise, action perturbation, and runtime safety monitoring wrappers for robustness and safety.
+- **Other files:** Utilities for federated aggregation, fuzzy logic primitives, etc.
 
 ### B. dashboard/
-- **main.py:**  The entry-point for the Streamlit dashboard. Provides agent selection, simulation, analytics, chat, and experiment control.
-- **visualization.py:**  Visualizations for agent positions, SOM grids, group analytics, and knowledge.
-- **simulation.py:**  Batch/parallel experiment logic, simulation step execution, and group clustering.
-- **chat.py:**  Human-agent chat interface, feedback, and explainability.
-- **collab.py, google_sheets.py:**  Collaboration features, experiment sharing, and Google Sheets integration.
-- **sidebar.py, layout.py, intervention.py:**  UI controls and layout helpers.
+
+- **main.py:** The entry-point for the Streamlit dashboard. Provides agent selection, simulation, analytics, chat, and experiment control.
+- **visualization.py:** Visualizations for agent positions, SOM grids, group analytics, and knowledge.
+- **simulation.py:** Batch/parallel experiment logic, simulation step execution, and group clustering.
+- **chat.py:** Human-agent chat interface, feedback, and explainability.
+- **collab.py, google_sheets.py:** Collaboration features, experiment sharing, and Google Sheets integration.
+- **sidebar.py, layout.py, intervention.py:** UI controls and layout helpers.
 
 ### C. examples/
+
 - Contains ready-to-run demo scripts for agent learning, multiagent RL, transfer learning, and simulation.
 
 ### D. tests/
+
 - Extensive test suite covering all major modules, agent behaviors, dashboard features, and robustness.
 
 ### E. Other Directories
+
 - **internet_learning/**: Integrates web/video knowledge for agent learning.
 - **multiagent/**: Collaboration and environment abstractions.
 
@@ -63,17 +68,19 @@ neuro_fuzzy_multiagent/
 This system supports **plug-and-play agent architecture** with dynamic agent management and hot-reloading of agent configurations. Agents can be added, removed, or reconfigured at runtime without restarting the system.
 
 #### Main APIs:
+
 - **AgentManager** (`src/core/agent_manager.py`):
-    - `add_agent(config, group=None)`: Add an agent at runtime using a YAML/JSON/dict config.
-    - `remove_agent(agent)`: Remove an agent from the system.
-    - `reload_agent_config(agent, config_or_path)`: Reload an agent's configuration from file or dict at runtime.
+  - `add_agent(config, group=None)`: Add an agent at runtime using a YAML/JSON/dict config.
+  - `remove_agent(agent)`: Remove an agent from the system.
+  - `reload_agent_config(agent, config_or_path)`: Reload an agent's configuration from file or dict at runtime.
 - **NeuroFuzzyAgent** (`src/core/agent.py`):
-    - `reload_config(config_or_path)`: Reload this agent's configuration in place.
+  - `reload_config(config_or_path)`: Reload this agent's configuration in place.
 
 #### Example Usage
+
 ```python
-from src.core.agent_manager import AgentManager
-from src.core.message_bus import MessageBus
+from neuro_fuzzy_multiagent.core.agent_manager import AgentManager
+from neuro_fuzzy_multiagent.core.message_bus import MessageBus
 
 bus = MessageBus()
 manager = AgentManager(bus=bus)
@@ -97,6 +104,7 @@ manager.remove_agent(agent)
 ```
 
 #### Example YAML Agent Config
+
 ```yaml
 agent_type: NeuroFuzzyAgent
 nn_config:
@@ -109,6 +117,7 @@ universal_fuzzy_layer: null
 ```
 
 #### Notes & Best Practices
+
 - Supported config formats: YAML, JSON, or Python dict.
 - Only keys present in the config will be updated; missing keys retain their previous values.
 - For neural network changes, the model is re-instantiated with new parameters.
@@ -124,10 +133,12 @@ universal_fuzzy_layer: null
 The system supports dynamic evolution and adaptation of fuzzy rule bases, as well as automatic switching between neural, fuzzy, and hybrid inference modes for robust agent performance.
 
 #### 1. Evolving Fuzzy Rule Bases
+
 - Use `agent.evolve_rules(recent_inputs, min_avg_activation)` to prune dynamic fuzzy rules whose average firing strength (activation) on recent data falls below the specified threshold.
 - This maintains a compact, relevant, and adaptive fuzzy rule base for each agent.
 
 **Example:**
+
 ```python
 # Prune weak rules using recent data
 recent_inputs = [np.array([0.1, 0.9]), np.array([0.2, 0.8]), ...]
@@ -135,10 +146,12 @@ pruned = agent.evolve_rules(recent_inputs, min_avg_activation=0.05)
 ```
 
 #### 2. Adaptive Hybrid Learning & Mode Switching
+
 - Use `agent.auto_switch_mode(error_history, thresholds)` to automatically switch the agent's inference mode based on recent error history.
 - The agent will switch between 'neural', 'fuzzy', and 'hybrid' modes to optimize performance and robustness.
 
 **Example:**
+
 ```python
 # Switch mode if error is high
 error_history = [0.12, 0.11, 0.15, 0.18, 0.2]
@@ -148,12 +161,14 @@ current_mode = agent.auto_switch_mode(error_history)
 - Both features are available in the `NeuroFuzzyAgent` API, and can be integrated into training loops or experiment logic for self-organizing, adaptive agents.
 
 ### A. Agent Setup & Training
+
 - Agents are instantiated via the dashboard or scripts.
 - Supports multi-modal input (vision, audio, text, etc.).
 - Training can be neural (deep RL), fuzzy (rule-based), or neuro-fuzzy (fusion).
 - Human feedback can add/adjust fuzzy rules (dynamic, never overwriting core rules).
 
 ### B. Dashboard Usage
+
 - Streamlit-based UI for:
   - Agent selection and configuration
   - Real-time simulation and visualization (positions, groups, SOM grid)
@@ -162,11 +177,13 @@ current_mode = agent.auto_switch_mode(error_history)
   - Intervention logging and knowledge sharing
 
 ### C. Robustness & Safety
+
 - Wrappers for adding noise/adversarial perturbations to observations/actions.
 - Runtime safety monitoring with constraint violation logging.
 - Dashboard toggles and analytics for robustness features.
 
 ### D. Distributed/Cloud Execution
+
 - Ray-based scripts and configs for scaling agents across clusters.
 - Dockerfile and deployment scripts for reproducibility.
 
@@ -175,7 +192,7 @@ current_mode = agent.auto_switch_mode(error_history)
 ## 5. Dependencies & Running the Project
 
 - **Python 3.8+** (see `requirements.txt`)
-- **Major dependencies:**  `numpy`, `torch`, `streamlit`, `matplotlib`, `seaborn`, `pandas`, `gspread`, `pytest`, `networkx`, `scikit-learn`, etc.
+- **Major dependencies:** `numpy`, `torch`, `streamlit`, `matplotlib`, `seaborn`, `pandas`, `gspread`, `pytest`, `networkx`, `scikit-learn`, etc.
 - **To run the dashboard:**
   ```sh
   pip install -r requirements.txt
@@ -194,12 +211,12 @@ current_mode = agent.auto_switch_mode(error_history)
 
 ## 6. Extensibility & Customization
 
-- **Agents:**  Add new agent types in `src/core/`, register in dashboard.
-- **Fuzzy Rules:**  Extend fuzzy logic and rule management in `fuzzy_system.py`.
-- **Human Feedback:**  Customize chat and feedback parsing in `dashboard/chat.py`.
-- **Robustness:**  Add new wrappers in `robustness_wrappers.py`.
-- **Distributed Execution:**  Modify Ray configs and scripts as needed.
-- **Visualization:**  Add new analytics/plots in `dashboard/visualization.py`.
+- **Agents:** Add new agent types in `src/core/`, register in dashboard.
+- **Fuzzy Rules:** Extend fuzzy logic and rule management in `fuzzy_system.py`.
+- **Human Feedback:** Customize chat and feedback parsing in `dashboard/chat.py`.
+- **Robustness:** Add new wrappers in `robustness_wrappers.py`.
+- **Distributed Execution:** Modify Ray configs and scripts as needed.
+- **Visualization:** Add new analytics/plots in `dashboard/visualization.py`.
 
 ---
 
@@ -224,17 +241,17 @@ current_mode = agent.auto_switch_mode(error_history)
 
 ## Appendix: Key Files (Quick Reference)
 
-| Path                                 | Purpose/Description                                 |
-|---------------------------------------|-----------------------------------------------------|
-| src/core/neuro_fuzzy_fusion_agent.py  | Main neuro-fuzzy agent logic                        |
-| src/core/fuzzy_system.py              | Fuzzy inference and rule management                 |
-| src/core/robustness_wrappers.py       | Robustness and safety wrappers                      |
-| dashboard/main.py                     | Streamlit dashboard entry point                     |
-| dashboard/visualization.py            | Agent/group/SOM visualizations                      |
-| dashboard/simulation.py               | Simulation and experiment logic                     |
-| dashboard/chat.py                     | Human-agent chat and feedback                       |
-| examples/                             | Example/demo scripts                                |
-| tests/                                | Test suite                                          |
-| requirements.txt                      | Python dependencies                                 |
-| Dockerfile                            | Containerization                                    |
-| ROADMAP.md                            | Project roadmap and milestones                      |
+| Path                                 | Purpose/Description                 |
+| ------------------------------------ | ----------------------------------- |
+| src/core/neuro_fuzzy_fusion_agent.py | Main neuro-fuzzy agent logic        |
+| src/core/fuzzy_system.py             | Fuzzy inference and rule management |
+| src/core/robustness_wrappers.py      | Robustness and safety wrappers      |
+| dashboard/main.py                    | Streamlit dashboard entry point     |
+| dashboard/visualization.py           | Agent/group/SOM visualizations      |
+| dashboard/simulation.py              | Simulation and experiment logic     |
+| dashboard/chat.py                    | Human-agent chat and feedback       |
+| examples/                            | Example/demo scripts                |
+| tests/                               | Test suite                          |
+| requirements.txt                     | Python dependencies                 |
+| Dockerfile                           | Containerization                    |
+| ROADMAP.md                           | Project roadmap and milestones      |

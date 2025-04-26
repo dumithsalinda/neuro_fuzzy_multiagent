@@ -1,8 +1,8 @@
 import numpy as np
 import pytest
 
-from src.core.management.multiagent import MultiAgentSystem
-from src.core.neural_networks.som_cluster import SOMClusterer
+from neuro_fuzzy_multiagent.core.management.multiagent import MultiAgentSystem
+from neuro_fuzzy_multiagent.core.neural_networks.som_cluster import SOMClusterer
 
 
 class DummyAgent:

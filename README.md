@@ -5,6 +5,7 @@ A modular, plug-and-play platform for building, experimenting with, and deployin
 ---
 
 ## Table of Contents
+
 - [Quickstart & Requirements](#quickstart--requirements)
 - [Key Features](#key-features)
 - [Overview](#overview)
@@ -16,6 +17,7 @@ A modular, plug-and-play platform for building, experimenting with, and deployin
 ## Quickstart & Requirements
 
 > **Note:**
+>
 > - For ROS features, install ROS and `rospy` separately (not via pip).
 > - For MQTT and API server features, `paho-mqtt`, `fastapi`, and `uvicorn` are required (now included in requirements.txt).
 
@@ -39,7 +41,7 @@ A modular, plug-and-play platform for building, experimenting with, and deployin
 - Modular neuro-fuzzy agents, easy plug-and-play extension
 - Privacy-aware knowledge sharing and multi-agent collaboration
 - Online learning and knowledge integration
-- Multi-modal fusion agent support (text, image, etc.) *(in development: advanced fusion methods, e.g., attention, gating)*
+- Multi-modal fusion agent support (text, image, etc.) _(in development: advanced fusion methods, e.g., attention, gating)_
 - Model management, versioning, and batch experimentation
 - Robust dashboard for simulation, analytics, and HITL (human-in-the-loop)
 - **Note:** Some advanced features are in development. See the FAQ for details.
@@ -66,7 +68,7 @@ A robust, environment-independent, dynamic self-organizing neuro-fuzzy multi-age
 - Simulated or real IoT sensors for smart environment demos and agent interaction.
 - Example:
   ```python
-  from src.core.plugins.iot_sensor import IoTSensor
+  from neuro_fuzzy_multiagent.core.plugins.iot_sensor import IoTSensor
   def my_callback(name, value):
       print(f"Sensor {name}: {value}")
   sensor = IoTSensor('temp_sensor', interval=1.0, callback=my_callback)
@@ -75,23 +77,23 @@ A robust, environment-independent, dynamic self-organizing neuro-fuzzy multi-age
   sensor.stop()
   ```
 
-### ROS/IoT Integration *(in development)*
+### ROS/IoT Integration _(in development)_
 
 - Minimal ROS bridge for agent-environment communication via ROS topics.
 - Example:
   ```python
-  from src.core.plugins.ros_bridge import ROSBridge
+  from neuro_fuzzy_multiagent.core.plugins.ros_bridge import ROSBridge
   bridge = ROSBridge(node_name='nfma_ros_bridge')
   pub = bridge.create_publisher('/nfma/test', queue_size=1)
   bridge.publish('/nfma/test', 'hello world')
   ```
 
-### Meta-Reinforcement Learning *(in development)*
+### Meta-Reinforcement Learning _(in development)_
 
 - Agents that adapt their own learning strategies over time using meta-feedback.
 - Example:
   ```python
-  from src.core.agents.meta_rl_agent import MetaRLAgent
+  from neuro_fuzzy_multiagent.core.agents.meta_rl_agent import MetaRLAgent
   meta_agent = MetaRLAgent(base_agent_cls=TabularQLearningAgent, base_agent_kwargs={'lr': 0.1}, meta_lr=0.05, meta_window=5)
   # Use meta_agent in place of any agent; it will adjust its learning rate based on reward trends.
   ```
@@ -101,7 +103,7 @@ A robust, environment-independent, dynamic self-organizing neuro-fuzzy multi-age
 - Support for distributed agent deployment and communication.
 - Example:
   ```python
-  from src.core.distributed import DistributedAgent
+  from neuro_fuzzy_multiagent.core.distributed import DistributedAgent
   agent = DistributedAgent('agent_name', host='localhost', port=8080)
   agent.start()
   # ...
@@ -135,11 +137,12 @@ To run all tests (requires pytest):
 pytest tests/
 ```
 
-All dashboard and core functions are covered by the test suite. If you encounter any errors, see the test output for details and troubleshooting.
-2. Run the dashboard:
-   ```sh
-   streamlit run dashboard/main.py
-   ```
+All dashboard and core functions are covered by the test suite. If you encounter any errors, see the test output for details and troubleshooting. 2. Run the dashboard:
+
+```sh
+streamlit run dashboard/main.py
+```
+
 3. (Optional) Run the API server:
    ```sh
    uvicorn agent_api:app --reload
@@ -213,7 +216,7 @@ tests/
 - Place new agent tests in `tests/agents/`, environment tests in `tests/environments/`, etc.
 - Each subfolder contains an `__init__.py` for pytest discovery.
 - Example: To test a new agent, add `test_my_agent.py` to `tests/agents/`.
-- Update imports to use relative paths (e.g., `from .dummy_agent import DummyAgent`).
+- Update imports to use relative paths (e.g., `from neuro_fuzzy_multiagent.core.agents.dummy_agent import DummyAgent`).
 
 ---
 
@@ -226,7 +229,7 @@ The platform supports meta-learning and automated hyperparameter optimization fo
 - Dynamically selects the best-performing agent type (e.g., DQN, Q-Learning) based on recent performance.
 - Usage:
   ```python
-  from src.core.agents.meta_agent import MetaAgent
+  from neuro_fuzzy_multiagent.core.agents.meta_agent import MetaAgent
   meta = MetaAgent(candidate_agents=[(DQNAgent, {...}), (TabularQLearningAgent, {...})])
   ```
 - The MetaAgent tries each candidate for a set number of steps (exploration), then switches to the best.
@@ -236,7 +239,7 @@ The platform supports meta-learning and automated hyperparameter optimization fo
 - Simple optimizer for agent hyperparameters (random search; extensible to Bayesian/evolutionary).
 - Usage:
   ```python
-  from src.core.agents.hpo import HyperparameterOptimizer
+  from neuro_fuzzy_multiagent.core.agents.hpo import HyperparameterOptimizer
   hpo = HyperparameterOptimizer(param_space, eval_fn)
   best_params, best_score = hpo.optimize(n_trials=100)
   ```
@@ -253,7 +256,7 @@ See `src/core/agents/meta_agent.py` and `src/core/agents/hpo.py` for details and
 - Use standard RL environments with the platform via `GymEnvWrapper`.
 - Example:
   ```python
-  from src.core.environments.gym_env_wrapper import GymEnvWrapper
+  from neuro_fuzzy_multiagent.core.environments.gym_env_wrapper import GymEnvWrapper
   env = GymEnvWrapper('CartPole-v1')
   obs = env.reset()
   action = env.action_space.sample()
@@ -266,7 +269,7 @@ See `src/core/agents/meta_agent.py` and `src/core/agents/hpo.py` for details and
 - Minimal ROS bridge for agent-environment communication via ROS topics.
 - Example:
   ```python
-  from src.core.plugins.ros_bridge import ROSBridge
+  from neuro_fuzzy_multiagent.core.plugins.ros_bridge import ROSBridge
   bridge = ROSBridge(node_name='nfma_ros_bridge')
   pub = bridge.create_publisher('/nfma/test', queue_size=1)
   bridge.publish('/nfma/test', 'hello world')
@@ -281,7 +284,7 @@ See `src/core/agents/meta_agent.py` and `src/core/agents/hpo.py` for details and
 - Agents that adapt their own learning strategies over time using meta-feedback.
 - Example:
   ```python
-  from src.core.agents.meta_rl_agent import MetaRLAgent
+  from neuro_fuzzy_multiagent.core.agents.meta_rl_agent import MetaRLAgent
   meta_agent = MetaRLAgent(base_agent_cls=TabularQLearningAgent, base_agent_kwargs={'lr': 0.1}, meta_lr=0.05, meta_window=5)
   # Use meta_agent in place of any agent; it will adjust its learning rate based on reward trends.
   ```
@@ -292,7 +295,7 @@ See `src/core/agents/meta_agent.py` and `src/core/agents/hpo.py` for details and
 - Simulated or real IoT sensors for smart environment demos and agent interaction.
 - Example:
   ```python
-  from src.core.plugins.iot_sensor import IoTSensor
+  from neuro_fuzzy_multiagent.core.plugins.iot_sensor import IoTSensor
   def my_callback(name, value):
       print(f"Sensor {name}: {value}")
   sensor = IoTSensor('temp_sensor', interval=1.0, callback=my_callback)
@@ -310,7 +313,7 @@ See `src/core/agents/meta_agent.py` and `src/core/agents/hpo.py` for details and
 ### Simulated Device Example
 
 ```python
-from src.core.plugins.iot_common import IoTDevice
+from neuro_fuzzy_multiagent.core.plugins.iot_common import IoTDevice
 def cb(name, value):
     print(f"Simulated {name}: {value}")
 device = IoTDevice('sim_sensor', mode='sim', interval=1.0, callback=cb)
@@ -322,7 +325,7 @@ device.stop()
 ### MQTT Device Example
 
 ```python
-from src.core.plugins.iot_common import IoTDevice
+from neuro_fuzzy_multiagent.core.plugins.iot_common import IoTDevice
 def cb(name, value):
     print(f"MQTT {name}: {value}")
 mqtt_conf = {'broker': 'localhost', 'topic': 'home/livingroom/temperature'}
@@ -335,7 +338,7 @@ device.send_command('ON')
 ### HTTP Device Example
 
 ```python
-from src.core.plugins.iot_common import IoTDevice
+from neuro_fuzzy_multiagent.core.plugins.iot_common import IoTDevice
 def cb(name, value):
     print(f"HTTP {name}: {value}")
 http_conf = {'url': 'http://device_ip/api/temperature', 'method': 'GET'}
@@ -363,7 +366,7 @@ This guide explains how to deploy the Neuro-Fuzzy Multi-Agent System in both a s
 **Example:**
 
 ```python
-from src.core.plugins.auto_discovery import PluginRegistry
+from neuro_fuzzy_multiagent.core.plugins.auto_discovery import PluginRegistry
 registry = PluginRegistry(plugin_dir='src/core/plugins', base_package='src.core.plugins')
 registry.discover_plugins()
 print(registry.list_plugins())  # [(name, version), ...]
@@ -385,9 +388,9 @@ registry.reload_plugin('MyPlugin')  # Hot-reload
 **Example:**
 
 ```python
-from src.core.management.distributed_orchestrator import DistributedExperimentOrchestrator
-from src.core.agents.dummy_agent import DummyAgent
-from src.core.environments.gym_env_wrapper import GymEnvWrapper
+from neuro_fuzzy_multiagent.core.management.distributed_orchestrator import DistributedExperimentOrchestrator
+from neuro_fuzzy_multiagent.core.agents.dummy_agent import DummyAgent
+from neuro_fuzzy_multiagent.core.environments.gym_env_wrapper import GymEnvWrapper
 orchestrator = DistributedExperimentOrchestrator(DummyAgent, GymEnvWrapper, agent_kwargs={}, env_kwargs={'env_name': 'CartPole-v1'}, num_agents=8)
 orchestrator.launch()
 results = orchestrator.run_episode(steps=100)
@@ -411,7 +414,7 @@ orchestrator.shutdown()
 **Example:**
 
 ```python
-from src.core.plugins.ros_bridge import ROSBridge
+from neuro_fuzzy_multiagent.core.plugins.ros_bridge import ROSBridge
 bridge = ROSBridge(node_name='car_agent')
 def steering_callback(topic, msg):
     # Process incoming sensor data
@@ -432,7 +435,7 @@ bridge.create_publisher('/vehicle/cmd_vel')
 **Example:**
 
 ```python
-from src.core.plugins.iot_sensor import IoTSensor
+from neuro_fuzzy_multiagent.core.plugins.iot_sensor import IoTSensor
 def temp_callback(name, value):
     # Adjust thermostat or notify agent
     ...
@@ -531,7 +534,7 @@ trained_model = transfer_learning(env1, env2, model, feat, steps=10)
 ### Integration with Neuro-Fuzzy Hybrid Model
 You can use the `NeuroFuzzyHybrid` model in place of the neural network in transfer learning:
 ```python
-from src.core.neuro_fuzzy import NeuroFuzzyHybrid
+from neuro_fuzzy_multiagent.core.neuro_fuzzy import NeuroFuzzyHybrid
 # ... setup fuzzy system and configs ...
 model = NeuroFuzzyHybrid(nn_config, fis_config)
 trained_model = transfer_learning(env1, env2, model, feat, steps=10)

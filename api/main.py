@@ -1,12 +1,13 @@
+import hashlib
+import uuid
+from typing import Any, Dict, List
+
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel
-from typing import List, Dict, Any
-import uuid
-import hashlib
 
-from src.plugins.registry import get_registered_plugins
-from src.core.experiment.mlflow_tracker import ExperimentTracker
-from src.core.experiment.result_analysis import ResultAnalyzer
+from neuro_fuzzy_multiagent.core.experiment.mlflow_tracker import ExperimentTracker
+from neuro_fuzzy_multiagent.core.experiment.result_analysis import ResultAnalyzer
+from neuro_fuzzy_multiagent.plugins.registry import get_registered_plugins
 
 app = FastAPI(title="Neuro-Fuzzy Multiagent Backend API")
 

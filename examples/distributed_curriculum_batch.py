@@ -3,12 +3,17 @@ Distributed Curriculum Batch Experiment Runner using Ray
 Each curriculum stage yields harder scenarios for distributed benchmarking.
 """
 
-import ray
 import numpy as np
-from src.core.management.agent_factory import create_agent_from_config
-from src.core.experiment_manager import ExperimentManager
-from src.core.curriculum_scenario_generator import CurriculumScenarioGenerator
-from src.env.environment_factory import EnvironmentFactory
+import ray
+
+from neuro_fuzzy_multiagent.core.curriculum_scenario_generator import (
+    CurriculumScenarioGenerator,
+)
+from neuro_fuzzy_multiagent.core.experiment_manager import ExperimentManager
+from neuro_fuzzy_multiagent.core.management.agent_factory import (
+    create_agent_from_config,
+)
+from neuro_fuzzy_multiagent.env.environment_factory import EnvironmentFactory
 
 ENV_MAP = {
     "Gridworld": "multiagent_gridworld",

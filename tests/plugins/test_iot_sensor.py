@@ -1,5 +1,6 @@
 import time
-from src.core.plugins.iot_sensor import IoTSensor
+
+from neuro_fuzzy_multiagent.core.plugins.iot_sensor import IoTSensor
 
 
 def test_iot_sensor_runs_and_callback():

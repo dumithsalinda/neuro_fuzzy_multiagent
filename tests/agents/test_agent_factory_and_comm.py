@@ -1,14 +1,15 @@
+import json
 import os
 import tempfile
+
 import yaml
-import json
-from src.core.management.agent_factory import (
+
+from neuro_fuzzy_multiagent.core.agents.agent import Agent
+from neuro_fuzzy_multiagent.core.agents.dummy_agent import DummyAgent
+from neuro_fuzzy_multiagent.core.management.agent_factory import (
     create_agent_from_config,
     create_agent_from_file,
 )
-from src.core.agents.agent import Agent
-
-from .dummy_agent import DummyAgent
 
 
 def test_create_agent_from_yaml():

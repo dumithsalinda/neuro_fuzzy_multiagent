@@ -7,7 +7,8 @@ Utility functions to clear and reload all plugin registries and modules at runti
 import importlib
 import logging
 import sys
-from src.core.plugins.registration_utils import clear_plugin_registry
+
+from neuro_fuzzy_multiagent.core.plugins.registration_utils import clear_plugin_registry
 
 PLUGIN_MODULE_PATHS = [
     "src.plugins",
@@ -17,11 +18,10 @@ PLUGIN_MODULE_PATHS = [
 PLUGIN_TYPES = ["sensor", "actuator", "environment", "agent"]
 
 
+import logging
 import os
 from pathlib import Path
-
-from typing import Dict, Any
-import logging
+from typing import Any, Dict
 
 
 def reload_all_plugins() -> Dict[str, Any]:

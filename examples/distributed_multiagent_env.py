@@ -3,10 +3,13 @@ Distributed Multi-Agent Environment Runner using Ray
 Each agent runs as a Ray actor; environment coordinates actions and observations.
 """
 
-import ray
 import numpy as np
-from src.core.management.agent_factory import create_agent_from_config
-from src.env.environment_factory import EnvironmentFactory
+import ray
+
+from neuro_fuzzy_multiagent.core.management.agent_factory import (
+    create_agent_from_config,
+)
+from neuro_fuzzy_multiagent.env.environment_factory import EnvironmentFactory
 
 # Map agent types to example config files
 AGENT_CFG_MAP = {

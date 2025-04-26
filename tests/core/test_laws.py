@@ -1,13 +1,14 @@
-import pytest
 import numpy as np
-from src.core.agents.laws import (
-    register_law,
-    remove_law,
+import pytest
+
+from neuro_fuzzy_multiagent.core.agents.agent import Agent
+from neuro_fuzzy_multiagent.core.agents.laws import (
     clear_laws,
     enforce_laws,
     list_laws,
+    register_law,
+    remove_law,
 )
-from src.core.agents.agent import Agent
 
 
 # --- Utility law functions ---
@@ -55,7 +56,7 @@ def test_agent_act_enforces_laws(monkeypatch):
     clear_laws()
     register_law(law_positive)  # Register in default 'action' category
     agent = Agent(model=None, policy=lambda obs, model: np.array([-1]))
-    from src.core.agents.laws import LawViolation
+    from neuro_fuzzy_multiagent.core.agents.laws import LawViolation
 
     with pytest.raises(LawViolation):
         agent.act(np.array([0]))

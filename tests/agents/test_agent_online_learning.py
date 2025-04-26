@@ -1,7 +1,8 @@
 import numpy as np
 import pytest
-from src.core.agents.agent import Agent, NeuroFuzzyAgent
-from src.core.neuro_fuzzy import NeuroFuzzyHybrid
+
+from neuro_fuzzy_multiagent.core.agents.agent import Agent, NeuroFuzzyAgent
+from neuro_fuzzy_multiagent.core.neuro_fuzzy import NeuroFuzzyHybrid
 
 
 def test_agent_learn_from_url(monkeypatch):

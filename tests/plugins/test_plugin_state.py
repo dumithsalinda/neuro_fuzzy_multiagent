@@ -1,6 +1,7 @@
-import tempfile
 import os
-from src.core.plugins.plugin_state import PluginStateManager
+import tempfile
+
+from neuro_fuzzy_multiagent.core.plugins.plugin_state import PluginStateManager
 
 
 def test_json_state():

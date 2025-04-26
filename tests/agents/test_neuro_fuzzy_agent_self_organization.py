@@ -6,8 +6,9 @@ Test self-organization in NeuroFuzzyAgent and NeuroFuzzyHybrid.
 
 import numpy as np
 import pytest
-from src.core.agents.agent import NeuroFuzzyAgent
-from src.core.neuro_fuzzy import NeuroFuzzyHybrid
+
+from neuro_fuzzy_multiagent.core.agents.agent import NeuroFuzzyAgent
+from neuro_fuzzy_multiagent.core.neuro_fuzzy import NeuroFuzzyHybrid
 
 
 def test_neuro_fuzzy_agent_self_organize_changes_nn_weights():
@@ -22,7 +23,10 @@ def test_neuro_fuzzy_agent_self_organize_changes_nn_weights():
 
 
 def test_neuro_fuzzy_hybrid_self_organize_fuzzy_rule_change():
-    from src.core.neural_networks.fuzzy_system import FuzzySet, FuzzyInferenceSystem
+    from neuro_fuzzy_multiagent.core.neural_networks.fuzzy_system import (
+        FuzzyInferenceSystem,
+        FuzzySet,
+    )
 
     # Setup FIS with 2 rules
     fs_low = FuzzySet("low", [0.0, 1.0])

@@ -4,7 +4,8 @@ Allows user to interact with NeuroFuzzyFusionAgent via natural language commands
 """
 
 import numpy as np
-from src.core.neuro_fuzzy_fusion_agent import NeuroFuzzyFusionAgent
+
+from neuro_fuzzy_multiagent.core.neuro_fuzzy_fusion_agent import NeuroFuzzyFusionAgent
 
 # Initialize agent (example config)
 input_dims = [4, 3]
@@ -90,7 +91,7 @@ while True:
                 # Assume two modalities: obs[0:4], obs[4:7]
                 obs_modalities = [obs_vals[:4], obs_vals[4:]]
                 # Demo fuzzy sets: for each input, Low/High sets
-                from src.core.fuzzy_system import FuzzySet
+                from neuro_fuzzy_multiagent.core.fuzzy_system import FuzzySet
 
                 fuzzy_sets_per_input = [
                     [FuzzySet("Low", [0, 1]), FuzzySet("High", [1, 1])]

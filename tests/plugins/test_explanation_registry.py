@@ -1,14 +1,15 @@
-import sys
 import os
+import sys
 
 sys.path.insert(
     0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../src"))
 )
 import pytest
-from src.core.plugins.explanation_registry import (
-    register_explanation,
-    get_explanation,
+
+from neuro_fuzzy_multiagent.core.plugins.explanation_registry import (
     clear_explanations,
+    get_explanation,
+    register_explanation,
 )
 
 

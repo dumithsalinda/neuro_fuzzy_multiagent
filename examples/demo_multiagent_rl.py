@@ -1,6 +1,7 @@
 import numpy as np
-from src.core.tabular_q_agent import TabularQLearningAgent
-from src.env.environment_factory import EnvironmentFactory
+
+from neuro_fuzzy_multiagent.core.tabular_q_agent import TabularQLearningAgent
+from neuro_fuzzy_multiagent.env.environment_factory import EnvironmentFactory
 
 # --- Multi-Agent Gridworld Demo ---
 print("=== Multi-Agent Gridworld (Cooperative) ===")

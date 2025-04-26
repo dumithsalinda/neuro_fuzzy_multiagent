@@ -1,7 +1,8 @@
-import numpy as np
 import matplotlib.pyplot as plt
-from src.core.tabular_q_agent import TabularQLearningAgent
-from src.env.environment_factory import EnvironmentFactory
+import numpy as np
+
+from neuro_fuzzy_multiagent.core.tabular_q_agent import TabularQLearningAgent
+from neuro_fuzzy_multiagent.env.environment_factory import EnvironmentFactory
 
 # --- Multi-Agent Gridworld Demo with Visualization ---
 grid_env = EnvironmentFactory.create(

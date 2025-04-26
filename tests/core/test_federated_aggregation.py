@@ -8,8 +8,12 @@ import numpy as np
 import pytest
 import ray
 
-from src.core.management.distributed_agent_executor import RayAgentWrapper
-from src.core.management.federated_aggregation import federated_update
+from neuro_fuzzy_multiagent.core.management.distributed_agent_executor import (
+    RayAgentWrapper,
+)
+from neuro_fuzzy_multiagent.core.management.federated_aggregation import (
+    federated_update,
+)
 
 
 class QTableAgent:

@@ -10,7 +10,7 @@ import streamlit as st
 # --- SAFE STUBS FOR DEMO/TESTING ---
 # Remove or update these with actual imports for production
 try:
-    from src.core.plugins.registry import (
+    from neuro_fuzzy_multiagent.core.plugins.registry import (
         get_registered_actuators,
         get_registered_sensors,
     )
@@ -24,11 +24,11 @@ except ImportError:
 
 
 try:
-    from src.env.registry import registered_envs
+    from neuro_fuzzy_multiagent.env.registry import registered_envs
 except ImportError:
     registered_envs = {}
 try:
-    from src.core.agents.registry import registered_agents
+    from neuro_fuzzy_multiagent.core.agents.registry import registered_agents
 except ImportError:
     registered_agents = {}
 
@@ -1536,7 +1536,7 @@ for i, agent in enumerate(st.session_state.agents):
             st.line_chart(df.iloc[:, 1])
     # --- Communication Graph Visualization ---
     if "messages_history" in st.session_state and st.session_state.messages_history:
-        from src.utils.visualization import plot_communication_graph
+        from neuro_fuzzy_multiagent.utils.visualization import plot_communication_graph
 
         st.subheader("Agent Communication Graph (Live)")
         plot_communication_graph(
@@ -1673,7 +1673,7 @@ for i, agent in enumerate(st.session_state.agents):
             # --- Real-World/Live Data Integration ---
             st.markdown("---")
             st.subheader("Real-World/Live Data Integration")
-            from src.utils import realtime_data
+            from neuro_fuzzy_multiagent.utils import realtime_data
 
             data_source = st.selectbox(
                 f"Select live data source for Agent {i+1}",

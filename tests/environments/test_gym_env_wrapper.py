@@ -1,6 +1,6 @@
 import pytest
 import gym
-from src.core.environments.gym_env_wrapper import GymEnvWrapper
+from neuro_fuzzy_multiagent.core.environments.gym_env_wrapper import GymEnvWrapper
 
 
 def test_gym_env_wrapper_cartpole():

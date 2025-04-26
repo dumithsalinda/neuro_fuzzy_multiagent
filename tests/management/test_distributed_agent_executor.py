@@ -5,7 +5,10 @@ Test for distributed agent execution utility using Ray.
 """
 
 import numpy as np
-from src.core.management.distributed_agent_executor import run_agents_distributed
+
+from neuro_fuzzy_multiagent.core.management.distributed_agent_executor import (
+    run_agents_distributed,
+)
 
 
 class DummyAgent:

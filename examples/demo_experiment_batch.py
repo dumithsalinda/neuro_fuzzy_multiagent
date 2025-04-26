@@ -3,19 +3,23 @@ Demo: Batch experiment runner using ScenarioGenerator and ExperimentManager
 Runs real agents in real environments for each scenario.
 """
 
-import numpy as np
 import os
-from src.core.management.agent_factory import create_agent_from_config
-from src.core.management.agent_manager import AgentManager
-from src.core.experiment_manager import ExperimentManager
-from src.core.scenario_generator import ScenarioGenerator
-from src.env.environment_factory import EnvironmentFactory
-from src.utils.visualization import (
-    plot_rewards,
+
+import numpy as np
+
+from neuro_fuzzy_multiagent.core.experiment_manager import ExperimentManager
+from neuro_fuzzy_multiagent.core.management.agent_factory import (
+    create_agent_from_config,
+)
+from neuro_fuzzy_multiagent.core.management.agent_manager import AgentManager
+from neuro_fuzzy_multiagent.core.scenario_generator import ScenarioGenerator
+from neuro_fuzzy_multiagent.env.environment_factory import EnvironmentFactory
+from neuro_fuzzy_multiagent.utils.human_in_the_loop import human_in_the_loop_control
+from neuro_fuzzy_multiagent.utils.visualization import (
     plot_agent_explanations,
+    plot_rewards,
     plot_rule_activations,
 )
-from src.utils.human_in_the_loop import human_in_the_loop_control
 
 # Map scenario env names to factory keys
 ENV_MAP = {

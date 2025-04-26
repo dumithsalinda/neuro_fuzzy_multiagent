@@ -1,7 +1,9 @@
-import pytest
-from src.core.agents.agent import Agent
-from src.core.management.online_learning import OnlineLearnerMixin
 import json
+
+import pytest
+
+from neuro_fuzzy_multiagent.core.agents.agent import Agent
+from neuro_fuzzy_multiagent.core.management.online_learning import OnlineLearnerMixin
 
 
 class DummyAgent(Agent, OnlineLearnerMixin):
