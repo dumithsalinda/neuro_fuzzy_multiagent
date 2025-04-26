@@ -6,6 +6,10 @@ A modular, plug-and-play platform for building, experimenting with, and deployin
 
 ## Quickstart & Requirements
 
+> **Note:**
+> - For ROS features, install ROS and `rospy` separately (not via pip).
+> - For MQTT and API server features, `paho-mqtt`, `fastapi`, and `uvicorn` are required (now included in requirements.txt).
+
 1. **Install requirements:**
    ```sh
    pip install -r requirements.txt

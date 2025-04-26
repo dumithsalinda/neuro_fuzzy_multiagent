@@ -17,6 +17,12 @@ gspread
 google-auth
 pytest
 mock
+# Optional integrations
+paho-mqtt
+fastapi
+uvicorn
+# ROS integration (install via ROS, not pip)
+# rospy
 # Development dependencies
 flake8
 black
