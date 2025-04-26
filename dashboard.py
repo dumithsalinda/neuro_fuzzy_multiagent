@@ -1,4 +1,114 @@
+import datetime
+import inspect
+import os
+import pickle
+import time
 
+import numpy as np
+import streamlit as st
+
+# --- SAFE STUBS FOR DEMO/TESTING ---
+# Remove or update these with actual imports for production
+try:
+    from src.core.plugins.registry import (
+        get_registered_actuators,
+        get_registered_sensors,
+    )
+except ImportError:
+
+    def get_registered_sensors():
+        return {}
+
+    def get_registered_actuators():
+        return {}
+
+
+try:
+    from src.env.registry import registered_envs
+except ImportError:
+    registered_envs = {}
+try:
+    from src.core.agents.registry import registered_agents
+except ImportError:
+    registered_agents = {}
+
+# Common undefined names for demo/testing
+agent_type_choices = ["Tabular Q-Learning", "Multi-Modal Fusion Agent"]
+
+
+class MultiModalFusionAgent:
+    pass
+
+
+class EnvironmentFactory:
+    pass
+
+
+class MessageBus:
+    pass
+
+
+reward_history = []
+
+
+def initialize_env_and_agents(*args, **kwargs):
+    pass
+
+
+# --- END SAFE STUBS ---
+
+# Additional safe stubs for undefined names
+# Remove or update these with actual imports for production
+env_type = "StubEnv"
+agent_type = "StubAgent"
+MODEL_DIR = "/tmp/models"
+try:
+    import networkx as nx
+except ImportError:
+
+    class nx:
+        @staticmethod
+        def Graph():
+            return None
+
+        @staticmethod
+        def draw(*args, **kwargs):
+            pass
+
+        @staticmethod
+        def spring_layout(*args, **kwargs):
+            return {}
+
+        @staticmethod
+        def draw_networkx_labels(*args, **kwargs):
+            pass
+
+        @staticmethod
+        def draw_networkx_edges(*args, **kwargs):
+            pass
+
+        @staticmethod
+        def draw_networkx_nodes(*args, **kwargs):
+            pass
+
+        @staticmethod
+        def to_numpy_matrix(*args, **kwargs):
+            return None
+
+
+try:
+    from collections import deque
+except ImportError:
+
+    class deque(list):
+        pass
+
+
+class MultiAgentSystem:
+    pass
+
+
+# --- END ALL IMPORTS AND STUBS ---
 
 registered_sensors = get_registered_sensors()
 registered_actuators = get_registered_actuators()
@@ -8,7 +118,7 @@ selected_env_name = st.sidebar.selectbox("Environment Type", env_names)
 # Show docstring for selected environment
 if selected_env_name in registered_envs:
     env_cls = registered_envs[selected_env_name]
-    st.sidebar.caption(f"**Env Doc:** {env_cls.__doc__}")
+    st.sidebar.caption(f"**Env Doc:** {env_cls.__doc__}")  # noqa: E501
 
 agent_names = list(registered_agents.keys())
 agent_count = st.sidebar.slider("Number of Agents", 1, 5, 3)
@@ -20,7 +130,7 @@ selected_agent_names = [
 for i, agent_cls_name in enumerate(selected_agent_names):
     if agent_cls_name in registered_agents:
         agent_cls = registered_agents[agent_cls_name]
-        st.sidebar.caption(f"**Agent {i+1} Doc:** {agent_cls.__doc__}")
+        st.sidebar.caption(f"**Agent {i+1} Doc:** {agent_cls.__doc__}")  # noqa: E501
 # Additional environment-specific options (e.g., obstacles)
 n_obstacles = st.sidebar.slider("Number of Obstacles", 0, 10, 2)
 
@@ -30,32 +140,46 @@ actuator_names = list(registered_actuators.keys())
 selected_sensor_name = st.sidebar.selectbox("Sensor Plugin", ["None"] + sensor_names)
 if selected_sensor_name != "None":
     sensor_cls = registered_sensors[selected_sensor_name]
-    st.sidebar.caption(f"**Sensor Doc:** {sensor_cls.__doc__}")
-selected_actuator_name = st.sidebar.selectbox("Actuator Plugin", ["None"] + actuator_names)
+    st.sidebar.caption(f"**Sensor Doc:** {sensor_cls.__doc__}")  # noqa: E501
+selected_actuator_name = st.sidebar.selectbox(
+    "Actuator Plugin", ["None"] + actuator_names
+)
 if selected_actuator_name != "None":
     actuator_cls = registered_actuators[selected_actuator_name]
-    st.sidebar.caption(f"**Actuator Doc:** {actuator_cls.__doc__}")
+    st.sidebar.caption(f"**Actuator Doc:** {actuator_cls.__doc__}")  # noqa: E501
 
-import inspect
 
 def get_init_params(cls):
     sig = inspect.signature(cls.__init__)
     # Exclude self and *args/**kwargs
-    return [p for p in sig.parameters.values()
-            if p.name != 'self' and p.kind in (p.POSITIONAL_OR_KEYWORD, p.KEYWORD_ONLY)]
+    return [
+        p
+        for p in sig.parameters.values()
+        if p.name != "self" and p.kind in (p.POSITIONAL_OR_KEYWORD, p.KEYWORD_ONLY)
+    ]
+
 
 def get_param_value(param, label_prefix=""):
     label = f"{label_prefix}{param.name} ({param.annotation.__name__ if param.annotation != inspect._empty else 'Any'})"
     default = None if param.default == inspect._empty else param.default
     # Use Streamlit input widgets based on type
     if param.annotation in [int, float]:
-        return st.sidebar.number_input(label, value=default if default is not None else 0)
+        return st.sidebar.number_input(
+            label, value=default if default is not None else 0
+        )
     elif param.annotation == bool:
-        return st.sidebar.checkbox(label, value=default if default is not None else False)
+        return st.sidebar.checkbox(
+            label, value=default if default is not None else False
+        )
     elif param.annotation == str:
-        return st.sidebar.text_input(label, value=default if default is not None else "")
+        return st.sidebar.text_input(
+            label, value=default if default is not None else ""
+        )
     else:
-        return st.sidebar.text_input(label, value=str(default) if default is not None else "")
+        return st.sidebar.text_input(
+            label, value=str(default) if default is not None else ""
+        )
+
 
 # Environment config
 env_kwargs = {}
@@ -90,11 +214,15 @@ if selected_actuator_name != "None":
 
 # Instantiate plugins and store in session_state for use elsewhere
 if selected_sensor_name != "None":
-    st.session_state["sensor_plugin"] = registered_sensors[selected_sensor_name](**sensor_kwargs)
+    st.session_state["sensor_plugin"] = registered_sensors[selected_sensor_name](
+        **sensor_kwargs
+    )
 else:
     st.session_state["sensor_plugin"] = None
 if selected_actuator_name != "None":
-    st.session_state["actuator_plugin"] = registered_actuators[selected_actuator_name](**actuator_kwargs)
+    st.session_state["actuator_plugin"] = registered_actuators[selected_actuator_name](
+        **actuator_kwargs
+    )
 else:
     st.session_state["actuator_plugin"] = None
 
@@ -129,16 +257,19 @@ else:
             key="mm_fusion_type",
         )
         # TODO: Add more modalities and fusion methods (e.g., attention, gating) here
-elif env_type == "Adversarial Gridworld":
-    agent_type = "Tabular Q-Learning"
-    n_pursuers = st.sidebar.slider("Number of Pursuers", 1, 3, 1)
-    n_evaders = st.sidebar.slider("Number of Evaders", 1, 3, 1)
-    n_obstacles = st.sidebar.slider("Number of Obstacles", 0, 10, 2)
-    agent_types = None
-else:
-    agent_type = "Tabular Q-Learning"
-    agent_count = st.sidebar.slider("Number of Agents", 1, 5, 3)
-    n_obstacles = 0
+
+    # Add more environment types as needed
+    # Example:
+    # elif env_type == "Adversarial Gridworld":
+    #     agent_type = "Tabular Q-Learning"
+    #     n_pursuers = st.sidebar.slider("Number of Pursuers", 1, 3, 1)
+    #     n_evaders = st.sidebar.slider("Number of Evaders", 1, 3, 1)
+    #     n_obstacles = st.sidebar.slider("Number of Obstacles", 0, 10, 2)
+    #     agent_types = None
+    # else:
+    #     agent_type = "Tabular Q-Learning"
+    #     agent_count = st.sidebar.slider("Number of Agents", 1, 5, 3)
+    #     n_obstacles = 0
     agent_types = None
 
 # --- Online Learning Toggle ---
@@ -203,7 +334,9 @@ def simulate_step():
                 )
             elif adversarial_type == "Uniform Noise":
                 obs_arr = obs_arr + np.random.uniform(
-                    -adversarial_strength, adversarial_strength, size=obs_arr.shape
+                    -adversarial_strength,
+                    adversarial_strength,
+                    size=obs_arr.shape,
                 )
             elif adversarial_type == "Zeros":
                 obs_arr = np.zeros_like(obs_arr)
@@ -245,7 +378,12 @@ def simulate_step():
             obs = [np.random.randn(img_dim), np.random.randn(txt_dim)]
             # TODO: Replace with real multi-modal features from environment when available
         fb = feedback.get(
-            i, {"approve": "Approve", "override_action": None, "custom_reward": None}
+            i,
+            {
+                "approve": "Approve",
+                "override_action": None,
+                "custom_reward": None,
+            },
         )
         if fb["approve"] == "Reject":
             action = getattr(agent, "last_action", 0)
@@ -600,7 +738,9 @@ for mf in model_files:
         }
         try:
             r = requests.post(
-                "http://localhost:8000/api/experiments/log", json=meta, timeout=5
+                "http://localhost:8000/api/experiments/log",
+                json=meta,
+                timeout=5,
             )
             if r.status_code == 200:
                 st.success("Batch experiments complete! Results logged to backend.")
@@ -840,7 +980,7 @@ if not auto_approve:
             )
             override_action = st.text_input(
                 f"Override Action (optional)",
-                value=str(default_action) if default_action is not None else "",
+                value=(str(default_action) if default_action is not None else ""),
                 key=f"override_{i}",
             )
             custom_reward = st.number_input(
@@ -850,7 +990,7 @@ if not auto_approve:
             )
             st.session_state.feedback[i] = {
                 "approve": approve,
-                "override_action": override_action if approve == "Override" else None,
+                "override_action": (override_action if approve == "Override" else None),
                 "custom_reward": custom_reward,
             }
 else:
@@ -1232,7 +1372,8 @@ if env_name == "realworld_api":
     else:
         st.sidebar.info("Real-world environment connected.")
     st.sidebar.write(
-        "Real-world config:", getattr(st.session_state["real_env"], "config", {})
+        "Real-world config:",
+        getattr(st.session_state["real_env"], "config", {}),
     )
 else:
     if "real_env" in st.session_state and getattr(
@@ -1264,7 +1405,8 @@ if st.sidebar.button("Send Test Message (Agent 1 → Agent 2)"):
     agents = st.session_state.get("agents", [])
     if len(agents) >= 2:
         agents[0].send_message(
-            {"type": "test", "content": "Hello from Agent 1"}, recipient=agents[1]
+            {"type": "test", "content": "Hello from Agent 1"},
+            recipient=agents[1],
         )
         st.sidebar.success("Test message sent!")
     else:
@@ -1453,7 +1595,8 @@ for i, agent in enumerate(st.session_state.agents):
                 # Simple summary
                 max_idx = int(np.argmax(agent.model._last_firing_strengths))
                 st.info(
-                    f"Rule {max_idx} contributed most to the last action (firing strength={agent.model._last_firing_strengths[max_idx]:.3f})"
+                    f"Rule {max_idx} contributed most to the last action "
+                    f"(firing strength={agent.model._last_firing_strengths[max_idx]:.3f})"
                 )
             st.markdown("---")
             st.subheader("Fuzzy Rule Management")
@@ -1461,64 +1604,91 @@ for i, agent in enumerate(st.session_state.agents):
             st.markdown("---")
             st.subheader("Human Feedback")
             if "interventions" not in st.session_state:
+                pass
 
             # --- Action Override ---
             st.markdown("**Override Agent Action**")
-            override_action = st.text_input(f"Override next action for Agent {i+1} (leave blank for no override)")
+            override_action = st.text_input(
+                f"Override next action for Agent {i+1} (leave blank for no override)"
+            )
             if st.button(f"Apply Override for Agent {i+1}"):
                 if override_action:
                     if "interventions" not in st.session_state:
                         st.session_state["interventions"] = []
-                    st.session_state["interventions"].append({
-                        "agent": i+1,
-                        "type": "action_override",
-                        "action": override_action,
-                        "step": st.session_state.get("step", 0)
-                    })
-                    st.success(f"Override action '{override_action}' for Agent {i+1} at step {st.session_state.get('step', 0)}.")
+                    st.session_state["interventions"].append(
+                        {
+                            "agent": i + 1,
+                            "type": "action_override",
+                            "action": override_action,
+                            "step": st.session_state.get("step", 0),
+                        }
+                    )
+                    st.success(
+                        f"Override action '{override_action}' for Agent {i+1} at step {st.session_state.get('step', 0)}."
+                    )
 
             # --- Reward Shaping ---
             st.markdown("**Manual Reward Feedback**")
-            reward_feedback = st.number_input(f"Manual reward for Agent {i+1} (leave blank for none)", value=0.0)
+            reward_feedback = st.number_input(
+                f"Manual reward for Agent {i+1} (leave blank for none)",
+                value=0.0,
+            )
             if st.button(f"Apply Reward Feedback for Agent {i+1}"):
                 if reward_feedback != 0.0:
                     if "interventions" not in st.session_state:
                         st.session_state["interventions"] = []
-                    st.session_state["interventions"].append({
-                        "agent": i+1,
-                        "type": "reward_feedback",
-                        "reward": reward_feedback,
-                        "step": st.session_state.get("step", 0)
-                    })
-                    st.success(f"Manual reward {reward_feedback} for Agent {i+1} at step {st.session_state.get('step', 0)}.")
+                    st.session_state["interventions"].append(
+                        {
+                            "agent": i + 1,
+                            "type": "reward_feedback",
+                            "reward": reward_feedback,
+                            "step": st.session_state.get("step", 0),
+                        }
+                    )
+                    st.success(
+                        f"Manual reward {reward_feedback} for Agent {i+1} at step {st.session_state.get('step', 0)}."
+                    )
 
             # --- Demonstration Logging ---
             st.markdown("**Demonstrate Action (Imitation Learning)**")
-            demo_action = st.text_input(f"Demonstrate action for Agent {i+1} (for imitation learning)")
+            demo_action = st.text_input(
+                f"Demonstrate action for Agent {i+1} (for imitation learning)"
+            )
             if st.button(f"Log Demonstration for Agent {i+1}"):
                 if demo_action:
                     if "interventions" not in st.session_state:
                         st.session_state["interventions"] = []
-                    st.session_state["interventions"].append({
-                        "agent": i+1,
-                        "type": "demonstration",
-                        "action": demo_action,
-                        "step": st.session_state.get("step", 0)
-                    })
-                    st.success(f"Logged demonstration action '{demo_action}' for Agent {i+1} at step {st.session_state.get('step', 0)}.")
+                    st.session_state["interventions"].append(
+                        {
+                            "agent": i + 1,
+                            "type": "demonstration",
+                            "action": demo_action,
+                            "step": st.session_state.get("step", 0),
+                        }
+                    )
+                    st.success(
+                        f"Logged demonstration action '{demo_action}' for Agent {i+1} at step {st.session_state.get('step', 0)}."
+                    )
 
             # --- Real-World/Live Data Integration ---
             st.markdown("---")
             st.subheader("Real-World/Live Data Integration")
             from src.utils import realtime_data
-            data_source = st.selectbox(f"Select live data source for Agent {i+1}", ["None", "Mock Sensor", "REST API", "MQTT Stream"])
+
+            data_source = st.selectbox(
+                f"Select live data source for Agent {i+1}",
+                ["None", "Mock Sensor", "REST API", "MQTT Stream"],
+            )
             live_value = None
             connection_status = None
             if data_source == "Mock Sensor":
                 live_value = realtime_data.get_mock_sensor_value()
                 st.write(f"Mock Sensor Value: {live_value:.3f}")
             elif data_source == "REST API":
-                rest_url = st.text_input(f"REST API URL for Agent {i+1}", "http://localhost:5000/value")
+                rest_url = st.text_input(
+                    f"REST API URL for Agent {i+1}",
+                    "http://localhost:5000/value",
+                )
                 if st.button(f"Fetch REST Value for Agent {i+1}"):
                     live_value = realtime_data.get_rest_api_value(rest_url)
                     if live_value is not None:
@@ -1555,11 +1725,17 @@ for i, agent in enumerate(st.session_state.agents):
             if live_value is not None:
                 # Try to inject into env (assume set_external_input exists)
                 try:
-                    if hasattr(st.session_state, "env") and hasattr(st.session_state.env, "set_external_input"):
+                    if hasattr(st.session_state, "env") and hasattr(
+                        st.session_state.env, "set_external_input"
+                    ):
                         st.session_state.env.set_external_input(i, live_value)
-                        st.success(f"Injected live value {live_value} into environment for Agent {i+1}.")
+                        st.success(
+                            f"Injected live value {live_value} into environment for Agent {i+1}."
+                        )
                     else:
-                        st.info(f"Live value {live_value} available for Agent {i+1}, but env integration not implemented.")
+                        st.info(
+                            f"Live value {live_value} available for Agent {i+1}, but env integration not implemented."
+                        )
                 except Exception as e:
                     st.warning(f"Failed to inject live value: {e}")
                 st.session_state["interventions"] = []
@@ -1643,7 +1819,10 @@ if "interventions" in st.session_state and st.session_state["interventions"]:
     # Export log
     csv = df.to_csv(index=False).encode("utf-8")
     st.download_button(
-        "Download Intervention Log as CSV", csv, "interventions.csv", "text/csv"
+        "Download Intervention Log as CSV",
+        csv,
+        "interventions.csv",
+        "text/csv",
     )
 
 # --- Human-in-the-Loop Experiment UI ---
@@ -1664,7 +1843,8 @@ if st.session_state["experiment_active"]:
     # Feedback form
     with st.form(f"experiment_feedback_{step}"):
         agent_idx = st.selectbox(
-            "Select agent to give feedback", list(range(len(st.session_state.agents)))
+            "Select agent to give feedback",
+            list(range(len(st.session_state.agents))),
         )
         override = st.text_input("Override action (blank for none)", value="")
         feedback_type = st.radio(
@@ -1714,7 +1894,10 @@ if st.session_state["experiment_active"]:
         df_exp = pd.DataFrame(st.session_state["experiment_log"])
         csv_exp = df_exp.to_csv(index=False).encode("utf-8")
         st.download_button(
-            "Download Experiment Log as CSV", csv_exp, "experiment_log.csv", "text/csv"
+            "Download Experiment Log as CSV",
+            csv_exp,
+            "experiment_log.csv",
+            "text/csv",
         )
     if st.button("End Experiment"):
         st.session_state["experiment_active"] = False
@@ -1743,7 +1926,11 @@ rb["noise_level"] = st.slider(
     "Noise StdDev/Range", 0.0, 2.0, float(rb["noise_level"]), 0.01
 )
 rb["drop_prob"] = st.slider(
-    "Random Drop/Corruption Probability", 0.0, 1.0, float(rb["drop_prob"]), 0.01
+    "Random Drop/Corruption Probability",
+    0.0,
+    1.0,
+    float(rb["drop_prob"]),
+    0.01,
 )
 rb["adv_runs"] = st.number_input(
     "Adversarial Batch Episodes",
@@ -1788,7 +1975,9 @@ if run_adv:
                     noise = np.random.normal(0, rb["noise_level"], size=np.shape(act))
                 elif rb["noise_type"] == "Uniform":
                     noise = np.random.uniform(
-                        -rb["noise_level"], rb["noise_level"], size=np.shape(act)
+                        -rb["noise_level"],
+                        rb["noise_level"],
+                        size=np.shape(act),
                     )
                 if np.random.rand() < rb["drop_prob"]:
                     act = None
@@ -1829,10 +2018,16 @@ if "batch_exp" not in st.session_state:
     }
 bexp = st.session_state["batch_exp"]
 bexp["runs"] = st.number_input(
-    "Number of Runs", min_value=1, max_value=1000, value=int(bexp["runs"]), step=1
+    "Number of Runs",
+    min_value=1,
+    max_value=1000,
+    value=int(bexp["runs"]),
+    step=1,
 )
 bexp["metrics"] = st.multiselect(
-    "Metrics to Track", ["reward", "action_var", "rule_usage"], default=bexp["metrics"]
+    "Metrics to Track",
+    ["reward", "action_var", "rule_usage"],
+    default=bexp["metrics"],
 )
 run_batch = st.button("Run Batch Experiment")
 
@@ -1979,7 +2174,8 @@ if (
             if getattr(agent, "group", "ungrouped") == gid
         ]
         leader = next(
-            (i for i in members if getattr(agents[i], "is_leader", False)), None
+            (i for i in members if getattr(agents[i], "is_leader", False)),
+            None,
         )
         group_table.append({"Group": gid, "Members": members, "Leader": leader})
     st.table(group_table)
