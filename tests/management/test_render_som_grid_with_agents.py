@@ -1,4 +1,4 @@
-from dashboard.visualization import render_som_grid_with_agents
+from neuro_fuzzy_multiagent.dashboard.visualization import render_som_grid_with_agents
 from unittest.mock import patch, MagicMock
 import streamlit as st
 import numpy as np

@@ -1,0 +1,6 @@
+recursive-include neuro_fuzzy_multiagent *.py
+recursive-include neuro_fuzzy_multiagent *.json
+recursive-include neuro_fuzzy_multiagent *.yaml
+recursive-include neuro_fuzzy_multiagent *.yml
+recursive-include neuro_fuzzy_multiagent *.txt
+recursive-include neuro_fuzzy_multiagent *.md

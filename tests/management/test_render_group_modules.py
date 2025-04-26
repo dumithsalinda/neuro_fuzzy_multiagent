@@ -1,4 +1,4 @@
-from dashboard.visualization import render_group_modules
+from neuro_fuzzy_multiagent.dashboard.visualization import render_group_modules
 from unittest.mock import patch
 import streamlit as st
 

@@ -12,7 +12,10 @@ from neuro_fuzzy_multiagent.core.plugins.registration_utils import (
 @ray.remote
 class ExperimentWorker:
     def __init__(self, agent_cls, env_cls, config):
-        self.agent = agent_cls(**config.get("agent", {}))
+        agent_cfg = config.get("agent", {})
+        if "model" not in agent_cfg:
+            raise ValueError(f"Agent config must include a 'model' argument for {agent_cls.__name__}. Provided config: {agent_cfg}")
+        self.agent = agent_cls(**agent_cfg)
         self.env = env_cls(**config.get("env", {}))
 
     def run(self, n_episodes):

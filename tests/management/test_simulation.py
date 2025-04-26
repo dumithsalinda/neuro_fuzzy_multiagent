@@ -1,6 +1,6 @@
 import pytest
 import streamlit as st
-from dashboard.simulation import simulate_step, run_batch_experiments, som_group_agents
+from neuro_fuzzy_multiagent.dashboard.simulation import simulate_step, run_batch_experiments, som_group_agents
 from unittest.mock import patch, MagicMock
 import numpy as np
 

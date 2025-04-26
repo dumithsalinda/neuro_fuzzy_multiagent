@@ -1,4 +1,4 @@
-from dashboard.main import merge_logs
+from neuro_fuzzy_multiagent.dashboard.main import merge_logs
 from neuro_fuzzy_multiagent.core.agents.agent import Agent
 from neuro_fuzzy_multiagent.core.agents.neuro_fuzzy_fusion_agent import (
     NeuroFuzzyFusionAgent,

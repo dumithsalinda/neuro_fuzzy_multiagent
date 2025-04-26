@@ -1101,7 +1101,7 @@ with tabs[0]:
     )
     # --- SOM Grid Visualization ---
     if hasattr(system, "groups"):
-        from dashboard_viz import plot_som_grid
+        from neuro_fuzzy_multiagent.dashboard.dashboard_viz import plot_som_grid
 
         group_ids = list(system.groups.keys())
         group_colors = {gid: plt.cm.tab10(i % 10) for i, gid in enumerate(group_ids)}

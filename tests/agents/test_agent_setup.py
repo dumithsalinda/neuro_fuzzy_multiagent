@@ -3,7 +3,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 import streamlit as st
 
-from dashboard.agent_setup import setup_agents_and_env
+from neuro_fuzzy_multiagent.dashboard.agent_setup import setup_agents_and_env
 from neuro_fuzzy_multiagent.core.agents.agent import Agent
 
 

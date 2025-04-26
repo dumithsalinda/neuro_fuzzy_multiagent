@@ -1,4 +1,4 @@
-from dashboard.visualization import render_agent_positions
+from neuro_fuzzy_multiagent.dashboard.visualization import render_agent_positions
 from unittest.mock import patch, MagicMock
 import streamlit as st
 

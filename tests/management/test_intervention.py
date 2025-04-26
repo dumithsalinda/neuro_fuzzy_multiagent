@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import patch
 import streamlit as st
-from dashboard.intervention import render_intervention_log
+from neuro_fuzzy_multiagent.dashboard.intervention import render_intervention_log
 
 
 def test_render_intervention_log_with_data():

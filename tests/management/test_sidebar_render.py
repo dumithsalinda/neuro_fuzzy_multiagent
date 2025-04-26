@@ -1,4 +1,4 @@
-from dashboard.sidebar import render_sidebar
+from neuro_fuzzy_multiagent.dashboard.sidebar import render_sidebar
 from unittest.mock import patch
 import streamlit as st
 

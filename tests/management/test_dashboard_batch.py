@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from dashboard.simulation import run_batch_experiments
+from neuro_fuzzy_multiagent.dashboard.simulation import run_batch_experiments
 from neuro_fuzzy_multiagent.core.management.multiagent import MultiAgentSystem
 
 

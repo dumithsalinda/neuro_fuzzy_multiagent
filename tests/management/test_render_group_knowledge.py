@@ -1,4 +1,4 @@
-from dashboard.visualization import render_group_knowledge
+from neuro_fuzzy_multiagent.dashboard.visualization import render_group_knowledge
 from unittest.mock import patch, MagicMock
 import streamlit as st
 

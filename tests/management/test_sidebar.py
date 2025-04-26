@@ -1,7 +1,6 @@
-import pytest
 from unittest.mock import patch
 import streamlit as st
-from dashboard.sidebar import render_sidebar
+from neuro_fuzzy_multiagent.dashboard.sidebar import render_sidebar
 
 
 def test_render_sidebar_sets_session_state():

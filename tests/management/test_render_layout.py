@@ -1,4 +1,4 @@
-from dashboard.layout import render_layout
+from neuro_fuzzy_multiagent.dashboard.layout import render_layout
 from unittest.mock import patch
 import streamlit as st
 

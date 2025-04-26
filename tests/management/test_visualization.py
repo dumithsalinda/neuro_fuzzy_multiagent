@@ -2,7 +2,7 @@ import pytest
 from unittest.mock import patch, MagicMock
 import streamlit as st
 import pandas as pd
-from dashboard.visualization import (
+from neuro_fuzzy_multiagent.dashboard.visualization import (
     render_agent_positions,
     render_group_knowledge,
     render_group_analytics,
