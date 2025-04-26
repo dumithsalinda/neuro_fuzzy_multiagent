@@ -3,7 +3,8 @@ import numpy as np
 
 from src.core.plugins.registration_utils import register_plugin
 
-@register_plugin('agent')
+
+@register_plugin("agent")
 class ANFISHybrid:
     """
     Minimal Adaptive Neuro-Fuzzy Inference System (ANFIS) hybrid model.

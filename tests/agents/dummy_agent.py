@@ -1,5 +1,6 @@
 from src.core.agents.agent import Agent
 
+
 class DummyAgent(Agent):
     def __init__(self, model=None, group=None):
         super().__init__(model=model)

@@ -5,19 +5,31 @@ from typing import Any, Optional, Tuple
 import threading
 import logging
 
-app = FastAPI(title="Human-in-the-Loop API", description="APIs for human approval of agent actions.")
+app = FastAPI(
+    title="Human-in-the-Loop API",
+    description="APIs for human approval of agent actions.",
+)
+
 
 class ActionApproval(BaseModel):
     observation: Any = Field(..., description="Observation presented to the agent.")
     proposed_action: Any = Field(..., description="Action proposed by the agent.")
-    approved: Optional[bool] = Field(None, description="Whether the action is approved by the human.")
-    modified_action: Optional[Any] = Field(None, description="Modified action if the human changes it.")
+    approved: Optional[bool] = Field(
+        None, description="Whether the action is approved by the human."
+    )
+    modified_action: Optional[Any] = Field(
+        None, description="Modified action if the human changes it."
+    )
+
 
 # Shared state for experiment loop to wait for human input
 action_event = threading.Event()
 approval_data = {}
 
-def request_human_approval(observation: Any, proposed_action: Any) -> Tuple[Optional[bool], Optional[Any]]:
+
+def request_human_approval(
+    observation: Any, proposed_action: Any
+) -> Tuple[Optional[bool], Optional[Any]]:
     """
     Block the experiment loop until human approval is received for the given action.
     Returns (approved, modified_action).
@@ -27,13 +39,18 @@ def request_human_approval(observation: Any, proposed_action: Any) -> Tuple[Opti
         "observation": observation,
         "proposed_action": proposed_action,
         "approved": None,
-        "modified_action": None
+        "modified_action": None,
     }
     action_event.clear()
-    logging.info(f"Waiting for human approval: observation={observation}, proposed_action={proposed_action}")
+    logging.info(
+        f"Waiting for human approval: observation={observation}, proposed_action={proposed_action}"
+    )
     action_event.wait()  # Block until human responds
-    logging.info(f"Human approval received: approved={approval_data['approved']}, modified_action={approval_data['modified_action']}")
+    logging.info(
+        f"Human approval received: approved={approval_data['approved']}, modified_action={approval_data['modified_action']}"
+    )
     return approval_data["approved"], approval_data["modified_action"]
+
 
 @app.post("/human/approve_action", tags=["Human-in-the-Loop"])
 async def approve_action(approval: ActionApproval) -> JSONResponse:
@@ -50,6 +67,7 @@ async def approve_action(approval: ActionApproval) -> JSONResponse:
     except Exception as e:
         logging.error(f"Error in approve_action: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @app.get("/human/pending_action", tags=["Human-in-the-Loop"])
 async def pending_action() -> dict:

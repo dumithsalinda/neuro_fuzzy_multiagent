@@ -26,7 +26,7 @@ class QNetwork(nn.Module):
         return self.net(x)
 
 
-@register_plugin('agent')
+@register_plugin("agent")
 class DQNAgent(Agent):
     def explain_action(self, observation):
         import torch

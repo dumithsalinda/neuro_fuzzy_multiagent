@@ -10,7 +10,10 @@ from examples.agent_with_model_hot_reload import HotReloadAgent
 
 import hashlib
 
-def make_model_dir(base_dir, name, device, framework="onnx", model_type="cnn", signature=None):
+
+def make_model_dir(
+    base_dir, name, device, framework="onnx", model_type="cnn", signature=None
+):
     model_dir = os.path.join(base_dir, name)
     os.makedirs(model_dir, exist_ok=True)
     # Use a minimal valid ONNX model file for testing
@@ -32,7 +35,7 @@ def make_model_dir(base_dir, name, device, framework="onnx", model_type="cnn", s
         "hash": f"sha256:{file_hash}",
         "model_type": model_type,
         "framework": framework,
-        "model_dir": model_dir  # Add this for agent lookup
+        "model_dir": model_dir,  # Add this for agent lookup
     }
     if signature:
         meta["signature"] = signature
@@ -40,10 +43,11 @@ def make_model_dir(base_dir, name, device, framework="onnx", model_type="cnn", s
         json.dump(meta, f)
     return model_dir
 
+
 def test_hot_reload_agent_workflow():
     temp_registry = tempfile.mkdtemp()
     temp_models = tempfile.mkdtemp()
-    os.environ['NFMAOS_MODEL_REGISTRY'] = temp_registry
+    os.environ["NFMAOS_MODEL_REGISTRY"] = temp_registry
     device_type = "test_device"
     # Create and register initial model
     model1_dir = make_model_dir(temp_models, "model1", device_type)
@@ -66,6 +70,7 @@ def test_hot_reload_agent_workflow():
     shutil.rmtree(temp_registry)
     shutil.rmtree(temp_models)
     print("Hot reload agent workflow test completed.")
+
 
 if __name__ == "__main__":
     test_hot_reload_agent_workflow()

@@ -1,10 +1,12 @@
 """
 CLI tool to validate all registered plugins for dependency and interface compliance.
 """
+
 import sys
 import os
 import importlib
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../src')))
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../src")))
 from core.plugins.registration_utils import get_registered_plugins
 
 PLUGIN_TYPES = ["agent", "environment", "sensor", "actuator"]
@@ -20,6 +22,7 @@ INTERFACE_MAP = {
     "actuator": REQUIRED_ACTUATOR_METHODS,
 }
 
+
 def validate_plugin_interface(plugin_type, cls):
     """Check that the plugin class implements required methods."""
     missing = []
@@ -27,6 +30,7 @@ def validate_plugin_interface(plugin_type, cls):
         if not hasattr(cls, method):
             missing.append(method)
     return missing
+
 
 def main():
     failed = False
@@ -46,6 +50,7 @@ def main():
     else:
         print("\nAll plugins passed validation.")
         sys.exit(0)
+
 
 if __name__ == "__main__":
     main()

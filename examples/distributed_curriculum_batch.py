@@ -2,6 +2,7 @@
 Distributed Curriculum Batch Experiment Runner using Ray
 Each curriculum stage yields harder scenarios for distributed benchmarking.
 """
+
 import ray
 import numpy as np
 from src.core.management.agent_factory import create_agent_from_config
@@ -11,12 +12,13 @@ from src.env.environment_factory import EnvironmentFactory
 
 ENV_MAP = {
     "Gridworld": "multiagent_gridworld",
-    "IoTSensorFusionEnv": "iot_sensor_fusion"
+    "IoTSensorFusionEnv": "iot_sensor_fusion",
 }
 AGENT_CFG_MAP = {
     "DQNAgent": "examples/agent_config_dqn.yaml",
-    "NeuroFuzzyAgent": "examples/agent_config_example.yaml"
+    "NeuroFuzzyAgent": "examples/agent_config_example.yaml",
 }
+
 
 @ray.remote
 def run_scenario(scenario):
@@ -24,8 +26,10 @@ def run_scenario(scenario):
     env_key = ENV_MAP[scenario["env"]]
     env = EnvironmentFactory.create(env_key, n_agents=scenario["agent_count"])
     agent_cfg_path = AGENT_CFG_MAP[scenario["agent_type"]]
-    agents = [create_agent_from_config(
-        __import__('yaml').safe_load(open(agent_cfg_path))) for _ in range(scenario["agent_count"])]
+    agents = [
+        create_agent_from_config(__import__("yaml").safe_load(open(agent_cfg_path)))
+        for _ in range(scenario["agent_count"])
+    ]
     obs = env.reset()
     total_rewards = [0 for _ in range(scenario["agent_count"])]
     done = False
@@ -35,18 +39,30 @@ def run_scenario(scenario):
         actions = []
         for i, agent in enumerate(agents):
             agent_obs = per_agent_obs[i]
-            if hasattr(agent, 'select_action'):
+            if hasattr(agent, "select_action"):
                 try:
                     action = agent.select_action(agent_obs)
                 except Exception:
-                    action = np.random.randint(env.action_space) if hasattr(env, 'action_space') else 0
-            elif hasattr(agent, 'act'):
+                    action = (
+                        np.random.randint(env.action_space)
+                        if hasattr(env, "action_space")
+                        else 0
+                    )
+            elif hasattr(agent, "act"):
                 try:
                     action = agent.act(agent_obs)
                 except Exception:
-                    action = np.random.randint(env.action_space) if hasattr(env, 'action_space') else 0
+                    action = (
+                        np.random.randint(env.action_space)
+                        if hasattr(env, "action_space")
+                        else 0
+                    )
             else:
-                action = np.random.randint(env.action_space) if hasattr(env, 'action_space') else 0
+                action = (
+                    np.random.randint(env.action_space)
+                    if hasattr(env, "action_space")
+                    else 0
+                )
             actions.append(action)
         step_result = env.step(actions)
         if isinstance(step_result, tuple) and len(step_result) == 4:
@@ -63,6 +79,7 @@ def run_scenario(scenario):
     mean_reward = float(np.mean(total_rewards))
     std_reward = float(np.std(total_rewards))
     return {"scenario": scenario, "mean_reward": mean_reward, "std_reward": std_reward}
+
 
 if __name__ == "__main__":
     ray.init(ignore_reinit_error=True)
@@ -82,6 +99,17 @@ if __name__ == "__main__":
         print("[Curriculum Stage {}] Scenario: {}".format(stage, scenario))
         future = run_scenario.remote(scenario)
         result = ray.get(future)
-        mgr.log_results(mgr.start_run(result["scenario"]), {"mean_reward": result["mean_reward"], "std_reward": result["std_reward"], "agent_count": result["scenario"]["agent_count"]})
-        print("[Distributed Curriculum] {} | mean_reward={:.2f}".format(result['scenario'], result['mean_reward']))
+        mgr.log_results(
+            mgr.start_run(result["scenario"]),
+            {
+                "mean_reward": result["mean_reward"],
+                "std_reward": result["std_reward"],
+                "agent_count": result["scenario"]["agent_count"],
+            },
+        )
+        print(
+            "[Distributed Curriculum] {} | mean_reward={:.2f}".format(
+                result["scenario"], result["mean_reward"]
+            )
+        )
     print("Curriculum run complete.")

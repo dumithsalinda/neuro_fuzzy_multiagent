@@ -3,15 +3,19 @@ test_parallel_agent_executor.py
 
 Test for parallel agent execution utility.
 """
+
 import numpy as np
 from src.core.management.parallel_agent_executor import run_agents_parallel
+
 
 class DummyAgent:
     def __init__(self, idx):
         self.idx = idx
+
     def act(self, obs):
         # Simulate computation
         return obs * (self.idx + 1)
+
 
 def test_run_agents_parallel():
     agents = [DummyAgent(i) for i in range(4)]

@@ -79,11 +79,13 @@ class FuzzyAgent:
 )
 def test_federated_update(AgentClass, knowledge_list, expected_type):
     ray.init(ignore_reinit_error=True, log_to_driver=False)
-    if AgentClass.__name__ == 'NNAgent':
-        print('Test knowledge_list input:')
+    if AgentClass.__name__ == "NNAgent":
+        print("Test knowledge_list input:")
         for i, k in enumerate(knowledge_list):
             for key, val in k.items():
-                print(f'Agent {i}, key {key}: type={type(val)}, shape={np.array(val).shape}, value={val}')
+                print(
+                    f"Agent {i}, key {key}: type={type(val)}, shape={np.array(val).shape}, value={val}"
+                )
     agents = [AgentClass(knowledge) for knowledge in knowledge_list]
     ray_agents = [RayAgentWrapper.remote(agent) for agent in agents]
     agg = federated_update(ray_agents)

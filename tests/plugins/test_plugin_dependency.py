@@ -3,6 +3,7 @@ import os
 from pathlib import Path
 from src.core.plugins.plugin_dependency import PluginDependencyManager
 
+
 def test_no_requirements():
     with tempfile.TemporaryDirectory() as tmpdir:
         mgr = PluginDependencyManager(tmpdir)
@@ -10,6 +11,7 @@ def test_no_requirements():
         ok, msg = mgr.check_requirements_installed()
         assert ok
         assert "No requirements" in msg
+
 
 def test_fake_requirements():
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -21,6 +23,7 @@ def test_fake_requirements():
         assert not ok
         assert "nonexistentpackage1234567890" in msg
         # Don't actually install
+
 
 def test_real_requirements():
     with tempfile.TemporaryDirectory() as tmpdir:

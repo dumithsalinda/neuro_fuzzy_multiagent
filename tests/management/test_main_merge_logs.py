@@ -2,6 +2,7 @@ from src.core.agents.agent import Agent
 from src.core.agents.neuro_fuzzy_fusion_agent import NeuroFuzzyFusionAgent
 from dashboard.main import merge_logs
 
+
 def test_merge_logs_merges_and_sorts():
     local_log = [
         {"time": "2024-01-01T10:00:00", "agent": 1, "group": 0, "user": "a"},

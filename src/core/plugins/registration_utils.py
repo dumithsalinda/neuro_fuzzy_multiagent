@@ -9,10 +9,10 @@ import logging
 
 # Global registries for each plugin type
 PLUGIN_REGISTRIES = {
-    'agent': {},
-    'environment': {},
-    'sensor': {},
-    'actuator': {},
+    "agent": {},
+    "environment": {},
+    "sensor": {},
+    "actuator": {},
 }
 
 
@@ -27,6 +27,7 @@ def register_plugin(plugin_type: str) -> Callable:
     Returns:
         Callable: A decorator function that registers the plugin.
     """
+
     def decorator(cls: type) -> type:
         """
         Registers the plugin class.
@@ -37,12 +38,13 @@ def register_plugin(plugin_type: str) -> Callable:
         Returns:
             type: The registered plugin class.
         """
-        name = getattr(cls, '__plugin_name__', cls.__name__)
+        name = getattr(cls, "__plugin_name__", cls.__name__)
         if name in PLUGIN_REGISTRIES[plugin_type]:
             logging.warning(f"Duplicate plugin registration for {plugin_type}: {name}")
         PLUGIN_REGISTRIES[plugin_type][name] = cls
         logging.info(f"Registered plugin: {plugin_type}.{name}")
         return cls
+
     return decorator
 
 

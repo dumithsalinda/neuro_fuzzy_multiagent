@@ -2,6 +2,7 @@ import os
 from src.utils.model_registry import ModelRegistry
 from src.utils.model_loader import ModelLoader
 
+
 class ExampleAgent:
     def __init__(self, registry_dir: str, device_type: str):
         self.registry = ModelRegistry(registry_dir)
@@ -25,15 +26,18 @@ class ExampleAgent:
             raise RuntimeError("No model loaded.")
         return self.model_loader.predict(input_data)
 
+
 # Example test usage
 def test_agent_with_model():
     import tempfile
     import shutil
+
     temp_registry = tempfile.mkdtemp()
     temp_model = tempfile.mkdtemp()
     try:
         # Create dummy model.json
         import json
+
         meta = {
             "name": "test_model",
             "version": "1.0.0",
@@ -44,7 +48,7 @@ def test_agent_with_model():
             "output_schema": "float32[1]",
             "hash": "sha256:dummy",
             "model_type": "cnn",
-            "framework": "onnx"
+            "framework": "onnx",
         }
         with open(os.path.join(temp_model, "model.json"), "w") as f:
             json.dump(meta, f)
@@ -58,6 +62,7 @@ def test_agent_with_model():
     finally:
         shutil.rmtree(temp_registry)
         shutil.rmtree(temp_model)
+
 
 if __name__ == "__main__":
     test_agent_with_model()

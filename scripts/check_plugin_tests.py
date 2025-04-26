@@ -12,8 +12,10 @@ TEST_DIRS = {
     "plugin": "tests/plugins/",
 }
 
+
 def plugin_name_from_file(fname):
     return os.path.splitext(os.path.basename(fname))[0].lower()
+
 
 def check_plugin_tests():
     missing = []
@@ -22,7 +24,7 @@ def check_plugin_tests():
         if not os.path.exists(pdir):
             continue
         for fname in os.listdir(pdir):
-            if not fname.endswith('.py') or fname.startswith('__'):
+            if not fname.endswith(".py") or fname.startswith("__"):
                 continue
             pname = plugin_name_from_file(fname)
             # Look for test file
@@ -37,6 +39,7 @@ def check_plugin_tests():
         sys.exit(1)
     print("All plugins have corresponding tests!")
     sys.exit(0)
+
 
 if __name__ == "__main__":
     check_plugin_tests()

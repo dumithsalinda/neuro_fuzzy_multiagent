@@ -3,10 +3,11 @@ generate_plugin_docs.py
 
 Auto-generates markdown documentation for all registered plugins (environments, agents, sensors, actuators).
 """
+
 import inspect
 from src.core.plugins.registration_utils import get_registered_plugins
 
-PLUGIN_TYPES = ['environment', 'agent', 'sensor', 'actuator']
+PLUGIN_TYPES = ["environment", "agent", "sensor", "actuator"]
 
 
 def document_class(cls):
@@ -45,6 +46,7 @@ def generate_all_plugin_docs():
         for name, cls in plugins.items():
             md += document_class(cls)
     return md
+
 
 if __name__ == "__main__":
     docs = generate_all_plugin_docs()

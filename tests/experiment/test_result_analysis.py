@@ -5,9 +5,10 @@ import tempfile
 import pytest
 
 # Add src directory to sys.path for src-layout compatibility
-src_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../src'))
+src_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../src"))
 sys.path.insert(0, src_path)
 from src.core.experiment.result_analysis import ResultAnalyzer
+
 
 def test_generate_report_and_save(tmp_path):
     analyzer = ResultAnalyzer(output_dir=tmp_path)
@@ -22,12 +23,14 @@ def test_generate_report_and_save(tmp_path):
     assert "accuracy" in content
     assert "test123" in content
 
+
 def test_export_metrics_json_and_csv(tmp_path):
     analyzer = ResultAnalyzer(output_dir=tmp_path)
     metrics = {"accuracy": 0.9, "loss": 0.2}
     json_path = analyzer.export_metrics(metrics, filename="metrics.json")
     assert os.path.exists(json_path)
     import json
+
     with open(json_path) as f:
         data = json.load(f)
     assert data["accuracy"] == 0.9
@@ -38,6 +41,7 @@ def test_export_metrics_json_and_csv(tmp_path):
     assert "accuracy" in content
     assert "loss" in content
 
+
 def test_summary_statistics():
     analyzer = ResultAnalyzer()
     metric_history = {"acc": [0.8, 0.85, 0.9], "loss": [0.2, 0.15, 0.1]}
@@ -47,6 +51,7 @@ def test_summary_statistics():
     assert abs(stats["acc"]["mean"] - 0.85) < 1e-6
     assert "loss" in stats
     assert stats["loss"]["min"] == 0.1
+
 
 def test_plot_metrics(tmp_path):
     analyzer = ResultAnalyzer(output_dir=tmp_path)

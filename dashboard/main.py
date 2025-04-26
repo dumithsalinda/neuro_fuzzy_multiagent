@@ -20,6 +20,7 @@ from dashboard.visualization import (
 from src.core.agents.agent_registry import get_registered_agents
 from src.core.agents.neuro_fuzzy_fusion_agent import NeuroFuzzyFusionAgent
 
+
 # --- Unified Plug-and-Play Sidebar ---
 def main():
     render_sidebar()  # Always show plug-and-play selection/config/hot-reload
@@ -55,7 +56,9 @@ def main():
     with tabs[8]:
         plugins_and_docs()
 
+
 # (Keep all other functions as before, but ensure they use st.session_state for selected plugins/config)
+
 
 def merge_logs(local_log, remote_log):
     """
@@ -90,6 +93,7 @@ def simulation_controls():
     """
     import streamlit as st
     from dashboard.simulation import simulate_step
+
     st.header("Simulation Controls")
     if st.button("Step Simulation"):
         simulate_step()
@@ -105,6 +109,7 @@ def simulation_controls():
     """
     from dashboard.simulation import simulate_step
     from dashboard.visualization import render_agent_positions
+
     st.header("Simulation Controls")
     n_steps = st.number_input(
         "Steps to Run", min_value=1, max_value=1000, value=10, step=1, key="n_steps"
@@ -132,6 +137,7 @@ def batch_experiments():
     """
     from dashboard.simulation import run_batch_experiments
     import pandas as pd
+
     st.header("Batch/Parallel Experiments")
     n_experiments = st.number_input(
         "Number of Experiments",
@@ -190,16 +196,20 @@ def analytics():
     """
     import streamlit as st
     from dashboard.visualization import render_group_analytics
+
     st.header("Analytics & Explainability")
     mas = st.session_state.get("multiagent_system")
     reward_history = st.session_state.get("reward_history", {})
     if mas:
         render_group_analytics(mas, reward_history=reward_history)
         from dashboard.visualization import render_agent_reward_and_qtable
+
         agents = st.session_state.get("agents", [])
         render_agent_reward_and_qtable(agents, reward_history=reward_history)
     else:
-        st.info("No multi-agent system or analytics available. Run a simulation step first.")
+        st.info(
+            "No multi-agent system or analytics available. Run a simulation step first."
+        )
 
     """
     Analytics tab.
@@ -244,6 +254,7 @@ def agent_chat():
     Interventions tab.
     """
     from dashboard.intervention import render_interventions_panel
+
     render_interventions_panel()
 
 
@@ -252,7 +263,9 @@ def feedback():
     Feedback tab for human-in-the-loop agent feedback and learning.
     """
     from dashboard.feedback import render_feedback_panel
+
     render_feedback_panel()
+
 
 def collaboration():
     """
@@ -320,9 +333,7 @@ def collaboration():
         with col_sync1:
             if st.button("Sync Log to Google Sheets"):
                 if spreadsheet_id_collab and worksheet_name_collab:
-                    df_log = pd.DataFrame(
-                        st.session_state.get("intervention_log", [])
-                    )
+                    df_log = pd.DataFrame(st.session_state.get("intervention_log", []))
                     write_df_to_sheet(
                         gc, spreadsheet_id_collab, worksheet_name_collab, df_log
                     )
@@ -343,7 +354,11 @@ def collaboration():
         # --- Auto-sync logic ---
         import time
 
-        if auto_sync_dashboard_collab and spreadsheet_id_collab and worksheet_name_collab:
+        if (
+            auto_sync_dashboard_collab
+            and spreadsheet_id_collab
+            and worksheet_name_collab
+        ):
             last_sync = st.session_state.get("gsheet_last_sync_dashboard_collab", 0)
             now = time.time()
             if now - last_sync > sync_interval_dashboard_collab:
@@ -377,33 +392,47 @@ def settings():
 try:
     from dashboard.interventions import interventions
 except ImportError:
+
     def interventions():
         """Stub for interventions tab (for testing)"""
         pass
+
+
 try:
     from dashboard.agent_chat import agent_chat
 except ImportError:
+
     def agent_chat():
         """Stub for agent_chat tab (for testing)"""
         pass
+
+
 try:
     from dashboard.analytics import analytics
 except ImportError:
+
     def analytics():
         """Stub for analytics tab (for testing)"""
         pass
+
+
 try:
     from dashboard.batch_experiments import batch_experiments
 except ImportError:
+
     def batch_experiments():
         """Stub for batch_experiments tab (for testing)"""
         pass
+
+
 try:
     from dashboard.simulation_controls import simulation_controls
 except ImportError:
+
     def simulation_controls():
         """Stub for simulation_controls tab (for testing)"""
         pass
+
 
 def main():
     """
@@ -528,12 +557,19 @@ def main():
                         df_log = pd.DataFrame(
                             st.session_state.get("intervention_log", [])
                         )
-                        write_df_to_sheet(gc, spreadsheet_id_dashboard, worksheet_name_dashboard, df_log)
+                        write_df_to_sheet(
+                            gc,
+                            spreadsheet_id_dashboard,
+                            worksheet_name_dashboard,
+                            df_log,
+                        )
                         st.success("Log synced to Google Sheets!")
             with col_sync2:
                 if st.button("Load Log from Google Sheets"):
                     if spreadsheet_id_dashboard and worksheet_name_dashboard:
-                        df_gsheet = read_sheet_to_df(gc, spreadsheet_id_dashboard, worksheet_name_dashboard)
+                        df_gsheet = read_sheet_to_df(
+                            gc, spreadsheet_id_dashboard, worksheet_name_dashboard
+                        )
                         # Merge logs
                         merged_log = merge_logs(
                             st.session_state.get("intervention_log", []),
@@ -544,12 +580,18 @@ def main():
             # --- Auto-sync logic ---
             import time
 
-            if auto_sync_dashboard and spreadsheet_id_dashboard and worksheet_name_dashboard:
+            if (
+                auto_sync_dashboard
+                and spreadsheet_id_dashboard
+                and worksheet_name_dashboard
+            ):
                 last_sync = st.session_state.get("gsheet_last_sync_dashboard", 0)
                 now = time.time()
                 if now - last_sync > sync_interval_dashboard:
                     # Pull remote log and merge
-                    df_gsheet = read_sheet_to_df(gc, spreadsheet_id_dashboard, worksheet_name_dashboard)
+                    df_gsheet = read_sheet_to_df(
+                        gc, spreadsheet_id_dashboard, worksheet_name_dashboard
+                    )
                     merged_log = merge_logs(
                         st.session_state.get("intervention_log", []),
                         df_gsheet.to_dict(orient="records"),
@@ -557,7 +599,9 @@ def main():
                     st.session_state["intervention_log"] = merged_log
                     # Push merged log
                     df_log = pd.DataFrame(st.session_state["intervention_log"])
-                    write_df_to_sheet(gc, spreadsheet_id_dashboard, worksheet_name_dashboard, df_log)
+                    write_df_to_sheet(
+                        gc, spreadsheet_id_dashboard, worksheet_name_dashboard, df_log
+                    )
                     st.session_state["gsheet_last_sync_dashboard"] = now
                     st.info("Auto-synced intervention log with Google Sheets.")
         # --- Timeline & Analytics ---
@@ -739,11 +783,13 @@ def main():
 
 def plugins_and_docs():
     from dashboard.plugin_marketplace import render_plugin_marketplace_sidebar
+
     render_plugin_marketplace_sidebar()
     import inspect
     from src.env.registry import get_registered_environments
     from src.core.agents.agent_registry import get_registered_agents
     from src.plugins.registry import get_registered_sensors, get_registered_actuators
+
     st.header("Plugin Registry & Developer Docs")
     st.subheader("Environments")
     envs = get_registered_environments()
@@ -774,12 +820,15 @@ def plugins_and_docs():
             sig = inspect.signature(cls.__init__)
             st.code(str(sig), language="python")
     st.subheader("Developer Documentation")
-    st.markdown("""
+    st.markdown(
+        """
     - **How to add new plugins:** See registry auto-discovery in `src/env/registry.py`, `src/core/agents/agent_registry.py`, `src/plugins/registry.py`.
     - **Best practices:** Use clear docstrings, type hints, and follow the base class interfaces.
     - **Advanced Controls:** Meta-learning, experiment management, explainability, and human-in-the-loop features are under development. See `roadmap2.md` for progress.
     - **Troubleshooting:** Use the plugin hot-reload button in the sidebar if new plugins do not appear.
-    """)
+    """
+    )
+
 
 if __name__ == "__main__":
     main()

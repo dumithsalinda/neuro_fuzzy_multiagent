@@ -2,11 +2,13 @@ import json
 import pickle
 from pathlib import Path
 
+
 class PluginStateManager:
     """
     Handles saving and loading plugin state to disk (JSON or pickle).
     Plugins can use this to persist state across reloads or restarts.
     """
+
     def __init__(self, plugin_dir, state_filename="state.json"):
         self.plugin_dir = Path(plugin_dir)
         self.state_path = self.plugin_dir / state_filename
@@ -33,10 +35,11 @@ class PluginStateManager:
         with open(pkl_path, "rb") as f:
             return pickle.load(f)
 
+
 # Example usage (for test):
 if __name__ == "__main__":
     mgr = PluginStateManager("../../plugins")
     mgr.save_json({"foo": 42})
     print(mgr.load_json())
-    mgr.save_pickle([1,2,3])
+    mgr.save_pickle([1, 2, 3])
     print(mgr.load_pickle())

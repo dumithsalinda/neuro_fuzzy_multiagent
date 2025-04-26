@@ -10,9 +10,11 @@ from src.core.agents.agent import Agent
 from src.environment.abstraction import SimpleEnvironment
 from src.environment.transfer_learning import FeatureExtractor
 
+
 class DummyModel:
     def forward(self, x):
         return x * 2
+
 
 def run_multiagent_simulation(num_agents=3, steps=10):
     np.random.seed(42)
@@ -36,6 +38,7 @@ def run_multiagent_simulation(num_agents=3, steps=10):
             agent.observe(reward)
     for i, agent in enumerate(agents):
         print(f"Agent {i} total reward: {agent.total_reward}")
+
 
 if __name__ == "__main__":
     run_multiagent_simulation()

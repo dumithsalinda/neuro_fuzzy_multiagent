@@ -1,10 +1,12 @@
 from src.core.plugins.registration_utils import register_plugin
 
-@register_plugin('actuator')
+
+@register_plugin("actuator")
 class ExampleActuator:
     """
     Example actuator plugin that sets and stores the last action.
     """
+
     def __init__(self):
         self.last_action = None
 

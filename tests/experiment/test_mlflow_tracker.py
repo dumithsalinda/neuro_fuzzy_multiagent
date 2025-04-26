@@ -2,12 +2,15 @@ import os
 import tempfile
 from src.core.experiment.mlflow_tracker import ExperimentTracker
 
+
 def test_mlflow_experiment_tracker():
     # Use a temp directory for MLflow tracking URI
     with tempfile.TemporaryDirectory() as tmpdir:
         os.environ["MLFLOW_TRACKING_URI"] = f"file://{tmpdir}"
         tracker = ExperimentTracker("test-exp")
-        run_id = tracker.start_run(run_name="test-run", params={"foo": 42}, tags={"type": "unit-test"})
+        run_id = tracker.start_run(
+            run_name="test-run", params={"foo": 42}, tags={"type": "unit-test"}
+        )
         tracker.log_metrics({"acc": 0.95, "loss": 0.1})
         # Create a dummy artifact
         artifact_path = os.path.join(tmpdir, "dummy.txt")

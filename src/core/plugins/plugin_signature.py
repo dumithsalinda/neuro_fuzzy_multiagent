@@ -2,10 +2,12 @@ import hashlib
 from typing import Dict, Optional
 import os
 
+
 class PluginSignatureVerifier:
     """
     Verifies plugin file signatures using SHA256 hash (default) or optional public key signature.
     """
+
     def __init__(self, manifest_path: str):
         self.manifest_path = manifest_path
         self.signatures = self._load_manifest()
@@ -38,8 +40,11 @@ class PluginSignatureVerifier:
             raise ValueError(f"No signature found for {fname}")
         actual = self.compute_hash(file_path)
         if actual != expected:
-            raise ValueError(f"Signature mismatch for {fname}: expected {expected}, got {actual}")
+            raise ValueError(
+                f"Signature mismatch for {fname}: expected {expected}, got {actual}"
+            )
         return True
+
 
 # Example manifest.txt:
 # plugin1.py: 1234abcd...

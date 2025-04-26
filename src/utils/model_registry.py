@@ -5,11 +5,13 @@ from typing import Dict, Optional, List
 from src.utils.model_schema import validate_model_metadata
 import hashlib
 
+
 class ModelRegistry:
     """
     Simple file-based model registry for registering, listing, and querying models.
     Each model must have a directory with a model.json metadata file.
     """
+
     def __init__(self, registry_dir: str):
         self.registry_dir = registry_dir
         os.makedirs(self.registry_dir, exist_ok=True)
@@ -36,18 +38,23 @@ class ModelRegistry:
         if model_file:
             with open(model_file, "rb") as f:
                 file_hash = hashlib.sha256(f.read()).hexdigest()
-            if 'hash' in metadata and not metadata['hash'].endswith(file_hash):
-                raise ValueError(f"Model file hash does not match metadata. Got {file_hash}")
+            if "hash" in metadata and not metadata["hash"].endswith(file_hash):
+                raise ValueError(
+                    f"Model file hash does not match metadata. Got {file_hash}"
+                )
         # Signature verification (if present)
-        if 'signature' in metadata:
+        if "signature" in metadata:
             from src.utils.crypto_utils import verify_signature, load_public_key
-            pubkey_path = os.environ.get('NFMAOS_MODEL_PUBKEY', None)
+
+            pubkey_path = os.environ.get("NFMAOS_MODEL_PUBKEY", None)
             if not pubkey_path or not os.path.exists(pubkey_path):
-                raise ValueError("Public key for signature verification not found. Set NFMAOS_MODEL_PUBKEY env variable.")
+                raise ValueError(
+                    "Public key for signature verification not found. Set NFMAOS_MODEL_PUBKEY env variable."
+                )
             public_key = load_public_key(pubkey_path)
             # The signature is over the hash field (or model file contents)
-            data_to_verify = metadata['hash'].encode()
-            if not verify_signature(data_to_verify, metadata['signature'], public_key):
+            data_to_verify = metadata["hash"].encode()
+            if not verify_signature(data_to_verify, metadata["signature"], public_key):
                 raise ValueError("Model signature verification failed.")
         # Index file for registry
         index_path = os.path.join(self.registry_dir, f"{name}.json")
@@ -57,7 +64,7 @@ class ModelRegistry:
 
     def list_models(self) -> List[str]:
         """List all registered model names."""
-        return [f[:-5] for f in os.listdir(self.registry_dir) if f.endswith('.json')]
+        return [f[:-5] for f in os.listdir(self.registry_dir) if f.endswith(".json")]
 
     def get_model_metadata(self, model_name: str) -> Optional[Dict]:
         """Get metadata for a registered model by name."""
@@ -67,10 +74,12 @@ class ModelRegistry:
         with open(index_path, "r") as f:
             return json.load(f)
 
+
 # Example usage and test
 def test_model_registry():
     import tempfile
     import shutil
+
     # Setup temp dirs
     temp_registry = tempfile.mkdtemp()
     temp_model = tempfile.mkdtemp()
@@ -86,7 +95,7 @@ def test_model_registry():
             "output_schema": "float32[1]",
             "hash": "sha256:dummy",
             "model_type": "cnn",
-            "framework": "onnx"
+            "framework": "onnx",
         }
         with open(os.path.join(temp_model, "model.json"), "w") as f:
             json.dump(meta, f)
@@ -97,6 +106,7 @@ def test_model_registry():
     finally:
         shutil.rmtree(temp_registry)
         shutil.rmtree(temp_model)
+
 
 if __name__ == "__main__":
     test_model_registry()

@@ -3,10 +3,12 @@ test_neuro_fuzzy_agent_self_organization.py
 
 Test self-organization in NeuroFuzzyAgent and NeuroFuzzyHybrid.
 """
+
 import numpy as np
 import pytest
 from src.core.agents.agent import NeuroFuzzyAgent
 from src.core.neuro_fuzzy import NeuroFuzzyHybrid
+
 
 def test_neuro_fuzzy_agent_self_organize_changes_nn_weights():
     nn_config = {"input_dim": 1, "output_dim": 1, "hidden_dim": 2}
@@ -14,10 +16,14 @@ def test_neuro_fuzzy_agent_self_organize_changes_nn_weights():
     W1_before = agent.model.nn.W1.copy()
     agent.self_organize(mutation_rate=0.5)
     W1_after = agent.model.nn.W1
-    assert not np.allclose(W1_before, W1_after), "Neural weights should change after self_organize()"
+    assert not np.allclose(
+        W1_before, W1_after
+    ), "Neural weights should change after self_organize()"
+
 
 def test_neuro_fuzzy_hybrid_self_organize_fuzzy_rule_change():
     from src.core.neural_networks.fuzzy_system import FuzzySet, FuzzyInferenceSystem
+
     # Setup FIS with 2 rules
     fs_low = FuzzySet("low", [0.0, 1.0])
     fs_high = FuzzySet("high", [5.0, 1.0])
@@ -32,4 +38,6 @@ def test_neuro_fuzzy_hybrid_self_organize_fuzzy_rule_change():
     n_rules_before = len(nf.fis.rules)
     nf.self_organize(rule_change=True)
     n_rules_after = len(nf.fis.rules)
-    assert n_rules_before != n_rules_after or n_rules_after > 1, "Rule set should change or stay valid after self_organize()"
+    assert (
+        n_rules_before != n_rules_after or n_rules_after > 1
+    ), "Rule set should change or stay valid after self_organize()"

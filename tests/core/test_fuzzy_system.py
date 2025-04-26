@@ -1,10 +1,16 @@
 import sys
 import os
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 import numpy as np
 import pytest
-from src.core.neural_networks.fuzzy_system import FuzzySet, FuzzyRule, FuzzyInferenceSystem
+from src.core.neural_networks.fuzzy_system import (
+    FuzzySet,
+    FuzzyRule,
+    FuzzyInferenceSystem,
+)
+
 
 def test_fuzzy_set_membership_and_tune():
     fs = FuzzySet("A", [0.0, 1.0])
@@ -17,6 +23,7 @@ def test_fuzzy_set_membership_and_tune():
     fs.tune(data)
     assert np.isclose(fs.params[0], np.mean(data))
     assert np.isclose(fs.params[1], np.std(data) + 1e-6)
+
 
 def test_dynamic_rule_generation_and_evaluate():
     # Two fuzzy sets per input

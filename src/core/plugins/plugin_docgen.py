@@ -3,6 +3,7 @@ import importlib.util
 import inspect
 from typing import List
 
+
 def get_plugin_classes(module_path: str) -> List[type]:
     """Dynamically load all classes from a module file."""
     module_name = os.path.splitext(os.path.basename(module_path))[0]
@@ -14,9 +15,13 @@ def get_plugin_classes(module_path: str) -> List[type]:
         spec.loader.exec_module(module)
     except Exception:
         return []  # Skip broken plugins
-    classes = [obj for name, obj in inspect.getmembers(module, inspect.isclass)
-               if obj.__module__ == module_name]
+    classes = [
+        obj
+        for name, obj in inspect.getmembers(module, inspect.isclass)
+        if obj.__module__ == module_name
+    ]
     return classes
+
 
 def generate_plugin_docs(plugin_dir: str, output_md: str):
     """Generate Markdown documentation for all plugin classes in a directory."""
@@ -41,10 +46,14 @@ def generate_plugin_docs(plugin_dir: str, output_md: str):
         f.write("\n".join(lines))
     print(f"Plugin docs written to {output_md}")
 
+
 if __name__ == "__main__":
     import argparse
+
     parser = argparse.ArgumentParser(description="Generate Markdown docs for plugins.")
-    parser.add_argument("--plugin-dir", required=True, help="Directory with plugin .py files")
+    parser.add_argument(
+        "--plugin-dir", required=True, help="Directory with plugin .py files"
+    )
     parser.add_argument("--output", required=True, help="Output Markdown file")
     args = parser.parse_args()
     generate_plugin_docs(args.plugin_dir, args.output)

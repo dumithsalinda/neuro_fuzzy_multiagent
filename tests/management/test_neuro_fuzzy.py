@@ -1,12 +1,14 @@
 import sys
 import os
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 import numpy as np
 import pytest
 from src.core.neural_networks.fuzzy_system import FuzzySet, FuzzyInferenceSystem
 from src.core.neural_networks.neural_network import FeedforwardNeuralNetwork
 from src.core.neuro_fuzzy import NeuroFuzzyHybrid
+
 
 def test_neuro_fuzzy_hybrid_forward():
     # Setup fuzzy system
@@ -31,6 +33,7 @@ def test_neuro_fuzzy_hybrid_forward():
     # Output should be finite
     assert np.isfinite(out0).all() and np.isfinite(out5).all()
 
+
 def test_neuro_fuzzy_hybrid_backward():
     # Setup fuzzy system
     fs_low = FuzzySet("low", [0.0, 1.0])
@@ -50,12 +53,14 @@ def test_neuro_fuzzy_hybrid_backward():
     nf.backward(batch_x, batch_y, lr=0.01)
     assert not np.allclose(nf.nn.W2, W2_before)
 
+
 def test_neuro_fuzzy_hybrid_evolutionary_update():
     nn_config = dict(input_dim=1, hidden_dim=2, output_dim=1)
     nf = NeuroFuzzyHybrid(nn_config, fis_config={})
     W1_before = nf.nn.W1.copy()
     nf.evolutionary_update(mutation_rate=0.1)
     assert not np.allclose(nf.nn.W1, W1_before)
+
 
 def test_neuro_fuzzy_hybrid_loss():
     nn_config = dict(input_dim=1, hidden_dim=2, output_dim=1)

@@ -4,6 +4,7 @@ from src.utils.model_registry import ModelRegistry
 from src.utils.model_loader import ModelLoader
 from src.utils.registry_watcher import RegistryWatcher
 
+
 class HotReloadAgent:
     def __init__(self, registry_dir: str, device_type: str):
         self.registry = ModelRegistry(registry_dir)
@@ -28,7 +29,9 @@ class HotReloadAgent:
         for model_name in self.registry.list_models():
             meta = self.registry.get_model_metadata(model_name)
             if meta and meta.get("supported_device") == self.device_type:
-                model_dir = meta.get("model_dir", os.path.join("/opt/nfmaos/models", model_name))
+                model_dir = meta.get(
+                    "model_dir", os.path.join("/opt/nfmaos/models", model_name)
+                )
                 if self.current_model_name != model_name:
                     self.model_loader = ModelLoader(model_dir)
                     self.current_model_name = model_name
@@ -40,7 +43,9 @@ class HotReloadAgent:
         return False
 
     def on_registry_change(self, added, removed, modified):
-        print(f"Registry changed: added={added}, removed={removed}, modified={modified}")
+        print(
+            f"Registry changed: added={added}, removed={removed}, modified={modified}"
+        )
         # Reload model if a compatible one was added, removed, or modified
         self.find_and_load_model()
 
@@ -49,8 +54,9 @@ class HotReloadAgent:
             raise RuntimeError("No model loaded.")
         return self.model_loader.predict(input_data)
 
+
 if __name__ == "__main__":
     # Example usage: simulate agent for 'test_device'
-    registry_dir = os.environ.get('NFMAOS_MODEL_REGISTRY', '/opt/nfmaos/registry')
+    registry_dir = os.environ.get("NFMAOS_MODEL_REGISTRY", "/opt/nfmaos/registry")
     agent = HotReloadAgent(registry_dir, "test_device")
     agent.start()

@@ -13,13 +13,22 @@ MODEL_SCHEMA = {
         "hash": {"type": "string"},
         "model_type": {"type": "string"},
         "framework": {"type": "string"},
-        "signature": {"type": "string"}
+        "signature": {"type": "string"},
     },
     "required": [
-        "name", "version", "author", "description", "supported_device",
-        "input_schema", "output_schema", "hash", "model_type", "framework"
-    ]
+        "name",
+        "version",
+        "author",
+        "description",
+        "supported_device",
+        "input_schema",
+        "output_schema",
+        "hash",
+        "model_type",
+        "framework",
+    ],
 }
+
 
 def validate_model_metadata(metadata):
     jsonschema.validate(instance=metadata, schema=MODEL_SCHEMA)

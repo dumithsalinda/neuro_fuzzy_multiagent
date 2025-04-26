@@ -3,25 +3,33 @@ import os
 import numpy as np
 import pytest
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../src')))
+sys.path.insert(
+    0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../src"))
+)
 from src.core.agents.meta_agent import MetaAgent
+
 
 class DummyAgent:
     def __init__(self, value=0):
         self.value = value
         self._actions = []
+
     def act(self, obs, state=None):
         self._actions.append(obs)
         return self.value
+
     def observe(self, reward, next_state, done):
         pass
 
+
 def test_meta_agent_switching():
     # Create two dummy agents: one always returns 0, one always returns 1
-    agents = [(DummyAgent, {'value': 0}), (DummyAgent, {'value': 1})]
+    agents = [(DummyAgent, {"value": 0}), (DummyAgent, {"value": 1})]
+
     # Selection strategy: pick agent with highest mean reward
     def select_best(perfs):
         return int(np.argmax(perfs))
+
     meta = MetaAgent(agents, selection_strategy=select_best, window=3)
     obs = 0
     # Simulate 3 steps for agent 0 (reward=0)

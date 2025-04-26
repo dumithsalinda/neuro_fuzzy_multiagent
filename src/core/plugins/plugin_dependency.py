@@ -10,6 +10,7 @@ class PluginDependencyManager:
     Handles detection, validation, and installation of plugin-specific dependencies.
     Each plugin may include a requirements.txt file in its directory.
     """
+
     def __init__(self, plugin_dir: str):
         """
         Args:
@@ -32,10 +33,10 @@ class PluginDependencyManager:
         if not self.has_requirements():
             return True, "No requirements.txt found."
         missing = []
-        with open(self.requirements_path, 'r') as f:
+        with open(self.requirements_path, "r") as f:
             for line in f:
-                pkg = line.strip().split('==')[0].split('>=')[0].split('<=')[0]
-                if not pkg or pkg.startswith('#'):
+                pkg = line.strip().split("==")[0].split(">=")[0].split("<=")[0]
+                if not pkg or pkg.startswith("#"):
                     continue
                 try:
                     __import__(pkg)
@@ -45,7 +46,6 @@ class PluginDependencyManager:
             return False, f"Missing packages: {', '.join(missing)}"
         return True, "All requirements satisfied."
 
-
     def install_requirements(self) -> tuple:
         """
         Installs requirements for the plugin in the current environment.
@@ -53,14 +53,26 @@ class PluginDependencyManager:
         """
         if not self.has_requirements():
             return True, "No requirements.txt found."
-        cmd = [sys.executable, "-m", "pip", "install", "-r", str(self.requirements_path)]
+        cmd = [
+            sys.executable,
+            "-m",
+            "pip",
+            "install",
+            "-r",
+            str(self.requirements_path),
+        ]
         try:
-            proc = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-            logging.info(f"Installed requirements for {self.plugin_dir}: returncode={proc.returncode}")
+            proc = subprocess.run(
+                cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
+            )
+            logging.info(
+                f"Installed requirements for {self.plugin_dir}: returncode={proc.returncode}"
+            )
             return proc.returncode == 0, proc.stdout + proc.stderr
         except Exception as e:
             logging.error(f"Failed to install requirements for {self.plugin_dir}: {e}")
             return False, str(e)
+
 
 # Example usage (for test):
 if __name__ == "__main__":

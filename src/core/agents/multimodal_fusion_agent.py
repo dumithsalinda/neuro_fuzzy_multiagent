@@ -4,7 +4,7 @@ from src.core.plugins.registration_utils import register_plugin
 from src.core.neural_networks.fusion import FusionNetwork
 
 
-@register_plugin('agent')
+@register_plugin("agent")
 class MultiModalFusionAgent:
     """
     Agent that accepts multiple modalities as input and uses a fusion network for policy/Q-value computation.

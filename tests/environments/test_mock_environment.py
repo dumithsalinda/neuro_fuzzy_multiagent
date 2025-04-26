@@ -1,5 +1,6 @@
 from src.env.mock_environment import MockEnvironment
 
+
 def test_mock_environment_step_and_reset():
     env = MockEnvironment()
     obs = env.reset()

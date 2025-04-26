@@ -2,13 +2,17 @@ import numpy as np
 from src.core.plugins.registration_utils import register_plugin
 from src.core.agents.agent import Agent
 
-@register_plugin('agent')
+
+@register_plugin("agent")
 class MetaAgent(Agent):
     """
     MetaAgent adapts its own learning algorithm or architecture based on performance metrics.
     It can switch between different agent models (DQN, NeuroFuzzy, etc.) or tune hyperparameters on the fly.
     """
-    def __init__(self, candidate_agents, selection_strategy=None, perf_metric='reward', window=10):
+
+    def __init__(
+        self, candidate_agents, selection_strategy=None, perf_metric="reward", window=10
+    ):
         """
         candidate_agents: list of (agent_class, config_dict)
         selection_strategy: function(perf_history) -> index of agent to use
@@ -36,7 +40,9 @@ class MetaAgent(Agent):
         self.perf_history[self.active_idx].append(reward)
         # Only keep window size
         if len(self.perf_history[self.active_idx]) > self.window:
-            self.perf_history[self.active_idx] = self.perf_history[self.active_idx][-self.window:]
+            self.perf_history[self.active_idx] = self.perf_history[self.active_idx][
+                -self.window :
+            ]
         if self._explore_phase:
             self._explore_steps += 1
             if self._explore_steps >= self.window:
@@ -47,7 +53,10 @@ class MetaAgent(Agent):
                     self.active_agent = self.candidate_agents[self.active_idx]
                 else:
                     # End exploration, pick best
-                    avg_perf = [np.mean(h[-self.window:]) if h else -np.inf for h in self.perf_history]
+                    avg_perf = [
+                        np.mean(h[-self.window :]) if h else -np.inf
+                        for h in self.perf_history
+                    ]
                     self.active_idx = self.selection_strategy(avg_perf)
                     self.active_agent = self.candidate_agents[self.active_idx]
                     self._explore_phase = False
@@ -56,7 +65,9 @@ class MetaAgent(Agent):
 
     def maybe_switch_agent(self):
         # Evaluate all agents' recent performance
-        avg_perf = [np.mean(h[-self.window:]) if h else -np.inf for h in self.perf_history]
+        avg_perf = [
+            np.mean(h[-self.window :]) if h else -np.inf for h in self.perf_history
+        ]
         new_idx = self.selection_strategy(avg_perf)
         if new_idx != self.active_idx:
             self.active_idx = new_idx

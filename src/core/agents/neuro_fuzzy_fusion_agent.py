@@ -6,7 +6,7 @@ from src.core.neural_networks.fusion import FusionNetwork
 from src.core.neural_networks.fuzzy_system import FuzzyInferenceSystem
 
 
-@register_plugin('agent')
+@register_plugin("agent")
 class NeuroFuzzyFusionAgent:
     """
     Multi-modal agent combining neural and fuzzy logic for decision making.

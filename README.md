@@ -4,6 +4,15 @@ A modular, plug-and-play platform for building, experimenting with, and deployin
 
 ---
 
+## Table of Contents
+- [Quickstart & Requirements](#quickstart--requirements)
+- [Key Features](#key-features)
+- [Overview](#overview)
+- [Advanced Integrations](#advanced-integrations)
+- [Troubleshooting & FAQ](#troubleshooting--faq)
+- [Community & Conduct](#community--conduct)
+- [Security Policy](#security-policy)
+
 ## Quickstart & Requirements
 
 > **Note:**
@@ -30,9 +39,10 @@ A modular, plug-and-play platform for building, experimenting with, and deployin
 - Modular neuro-fuzzy agents, easy plug-and-play extension
 - Privacy-aware knowledge sharing and multi-agent collaboration
 - Online learning and knowledge integration
-- Multi-modal fusion agent support (text, image, etc.)
+- Multi-modal fusion agent support (text, image, etc.) *(in development: advanced fusion methods, e.g., attention, gating)*
 - Model management, versioning, and batch experimentation
 - Robust dashboard for simulation, analytics, and HITL (human-in-the-loop)
+- **Note:** Some advanced features are in development. See the FAQ for details.
 
 ---
 
@@ -65,7 +75,7 @@ A robust, environment-independent, dynamic self-organizing neuro-fuzzy multi-age
   sensor.stop()
   ```
 
-### ROS/IoT Integration
+### ROS/IoT Integration *(in development)*
 
 - Minimal ROS bridge for agent-environment communication via ROS topics.
 - Example:
@@ -76,7 +86,7 @@ A robust, environment-independent, dynamic self-organizing neuro-fuzzy multi-age
   bridge.publish('/nfma/test', 'hello world')
   ```
 
-### Meta-Reinforcement Learning
+### Meta-Reinforcement Learning *(in development)*
 
 - Agents that adapt their own learning strategies over time using meta-feedback.
 - Example:
@@ -171,6 +181,7 @@ sudo docker run -p 8501:8501 neuro-fuzzy-multiagent
 - **Google Sheets Errors:** Ensure your service account has access to the target spreadsheet and the JSON key is valid.
 - **Docker Issues:** Make sure Docker is installed and running, and ports are not in use.
 - **Missing Dependencies:** Double-check `requirements.txt` for all needed Python packages.
+- **Some features are marked as 'in development':** You may encounter NotImplementedError or TODO comments in the codebase. These are active areas for contribution. See the roadmap and consider contributing!
 - **Streamlit/Matplotlib/NetworkX errors:** Install missing packages with `pip install ...` or rebuild the Docker image.
 - **Performance:** Enable "Fast Mode" in the dashboard for large-scale experiments.
 
@@ -449,6 +460,16 @@ sensor.start()
 # Home agent subscribes and adjusts home settings
 # Home agent publishes alerts to /home/alert, car agent receives and reacts
 ```
+
+---
+
+## Community & Conduct
+
+We welcome contributions from everyone! Please read our [Code of Conduct](CODE_OF_CONDUCT.md) before participating. By contributing, you agree to abide by it and help foster a welcoming, safe, and productive environment for all.
+
+## Security Policy
+
+Please see our [Security Policy](SECURITY.md) for how to report vulnerabilities and best practices for using this project securely.
 
 ## 4. Security & Reliability
 

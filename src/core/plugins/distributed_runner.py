@@ -1,10 +1,11 @@
 import ray
 import time
 
+
 class DistributedTaskRunner:
     """
     Provides a simple Ray-based distributed task runner for agents/environments.
-    
+
     Features:
     - Call .run_distributed(func, *args, **kwargs) to execute a function in Ray.
     - Use .run_distributed_with_resources(func, resource_dict, *args, **kwargs) to target a specific node (remote or local) with Ray resources.
@@ -18,6 +19,7 @@ class DistributedTaskRunner:
         result = runner.run_distributed_with_resources(plugin_task, {"remote_node": 1}, 5)
         print(result)  # 50
     """
+
     def __init__(self, address=None):
         if not ray.is_initialized():
             ray.init(address=address, ignore_reinit_error=True, log_to_driver=False)
@@ -55,11 +57,14 @@ class DistributedTaskRunner:
         except Exception as e:
             return e
 
+
 # Example usage (for test):
 if __name__ == "__main__":
     runner = DistributedTaskRunner()
+
     def slow_add(x, y):
         time.sleep(1)
         return x + y
+
     print(runner.run_distributed(slow_add, 2, 3))
-    print(runner.map_distributed(slow_add, [(1,2), (3,4)]))
+    print(runner.map_distributed(slow_add, [(1, 2), (3, 4)]))

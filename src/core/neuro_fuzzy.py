@@ -11,7 +11,10 @@ This module is central to experiments in adaptive, interpretable, and robust lea
 """
 
 import numpy as np
-from src.core.neural_networks.neural_network import create_network_by_name, FeedforwardNeuralNetwork
+from src.core.neural_networks.neural_network import (
+    create_network_by_name,
+    FeedforwardNeuralNetwork,
+)
 from src.core.neural_networks.fuzzy_system import FuzzyInferenceSystem
 
 
@@ -21,7 +24,7 @@ class NeuroFuzzyHybrid:
         Update the neural network configuration at runtime.
         Supports switching network type (plug-and-play).
         """
-        nn_type = nn_config.pop('nn_type', 'FeedforwardNeuralNetwork')
+        nn_type = nn_config.pop("nn_type", "FeedforwardNeuralNetwork")
         self.nn = create_network_by_name(nn_type, **nn_config)
 
     def update_fis_config(self, fis_config):
@@ -46,7 +49,7 @@ class NeuroFuzzyHybrid:
             output_dim: 2
             activation: np.tanh
         """
-        nn_type = nn_config.pop('nn_type', 'FeedforwardNeuralNetwork')
+        nn_type = nn_config.pop("nn_type", "FeedforwardNeuralNetwork")
         self.nn = create_network_by_name(nn_type, **nn_config)
         self.fis = FuzzyInferenceSystem()
         self.mode = "hybrid"  # 'neural', 'fuzzy', or 'hybrid'

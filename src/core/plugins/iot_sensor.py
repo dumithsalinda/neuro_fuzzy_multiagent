@@ -2,11 +2,13 @@ import threading
 import time
 import random
 
+
 class IoTSensor:
     """
     Simulated IoT Sensor for smart environment demos.
     Can be extended to support real hardware (e.g., MQTT, HTTP, serial, etc).
     """
+
     def __init__(self, name, interval=1.0, value_fn=None, callback=None):
         self.name = name
         self.interval = interval

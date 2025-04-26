@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 
+
 def render_batch_analytics(df: pd.DataFrame) -> None:
     """
     Render analytics for batch experiments, including summary statistics and visualizations.
@@ -14,15 +15,22 @@ def render_batch_analytics(df: pd.DataFrame) -> None:
     st.dataframe(df)
     # Show summary statistics
     st.markdown("### Summary Statistics")
-    st.write(df.describe(include='all'))
+    st.write(df.describe(include="all"))
     # Visualize key metrics if present
-    for metric in ["AvgReward", "Diversity", "Cohesion", "GroupStability", "InterventionCount"]:
+    for metric in [
+        "AvgReward",
+        "Diversity",
+        "Cohesion",
+        "GroupStability",
+        "InterventionCount",
+    ]:
         if metric in df.columns:
             st.line_chart(df[metric])
     # Show distribution plots for numeric columns
     import matplotlib.pyplot as plt
     import seaborn as sns
-    numeric_cols = df.select_dtypes(include=['float64', 'int64']).columns
+
+    numeric_cols = df.select_dtypes(include=["float64", "int64"]).columns
     for col in numeric_cols:
         fig, ax = plt.subplots()
         sns.histplot(df[col], kde=True, ax=ax)
@@ -57,11 +65,11 @@ def render_advanced_metrics(df: pd.DataFrame) -> None:
     # Optionally, visualize correlations
     import matplotlib.pyplot as plt
     import seaborn as sns
-    numeric_cols = df.select_dtypes(include=['float64', 'int64']).columns
+
+    numeric_cols = df.select_dtypes(include=["float64", "int64"]).columns
     if len(numeric_cols) > 1:
         fig, ax = plt.subplots()
         corr = df[numeric_cols].corr()
         sns.heatmap(corr, annot=True, cmap="coolwarm", ax=ax)
         ax.set_title("Correlation Matrix of Metrics")
         st.pyplot(fig)
-

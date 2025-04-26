@@ -3,16 +3,19 @@ import os
 import textwrap
 from src.core.plugins.plugin_docgen import generate_plugin_docs
 
+
 def test_generate_plugin_docs_basic():
     with tempfile.TemporaryDirectory() as tmpdir:
         # Create a sample plugin file
-        plugin_code = textwrap.dedent('''
+        plugin_code = textwrap.dedent(
+            '''
             class MyPlugin:
                 """This is a test plugin."""
                 def foo(self, x):
                     """Foo does something."""
                     return x
-        ''')
+        '''
+        )
         plugin_path = os.path.join(tmpdir, "my_plugin.py")
         with open(plugin_path, "w") as f:
             f.write(plugin_code)

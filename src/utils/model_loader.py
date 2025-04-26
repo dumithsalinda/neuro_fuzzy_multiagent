@@ -17,14 +17,17 @@ try:
 except ImportError:
     tf = None
 
+
 class ModelLoaderException(Exception):
     pass
+
 
 class ModelLoader:
     """
     Universal loader for different neural network types (neuro-fuzzy, CNN, RNN, transformer, etc.).
     Loads models based on metadata and exposes a standard predict interface.
     """
+
     def __init__(self, model_dir: str):
         self.model_dir = model_dir
         self.model = None
@@ -35,6 +38,7 @@ class ModelLoader:
 
     def _load_metadata(self):
         from src.utils.model_schema import validate_model_metadata
+
         meta_path = os.path.join(self.model_dir, "model.json")
         if not os.path.exists(meta_path):
             raise ModelLoaderException(f"Metadata file not found: {meta_path}")
@@ -45,7 +49,9 @@ class ModelLoader:
         except Exception as e:
             raise ModelLoaderException(f"Invalid model metadata: {e}")
         if "model_type" not in self.metadata or "framework" not in self.metadata:
-            raise ModelLoaderException("model.json must contain 'model_type' and 'framework'")
+            raise ModelLoaderException(
+                "model.json must contain 'model_type' and 'framework'"
+            )
 
     def _load_model(self):
         model_type = self.metadata["model_type"].lower()
@@ -58,7 +64,9 @@ class ModelLoader:
                 model_file = candidate
                 break
         if not model_file:
-            raise ModelLoaderException(f"No supported model file found in {self.model_dir}")
+            raise ModelLoaderException(
+                f"No supported model file found in {self.model_dir}"
+            )
 
         if framework == "onnx":
             if onnxruntime is None:
@@ -103,11 +111,13 @@ class ModelLoader:
     def get_metadata(self) -> Dict[str, Any]:
         return self.metadata
 
+
 # Example test function
 def test_model_loader():
     """Test loading and running a model (mocked for demonstration)."""
     import tempfile
     import shutil
+
     # Create a mock model directory
     temp_dir = tempfile.mkdtemp()
     try:
@@ -122,7 +132,7 @@ def test_model_loader():
             "output_schema": "float32[1]",
             "hash": "sha256:dummy",
             "model_type": "cnn",
-            "framework": "onnx"
+            "framework": "onnx",
         }
         with open(os.path.join(temp_dir, "model.json"), "w") as f:
             json.dump(meta, f)
@@ -138,6 +148,7 @@ def test_model_loader():
             print("Expected error (no real model):", e)
     finally:
         shutil.rmtree(temp_dir)
+
 
 if __name__ == "__main__":
     test_model_loader()

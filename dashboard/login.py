@@ -2,6 +2,7 @@ import streamlit as st
 
 import uuid
 
+
 def login_form() -> None:
     """
     Render a login form for the Multi-Agent System Dashboard.

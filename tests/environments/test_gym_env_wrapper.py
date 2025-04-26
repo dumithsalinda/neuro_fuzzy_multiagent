@@ -2,8 +2,9 @@ import pytest
 import gym
 from src.core.environments.gym_env_wrapper import GymEnvWrapper
 
+
 def test_gym_env_wrapper_cartpole():
-    wrapper = GymEnvWrapper('CartPole-v1')
+    wrapper = GymEnvWrapper("CartPole-v1")
     obs = wrapper.reset()
     assert wrapper.observation_space.shape[0] == 4
     done = False

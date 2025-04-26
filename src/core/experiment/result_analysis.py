@@ -9,10 +9,12 @@ from statistics import mean, stdev
 from typing import Dict, Any, Optional, List
 from datetime import datetime
 
+
 class ResultAnalyzer:
     """
     Utility to generate experiment result summary reports, plots, exports, and statistics.
     """
+
     def __init__(self, output_dir: str = "."):
         """
         Args:
@@ -21,7 +23,12 @@ class ResultAnalyzer:
         self.output_dir = output_dir
         os.makedirs(self.output_dir, exist_ok=True)
 
-    def generate_report(self, config: Dict[str, Any], metrics: Dict[str, Any], run_id: Optional[str] = None) -> str:
+    def generate_report(
+        self,
+        config: Dict[str, Any],
+        metrics: Dict[str, Any],
+        run_id: Optional[str] = None,
+    ) -> str:
         """
         Generate a Markdown report summarizing config and metrics.
         """
@@ -48,7 +55,9 @@ class ResultAnalyzer:
         logging.info(f"Saved report to {path}")
         return path
 
-    def plot_metrics(self, metric_history: Dict[str, List[float]], filename: str = "metrics.png") -> Optional[str]:
+    def plot_metrics(
+        self, metric_history: Dict[str, List[float]], filename: str = "metrics.png"
+    ) -> Optional[str]:
         """
         Plot metric histories as line plots and save as an image (requires matplotlib).
         Args:
@@ -75,7 +84,9 @@ class ResultAnalyzer:
         logging.info(f"Saved metrics plot to {path}")
         return path
 
-    def export_metrics(self, metrics: Dict[str, Any], filename: str = "metrics.json") -> str:
+    def export_metrics(
+        self, metrics: Dict[str, Any], filename: str = "metrics.json"
+    ) -> str:
         """
         Export metrics to a JSON or CSV file.
         Args:
@@ -99,7 +110,9 @@ class ResultAnalyzer:
         logging.info(f"Exported metrics to {path}")
         return path
 
-    def summary_statistics(self, metric_history: Dict[str, List[float]]) -> Dict[str, Dict[str, float]]:
+    def summary_statistics(
+        self, metric_history: Dict[str, List[float]]
+    ) -> Dict[str, Dict[str, float]]:
         """
         Compute summary statistics (mean, std, min, max) for each metric.
         Args:
@@ -115,7 +128,7 @@ class ResultAnalyzer:
                 "mean": mean(v),
                 "std": stdev(v) if len(v) > 1 else 0.0,
                 "min": min(v),
-                "max": max(v)
+                "max": max(v),
             }
         logging.info(f"Computed summary statistics: {stats}")
         return stats

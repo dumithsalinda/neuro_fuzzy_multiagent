@@ -2,11 +2,13 @@ import mlflow
 from typing import Dict, Any, Optional
 import logging
 
+
 class ExperimentTracker:
     """
     Wrapper for MLflow experiment tracking.
     Provides methods to start runs, log parameters/metrics/artifacts, and retrieve run info.
     """
+
     def __init__(self, experiment_name: str = "default"):
         """
         Args:
@@ -20,7 +22,12 @@ class ExperimentTracker:
             logging.error(f"Failed to set MLflow experiment: {e}")
         self.run = None
 
-    def start_run(self, run_name: Optional[str] = None, params: Optional[Dict[str, Any]] = None, tags: Optional[Dict[str, str]] = None) -> Optional[str]:
+    def start_run(
+        self,
+        run_name: Optional[str] = None,
+        params: Optional[Dict[str, Any]] = None,
+        tags: Optional[Dict[str, str]] = None,
+    ) -> Optional[str]:
         """
         Start a new MLflow run and optionally log parameters and tags.
         Returns the run ID.
@@ -78,6 +85,7 @@ class ExperimentTracker:
         except Exception as e:
             logging.error(f"Failed to retrieve MLflow run {run_id}: {e}")
             return None
+
 
 # Example usage (for test):
 if __name__ == "__main__":

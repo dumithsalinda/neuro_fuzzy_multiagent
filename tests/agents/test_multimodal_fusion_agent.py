@@ -3,9 +3,11 @@ test_multimodal_fusion_agent.py
 
 Test for MultiModalFusionAgent with synthetic multi-modal data (image + text).
 """
+
 import numpy as np
 import torch
 from src.core.agents.multimodal_fusion_agent import MultiModalFusionAgent
+
 
 def test_multimodal_fusion_agent_forward():
     # Two modalities: image (4-dim), text (3-dim)
@@ -14,7 +16,7 @@ def test_multimodal_fusion_agent_forward():
         input_dims=[img_dim, txt_dim],
         hidden_dim=16,
         output_dim=n_actions,
-        fusion_type='concat',
+        fusion_type="concat",
     )
     # Batch of 2 samples
     img_feats = np.random.randn(2, img_dim)
@@ -27,6 +29,7 @@ def test_multimodal_fusion_agent_forward():
     assert torch.isfinite(qvals).all()
     print("Q-values:", qvals)
 
+
 def test_multimodal_fusion_agent_q_update():
     # Single step Q-learning update
     img_dim, txt_dim, n_actions = 4, 3, 5
@@ -34,7 +37,7 @@ def test_multimodal_fusion_agent_q_update():
         input_dims=[img_dim, txt_dim],
         hidden_dim=16,
         output_dim=n_actions,
-        fusion_type='concat',
+        fusion_type="concat",
     )
     obs = [np.random.randn(img_dim), np.random.randn(txt_dim)]
     next_obs = [np.random.randn(img_dim), np.random.randn(txt_dim)]

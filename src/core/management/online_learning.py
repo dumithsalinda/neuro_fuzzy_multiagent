@@ -5,7 +5,6 @@ Provides OnlineLearnerMixin for agents to learn from web resources.
 """
 
 
-
 class OnlineLearnerMixin:
     """
     Mixin for enabling agents to learn from web resources with flexible parsing and robust integration.

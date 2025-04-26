@@ -4,6 +4,7 @@ from dashboard.simulation import simulate_step, run_batch_experiments, som_group
 from unittest.mock import patch, MagicMock
 import numpy as np
 
+
 def setup_streamlit_session(agents=2, obs_dim=3):
     st.session_state.clear()
     # Patch agents so that act returns 0 and observe does nothing
@@ -39,6 +40,7 @@ def test_run_batch_experiments_output():
     assert isinstance(results, list)
     assert len(results) == 1
     assert "mean_reward" in results[0]
+
 
 def test_som_group_agents_handles_missing_agents():
     st.session_state.clear()

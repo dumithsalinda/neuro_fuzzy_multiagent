@@ -2,6 +2,7 @@ import tempfile
 import os
 from src.core.plugins.plugin_state import PluginStateManager
 
+
 def test_json_state():
     with tempfile.TemporaryDirectory() as tmpdir:
         mgr = PluginStateManager(tmpdir)
@@ -10,6 +11,7 @@ def test_json_state():
         loaded = mgr.load_json()
         assert loaded == state
 
+
 def test_pickle_state():
     with tempfile.TemporaryDirectory() as tmpdir:
         mgr = PluginStateManager(tmpdir)
@@ -17,6 +19,7 @@ def test_pickle_state():
         mgr.save_pickle(obj)
         loaded = mgr.load_pickle()
         assert loaded == obj
+
 
 def test_missing_state():
     with tempfile.TemporaryDirectory() as tmpdir:

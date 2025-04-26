@@ -5,14 +5,16 @@ except ImportError:
     rospy = None
     String = None
 
+
 class ROSBridge:
     """
     Minimal ROS integration for agent-environment communication.
     Allows publishing/subscribing to ROS topics from agents or environments.
     """
-    def __init__(self, node_name='nfma_ros_bridge'):
+
+    def __init__(self, node_name="nfma_ros_bridge"):
         if rospy is None:
-            raise ImportError('rospy is not installed. ROS integration requires rospy.')
+            raise ImportError("rospy is not installed. ROS integration requires rospy.")
         rospy.init_node(node_name, anonymous=True)
         self.publishers = {}
         self.subscribers = {}
@@ -31,7 +33,7 @@ class ROSBridge:
         if topic in self.publishers:
             self.publishers[topic].publish(msg)
         else:
-            raise ValueError(f'No publisher for topic {topic}')
+            raise ValueError(f"No publisher for topic {topic}")
 
     def spin(self):
         rospy.spin()

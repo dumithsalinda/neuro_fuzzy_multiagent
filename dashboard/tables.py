@@ -1,6 +1,7 @@
 import streamlit as st
 from typing import List, Any, Optional, Tuple
 
+
 def render_knowledge_table(agents: List[Any]) -> None:
     """
     Display a table showing each agent's knowledge state and law violations.
@@ -17,17 +18,20 @@ def render_knowledge_table(agents: List[Any]) -> None:
             group = getattr(agent, "group", "")
             knowledge = str(getattr(agent, "online_knowledge", {}))
             law_violations = getattr(agent, "law_violations", 0)
-            data.append({
-                "Agent": f"{group}:{i}",
-                "Knowledge": knowledge,
-                "Law Violations": law_violations,
-            })
+            data.append(
+                {
+                    "Agent": f"{group}:{i}",
+                    "Knowledge": knowledge,
+                    "Law Violations": law_violations,
+                }
+            )
         except Exception as e:
             st.warning(f"Agent {i} missing expected attributes: {e}")
     if data:
         st.table(data)
     else:
         st.info("No agent knowledge data to display.")
+
 
 def render_group_decisions_log(group_decisions: List[Any]) -> None:
     """
@@ -52,13 +56,14 @@ def render_group_decisions_log(group_decisions: List[Any]) -> None:
         except Exception as e:
             st.warning(f"Malformed group decision entry at index {idx}: {e}")
 
+
 def parse_group_decision(item: Any) -> Optional[Tuple[str, str, bool]]:
     """
     Parse a group decision item into a tuple of (actions, result, legal).
-    
+
     Args:
         item (Any): A group decision item, either a tuple or a dictionary.
-    
+
     Returns:
         Optional[Tuple[str, str, bool]]: The parsed group decision item, or None if parsing fails.
     """
@@ -74,10 +79,11 @@ def parse_group_decision(item: Any) -> Optional[Tuple[str, str, bool]]:
         st.warning(f"Malformed group decision entry: {e}")
         return None
 
+
 def render_group_decisions_log(group_decisions: List[Any]) -> None:
     """
     Display a log of recent group decisions, color-coded by legality.
-    
+
     Args:
         group_decisions (List[Any]): List of (actions, result, legal) tuples or dicts.
     """

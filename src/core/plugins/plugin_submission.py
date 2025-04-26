@@ -3,6 +3,7 @@ plugin_submission.py
 
 Local storage for plugin submission requests (JSON file).
 """
+
 import json
 import os
 from datetime import datetime
@@ -16,9 +17,11 @@ def load_submissions():
     with open(SUBMISSIONS_PATH, "r", encoding="utf-8") as f:
         return json.load(f)
 
+
 def save_submissions(data):
     with open(SUBMISSIONS_PATH, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2)
+
 
 def add_submission(submission):
     data = load_submissions()
@@ -26,8 +29,12 @@ def add_submission(submission):
     data.append(submission)
     save_submissions(data)
 
+
 # --- Remote API Integration ---
-REMOTE_API_URL = None  # Set to your API endpoint, e.g. 'https://my-marketplace.com/api/submit'
+REMOTE_API_URL = (
+    None  # Set to your API endpoint, e.g. 'https://my-marketplace.com/api/submit'
+)
+
 
 def post_submission_to_remote(submission):
     """
@@ -38,6 +45,7 @@ def post_submission_to_remote(submission):
         return False, "No remote API endpoint configured."
     try:
         import requests
+
         resp = requests.post(REMOTE_API_URL, json=submission, timeout=10)
         if resp.status_code == 200:
             return True, "Submission posted to remote API."

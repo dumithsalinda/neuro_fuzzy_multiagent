@@ -1,5 +1,6 @@
 import streamlit as st
 
+
 def render_feedback_panel():
     """
     Render the feedback panel for human-in-the-loop agent feedback and learning.
@@ -12,7 +13,11 @@ def render_feedback_panel():
         st.info("No agents available. Run a simulation step first.")
         return
     agent_options = [f"Agent {i}" for i in range(len(agents))]
-    selected_agent_idx = st.selectbox("Select Agent to Provide Feedback", list(range(len(agents))), format_func=lambda i: agent_options[i])
+    selected_agent_idx = st.selectbox(
+        "Select Agent to Provide Feedback",
+        list(range(len(agents))),
+        format_func=lambda i: agent_options[i],
+    )
     feedback_text = st.text_area("Enter feedback for the selected agent:")
     if st.button("Submit Feedback"):
         entry = {

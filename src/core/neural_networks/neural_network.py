@@ -14,6 +14,7 @@ from abc import ABC, abstractmethod
 # ---- Neural Network Registry ----
 NN_REGISTRY = {}
 
+
 def register_neural_network(cls):
     """
     Decorator to register a neural network class for plug-and-play discovery.
@@ -22,11 +23,13 @@ def register_neural_network(cls):
     NN_REGISTRY[cls.__name__] = cls
     return cls
 
+
 def get_registered_networks():
     """
     Returns a dict of all registered neural network classes: {name: class}
     """
     return dict(NN_REGISTRY)
+
 
 def create_network_by_name(name, *args, **kwargs):
     """
@@ -34,7 +37,9 @@ def create_network_by_name(name, *args, **kwargs):
     Example: create_network_by_name('FeedforwardNeuralNetwork', ...)
     """
     if name not in NN_REGISTRY:
-        raise ValueError(f"Unknown network type: {name}. Available: {list(NN_REGISTRY)}")
+        raise ValueError(
+            f"Unknown network type: {name}. Available: {list(NN_REGISTRY)}"
+        )
     return NN_REGISTRY[name](*args, **kwargs)
 
 
@@ -42,6 +47,7 @@ class BaseNeuralNetwork(ABC):
     """
     Abstract base class for all neural network types.
     """
+
     @abstractmethod
     def forward(self, x):
         pass
@@ -54,6 +60,7 @@ class BaseNeuralNetwork(ABC):
     def evolutionary_update(self, mutation_rate=0.01):
         pass
 
+
 @register_neural_network
 class FeedforwardNeuralNetwork(BaseNeuralNetwork):
     """
@@ -61,6 +68,7 @@ class FeedforwardNeuralNetwork(BaseNeuralNetwork):
     input_dim should match the feature vector dimension for the agent's input type (e.g., 768 for BERT, 512 for ResNet18).
     Extendable for hybrid learning (backpropagation + evolution).
     """
+
     def __init__(self, input_dim, hidden_dim, output_dim, activation="tanh"):
         self.input_dim = input_dim
         self.hidden_dim = hidden_dim
@@ -96,13 +104,17 @@ class FeedforwardNeuralNetwork(BaseNeuralNetwork):
         """Stub for evolutionary update (mutation/crossover). To be implemented."""
         pass
 
+
 # ---- Convolutional Neural Network (CNN) Template ----
 @register_neural_network
 class ConvolutionalNeuralNetwork(BaseNeuralNetwork):
     """
     Example CNN for plug-and-play extension. (This is a stub; actual implementation needed for real use.)
     """
-    def __init__(self, input_shape, num_filters, kernel_size, output_dim, activation=np.tanh):
+
+    def __init__(
+        self, input_shape, num_filters, kernel_size, output_dim, activation=np.tanh
+    ):
         self.input_shape = input_shape
         self.num_filters = num_filters
         self.kernel_size = kernel_size
@@ -112,15 +124,22 @@ class ConvolutionalNeuralNetwork(BaseNeuralNetwork):
 
     def forward(self, x):
         # Implement actual CNN forward pass here
-        raise NotImplementedError("ConvolutionalNeuralNetwork.forward() not implemented.")
+        raise NotImplementedError(
+            "ConvolutionalNeuralNetwork.forward() not implemented."
+        )
 
     def backward(self, x, y, lr=0.01):
         # Implement CNN backpropagation here
-        raise NotImplementedError("ConvolutionalNeuralNetwork.backward() not implemented.")
+        raise NotImplementedError(
+            "ConvolutionalNeuralNetwork.backward() not implemented."
+        )
 
     def evolutionary_update(self, mutation_rate=0.01):
         # Implement evolutionary update for CNN
-        raise NotImplementedError("ConvolutionalNeuralNetwork.evolutionary_update() not implemented.")
+        raise NotImplementedError(
+            "ConvolutionalNeuralNetwork.evolutionary_update() not implemented."
+        )
+
 
 # ---- Developer Notes ----
 """

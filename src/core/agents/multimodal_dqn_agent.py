@@ -3,7 +3,8 @@ import torch.nn as nn
 from .agent import Agent
 from src.core.plugins.registration_utils import register_plugin
 
-@register_plugin('agent')
+
+@register_plugin("agent")
 class MultiModalDQNAgent(Agent):
     def explain_action(self, features):
         import torch

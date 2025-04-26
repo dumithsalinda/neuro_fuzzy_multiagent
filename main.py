@@ -6,6 +6,7 @@ from internet_learning.web_search import WebSearch
 from internet_learning.video_learning import VideoLearning
 from internet_learning.knowledge_base import KnowledgeBase
 
+
 def main():
     # Define global rules
     rules = GlobalRules([never_delete_data])
@@ -25,6 +26,7 @@ def main():
     video.learn_from_video("https://youtube.com/example")
     kb.add({"topic": "neuro-fuzzy", "content": "example"})
     print(kb.query("neuro"))
+
 
 if __name__ == "__main__":
     main()

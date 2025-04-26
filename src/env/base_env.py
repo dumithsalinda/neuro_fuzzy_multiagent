@@ -3,7 +3,8 @@ from typing import Any
 
 from src.core.plugins.registration_utils import register_plugin
 
-@register_plugin('environment')
+
+@register_plugin("environment")
 class BaseEnvironment(ABC):
     """
     Abstract base class for all environments (simulated, real-world, etc.).
@@ -21,7 +22,7 @@ class BaseEnvironment(ABC):
             agent_idx (int): Index of the agent to inject the value for.
             value (Any): The value to inject (float, dict, etc.).
         """
-        if not hasattr(self, '_external_inputs'):
+        if not hasattr(self, "_external_inputs"):
             self._external_inputs = {}
         self._external_inputs[agent_idx] = value
 

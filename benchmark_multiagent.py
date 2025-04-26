@@ -11,6 +11,7 @@ from src.core.agents.agent import Agent, NeuroFuzzyAgent
 from src.environment.abstraction import SimpleEnvironment
 from src.environment.transfer_learning import FeatureExtractor
 
+
 def run_benchmark(agent_types, episodes=20, steps_per_episode=30):
     np.random.seed(123)
     agents = []
@@ -21,7 +22,7 @@ def run_benchmark(agent_types, episodes=20, steps_per_episode=30):
     for agent_type in agent_types:
         env = SimpleEnvironment(dim=1)
         feat_extractor = FeatureExtractor(input_dim=1, output_dim=1)
-        if agent_type == 'neurofuzzy':
+        if agent_type == "neurofuzzy":
             nn_config = {"input_dim": 1, "output_dim": 1, "hidden_dim": 4}
             agent = NeuroFuzzyAgent(nn_config, None)
         else:
@@ -33,7 +34,9 @@ def run_benchmark(agent_types, episodes=20, steps_per_episode=30):
         for agent in agents:
             agent.reset()
         for step in range(steps_per_episode):
-            for i, (agent, env, extractor) in enumerate(zip(agents, envs, feat_extractors)):
+            for i, (agent, env, extractor) in enumerate(
+                zip(agents, envs, feat_extractors)
+            ):
                 state = env.perceive()
                 features = extractor.extract(state)
                 if isinstance(agent, NeuroFuzzyAgent):
@@ -45,6 +48,7 @@ def run_benchmark(agent_types, episodes=20, steps_per_episode=30):
                 agent.observe(reward)
                 rewards[i, ep, step] = reward
     return rewards
+
 
 def plot_learning_curves(rewards, agent_types):
     num_agents, episodes, steps = rewards.shape
@@ -60,8 +64,8 @@ def plot_learning_curves(rewards, agent_types):
     plt.tight_layout()
     plt.show()
 
+
 if __name__ == "__main__":
-    agent_types = ['random', 'neurofuzzy']
+    agent_types = ["random", "neurofuzzy"]
     rewards = run_benchmark(agent_types, episodes=20, steps_per_episode=30)
     plot_learning_curves(rewards, agent_types)
-

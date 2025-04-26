@@ -1,5 +1,6 @@
 import streamlit as st
 
+
 def render_intervention_log() -> None:
     """
     Render the human intervention log if interventions are present in session state.
@@ -10,12 +11,14 @@ def render_intervention_log() -> None:
         st.header("Human Intervention Log")
         st.table(st.session_state["interventions"])
 
+
 def render_interventions_panel() -> None:
     """
-    Render the interventions panel, encapsulating all UI and logic for group batch edits, 
+    Render the interventions panel, encapsulating all UI and logic for group batch edits,
     single-agent interventions, group module editing, and intervention log display.
     """
     import streamlit as st
+
     agents = st.session_state.get("agents", [])
     mas = st.session_state.get("multiagent_system")
     user_name = st.text_input("Your Name or Email (for attribution)", key="user_name")
@@ -41,7 +44,9 @@ def render_interventions_panel() -> None:
                 value=str(getattr(mas, "group_modules", {}).get(group_id, {})),
                 key=f"module_json_{group_id}",
             )
-            if st.button(f"Update Module for Group {group_id}", key=f"update_module_{group_id}"):
+            if st.button(
+                f"Update Module for Group {group_id}", key=f"update_module_{group_id}"
+            ):
                 try:
                     module = eval(module_json)
                     if not hasattr(mas, "group_modules"):
@@ -87,7 +92,12 @@ def render_interventions_panel() -> None:
                     st.error(f"Invalid knowledge format: {e}")
         st.markdown("---")
         st.header("Intervention Log")
-        if "intervention_log" in st.session_state and st.session_state["intervention_log"]:
+        if (
+            "intervention_log" in st.session_state
+            and st.session_state["intervention_log"]
+        ):
             st.table(st.session_state["intervention_log"])
     else:
-        st.info("No agents or multi-agent system available for intervention. Run a simulation step first.")
+        st.info(
+            "No agents or multi-agent system available for intervention. Run a simulation step first."
+        )

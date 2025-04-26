@@ -4,8 +4,8 @@ import pandas as pd
 
 # --- Google Sheets Helper Functions ---
 SCOPES = [
-    'https://www.googleapis.com/auth/spreadsheets',
-    'https://www.googleapis.com/auth/drive'
+    "https://www.googleapis.com/auth/spreadsheets",
+    "https://www.googleapis.com/auth/drive",
 ]
 
 
@@ -31,7 +31,9 @@ def read_sheet_to_df(gc, spreadsheet_id: str, worksheet_name: str) -> pd.DataFra
     return pd.DataFrame(data)
 
 
-def write_df_to_sheet(gc, spreadsheet_id: str, worksheet_name: str, df: pd.DataFrame) -> None:
+def write_df_to_sheet(
+    gc, spreadsheet_id: str, worksheet_name: str, df: pd.DataFrame
+) -> None:
     """
     Write a pandas DataFrame to a Google Sheets worksheet, replacing its contents.
     Raises an exception if the sheet or worksheet is not found.

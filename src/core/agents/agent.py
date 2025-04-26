@@ -5,7 +5,6 @@ Defines a generic Agent class for single and multiagent scenarios.
 Supports integration with neuro-fuzzy models, transfer learning, and various environments.
 """
 
-
 from .laws import enforce_laws
 from src.core.neuro_fuzzy import NeuroFuzzyHybrid
 from src.core.management.online_learning import OnlineLearnerMixin
@@ -15,7 +14,8 @@ from typing import Callable, Optional, Dict, Any
 
 from src.core.plugins.registration_utils import register_plugin
 
-@register_plugin('agent')
+
+@register_plugin("agent")
 class Agent(OnlineLearnerMixin):
     """
     Generic agent that interacts with an environment using a model and policy.
@@ -30,7 +30,13 @@ class Agent(OnlineLearnerMixin):
         group: Optional group identifier.
     """
 
-    def __init__(self, model: Any, policy: Optional[Callable] = None, bus: Optional[Any] = None, group: Optional[str] = None):
+    def __init__(
+        self,
+        model: Any,
+        policy: Optional[Callable] = None,
+        bus: Optional[Any] = None,
+        group: Optional[str] = None,
+    ):
         self.model = model
         self.policy = policy if policy is not None else self.random_policy
         self.last_action = None
@@ -308,7 +314,9 @@ class NeuroFuzzyAgent(Agent):
 
             self.meta_controller = MetaController(**meta_cfg) if meta_cfg else None
         if fuzzy_cfg is not None:
-            from src.core.neural_networks.universal_fuzzy_layer import UniversalFuzzyLayer
+            from src.core.neural_networks.universal_fuzzy_layer import (
+                UniversalFuzzyLayer,
+            )
 
             self._fuzzy_layer = UniversalFuzzyLayer(**fuzzy_cfg) if fuzzy_cfg else None
 

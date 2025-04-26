@@ -3,7 +3,8 @@ import numpy as np
 from src.core.plugins.registration_utils import register_plugin
 from src.core.agents.anfis_hybrid import ANFISHybrid
 
-@register_plugin('agent')
+
+@register_plugin("agent")
 class NeuroFuzzyANFISAgent:
     """
     Agent wrapper for the ANFISHybrid neuro-fuzzy model.

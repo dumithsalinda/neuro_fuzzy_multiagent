@@ -71,11 +71,14 @@ PLUGIN_DIRS = {
     "actuator": "src/plugins/",
 }
 
+
 def scaffold_plugin(plugin_type, name):
     if plugin_type not in TEMPLATES:
         raise ValueError(f"Unknown plugin type: {plugin_type}")
     class_name = name[0].upper() + name[1:]
-    code = TEMPLATES[plugin_type].format(name=class_name, date=datetime.now().strftime("%Y-%m-%d"))
+    code = TEMPLATES[plugin_type].format(
+        name=class_name, date=datetime.now().strftime("%Y-%m-%d")
+    )
     dir_path = PLUGIN_DIRS[plugin_type]
     os.makedirs(dir_path, exist_ok=True)
     file_path = os.path.join(dir_path, f"{name.lower()}.py")
@@ -86,12 +89,18 @@ def scaffold_plugin(plugin_type, name):
         f.write(code)
     print(f"Created {plugin_type} plugin: {file_path}")
 
+
 def main():
-    parser = argparse.ArgumentParser(description="Scaffold a new plugin (environment, agent, sensor, actuator)")
-    parser.add_argument("type", choices=TEMPLATES.keys(), help="Type of plugin to scaffold")
+    parser = argparse.ArgumentParser(
+        description="Scaffold a new plugin (environment, agent, sensor, actuator)"
+    )
+    parser.add_argument(
+        "type", choices=TEMPLATES.keys(), help="Type of plugin to scaffold"
+    )
     parser.add_argument("name", help="Name of the plugin class (CamelCase)")
     args = parser.parse_args()
     scaffold_plugin(args.type, args.name)
+
 
 if __name__ == "__main__":
     main()

@@ -6,15 +6,18 @@ Tests for the Agent class in agent.py.
 
 import sys
 import os
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 import numpy as np
 import pytest
 from src.core.agents.agent import Agent, NeuroFuzzyAgent
 
+
 class DummyModel:
     def forward(self, x):
         return x * 2
+
 
 def test_agent_act_and_observe():
     model = DummyModel()
@@ -27,6 +30,7 @@ def test_agent_act_and_observe():
     agent.observe(-0.5)
     assert agent.total_reward == 1.0
 
+
 def test_agent_reset():
     model = DummyModel()
     agent = Agent(model)
@@ -38,9 +42,11 @@ def test_agent_reset():
     assert agent.last_observation is None
     assert agent.total_reward == 0
 
+
 def test_agent_custom_policy():
     def greedy_policy(obs, model):
         return model.forward(obs)
+
     model = DummyModel()
     agent = Agent(model, policy=greedy_policy)
     obs = np.ones(4)

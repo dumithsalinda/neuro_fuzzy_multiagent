@@ -8,6 +8,7 @@ from src.core.neural_networks.som_cluster import SOMClusterer
 
 from typing import Any, List
 
+
 def som_group_agents() -> None:
     """
     Cluster agents using SOM based on their current observation vectors.
@@ -49,30 +50,35 @@ def simulate_step() -> None:
     import requests
     from src.core.agents.agent import Agent
     from src.core.agents.multimodal_fusion_agent import MultiModalFusionAgent
+
     # --- Get session state ---
     try:
-        env = st.session_state.get('env', None)
-        agents = st.session_state.get('agents', [])
-        feedback = st.session_state.get('feedback', {})
-        online_learning_enabled = st.session_state.get('online_learning_enabled', True)
-        adversarial_enabled = st.session_state.get('adversarial_enabled', False)
-        adversarial_agents = st.session_state.get('adversarial_agents', [])
-        adversarial_type = st.session_state.get('adversarial_type', "None")
-        adversarial_strength = st.session_state.get('adversarial_strength', 0.1)
-        orig_obs = list(st.session_state.get('obs', []))
+        env = st.session_state.get("env", None)
+        agents = st.session_state.get("agents", [])
+        feedback = st.session_state.get("feedback", {})
+        online_learning_enabled = st.session_state.get("online_learning_enabled", True)
+        adversarial_enabled = st.session_state.get("adversarial_enabled", False)
+        adversarial_agents = st.session_state.get("adversarial_agents", [])
+        adversarial_type = st.session_state.get("adversarial_type", "None")
+        adversarial_strength = st.session_state.get("adversarial_strength", 0.1)
+        orig_obs = list(st.session_state.get("obs", []))
         if env is None or not agents or not orig_obs:
-            st.error("Simulation state initialization failed: missing required session state.")
+            st.error(
+                "Simulation state initialization failed: missing required session state."
+            )
             return
     except Exception as e:
         st.error(f"Simulation state initialization failed: {e}")
         return
     perturbed_obs = []
+
     def to_scalar_action(a):
         if isinstance(a, np.ndarray):
             return int(a.item()) if a.size == 1 else int(a.flat[0])
         return int(a) if isinstance(a, (np.integer, np.floating)) else a
+
     for i, obs in enumerate(orig_obs):
-        is_dqn = getattr(agents[i], '__class__', type(agents[i])).__name__ == "DQNAgent"
+        is_dqn = getattr(agents[i], "__class__", type(agents[i])).__name__ == "DQNAgent"
         if (
             adversarial_enabled
             and i in adversarial_agents
@@ -94,6 +100,7 @@ def simulate_step() -> None:
             elif adversarial_type == "FGSM (Targeted, DQN)" and is_dqn:
                 try:
                     import torch
+
                     obs_tensor = (
                         torch.tensor(obs_arr, requires_grad=True).unsqueeze(0).float()
                     )
@@ -251,12 +258,13 @@ def simulate_step() -> None:
         st.session_state["episode_memory"] = []
     st.session_state["episode_memory"].append(step_data)
 
+
 def run_batch_experiments(
     n_experiments: int,
     agent_counts_list: list,
     seeds_list: list,
     n_steps: int,
-    fast_mode: bool = True
+    fast_mode: bool = True,
 ) -> list:
     """
     Run multiple experiments in batch/parallel with varying agent counts and seeds.

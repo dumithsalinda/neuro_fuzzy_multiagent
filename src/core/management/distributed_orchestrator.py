@@ -2,12 +2,16 @@ import ray
 import time
 import importlib
 
+
 class DistributedExperimentOrchestrator:
     """
     Orchestrates distributed experiments using Ray.
     Launches multiple agents/environments as Ray actors, collects results, and supports dynamic scaling.
     """
-    def __init__(self, agent_class, env_class, agent_kwargs=None, env_kwargs=None, num_agents=4):
+
+    def __init__(
+        self, agent_class, env_class, agent_kwargs=None, env_kwargs=None, num_agents=4
+    ):
         self.agent_class = agent_class
         self.env_class = env_class
         self.agent_kwargs = agent_kwargs or {}
@@ -20,8 +24,12 @@ class DistributedExperimentOrchestrator:
         ray.init(ignore_reinit_error=True)
         RemoteAgent = ray.remote(self.agent_class)
         RemoteEnv = ray.remote(self.env_class)
-        self.envs = [RemoteEnv.remote(**self.env_kwargs) for _ in range(self.num_agents)]
-        self.agents = [RemoteAgent.remote(**self.agent_kwargs) for _ in range(self.num_agents)]
+        self.envs = [
+            RemoteEnv.remote(**self.env_kwargs) for _ in range(self.num_agents)
+        ]
+        self.agents = [
+            RemoteAgent.remote(**self.agent_kwargs) for _ in range(self.num_agents)
+        ]
 
     def run_episode(self, steps=100):
         results = []

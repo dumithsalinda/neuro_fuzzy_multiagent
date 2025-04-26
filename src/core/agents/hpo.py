@@ -1,6 +1,7 @@
 import numpy as np
 from typing import Callable, Dict, Any, List
 
+
 class HyperparameterOptimizer:
     """
     Simple Bayesian Optimization/Evolutionary Strategy for agent hyperparameter tuning.
@@ -8,7 +9,12 @@ class HyperparameterOptimizer:
         optimizer = HyperparameterOptimizer(param_space, eval_fn)
         best_params, best_score = optimizer.optimize(n_trials=20)
     """
-    def __init__(self, param_space: Dict[str, List[Any]], eval_fn: Callable[[Dict[str, Any]], float]):
+
+    def __init__(
+        self,
+        param_space: Dict[str, List[Any]],
+        eval_fn: Callable[[Dict[str, Any]], float],
+    ):
         self.param_space = param_space
         self.eval_fn = eval_fn
         self.history = []  # List of (params, score)

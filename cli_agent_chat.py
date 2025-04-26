@@ -2,6 +2,7 @@
 CLI Chat Interface for Human-Agent Collaboration
 Allows user to interact with NeuroFuzzyFusionAgent via natural language commands/questions.
 """
+
 import numpy as np
 from src.core.neuro_fuzzy_fusion_agent import NeuroFuzzyFusionAgent
 
@@ -9,7 +10,7 @@ from src.core.neuro_fuzzy_fusion_agent import NeuroFuzzyFusionAgent
 input_dims = [4, 3]
 hidden_dim = 16
 output_dim = 5
-fusion_type = 'concat'
+fusion_type = "concat"
 fusion_alpha = 0.6
 fuzzy_config = None
 agent = NeuroFuzzyFusionAgent(
@@ -18,7 +19,7 @@ agent = NeuroFuzzyFusionAgent(
     output_dim=output_dim,
     fusion_type=fusion_type,
     fuzzy_config=fuzzy_config,
-    fusion_alpha=fusion_alpha
+    fusion_alpha=fusion_alpha,
 )
 
 print("\n=== NeuroFuzzyFusionAgent CLI Chat ===")
@@ -29,7 +30,8 @@ last_action = None
 
 while True:
     user_input = input("You: ").strip().lower()
-    if user_input in ("quit", "exit"): break
+    if user_input in ("quit", "exit"):
+        break
     if user_input == "help":
         print("Commands:")
         print("  explain              - Explain last action")
@@ -63,19 +65,22 @@ while True:
                 print(f"  {k}: {v}")
         continue
     if user_input == "show rules":
-        rules = getattr(agent.fuzzy_system, 'rules', [])
+        rules = getattr(agent.fuzzy_system, "rules", [])
         if not rules:
             print("No fuzzy rules defined.")
         else:
             print("Fuzzy Rules:")
             for i, rule in enumerate(rules):
-                print(f"  Rule {i}: Antecedents: {rule.antecedents}, Consequent: {rule.consequent}")
+                print(
+                    f"  Rule {i}: Antecedents: {rule.antecedents}, Consequent: {rule.consequent}"
+                )
         continue
     if user_input.startswith("feedback"):
-        feedback = user_input[len("feedback"):].strip()
+        feedback = user_input[len("feedback") :].strip()
         if feedback.startswith("rule") and "obs=" in feedback and "action=" in feedback:
             # Example: feedback rule obs=[0.1,0.2,0.3,0.4,0.5,0.6,0.7] action=2
             import re
+
             obs_match = re.search(r"obs=\[(.*?)\]", feedback)
             action_match = re.search(r"action=([0-9]+)", feedback)
             if obs_match and action_match:
@@ -86,14 +91,22 @@ while True:
                 obs_modalities = [obs_vals[:4], obs_vals[4:]]
                 # Demo fuzzy sets: for each input, Low/High sets
                 from src.core.fuzzy_system import FuzzySet
-                fuzzy_sets_per_input = [[FuzzySet('Low', [0, 1]), FuzzySet('High', [1, 1])] for _ in obs_vals]
-                agent.add_fuzzy_rule_from_feedback(obs_vals, action_val, fuzzy_sets_per_input)
+
+                fuzzy_sets_per_input = [
+                    [FuzzySet("Low", [0, 1]), FuzzySet("High", [1, 1])]
+                    for _ in obs_vals
+                ]
+                agent.add_fuzzy_rule_from_feedback(
+                    obs_vals, action_val, fuzzy_sets_per_input
+                )
                 print(f"Fuzzy rule added for obs={obs_vals}, action={action_val}")
                 # Show updated rules
-                rules = getattr(agent.fuzzy_system, 'rules', [])
+                rules = getattr(agent.fuzzy_system, "rules", [])
                 print("Updated Fuzzy Rules:")
                 for i, rule in enumerate(rules):
-                    print(f"  Rule {i}: Antecedents: {rule.antecedents}, Consequent: {rule.consequent}")
+                    print(
+                        f"  Rule {i}: Antecedents: {rule.antecedents}, Consequent: {rule.consequent}"
+                    )
             else:
                 print("Usage: feedback rule obs=[x1,...,xN] action=X")
         else:
