@@ -1,5 +1,8 @@
 # Plugin API Documentation
 
+The plugin system enables easy extension of the platform with new agents, environments, sensors, actuators, and neural networks. All plugins are auto-discovered and available in the dashboard/config—no core code changes required.
+
+
 
 ## Agent Plugins
 

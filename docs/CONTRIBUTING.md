@@ -1,4 +1,7 @@
-# Contributing to the Neuro-Fuzzy Multi-Agent Plug-and-Play Platform
+# Contributing to the Neuro-Fuzzy Multi-Agent Platform
+
+Thank you for your interest in contributing! This project is designed for easy extension and welcomes new agents, environments, sensors, actuators, documentation, and improvements from the community.
+
 
 Thank you for your interest in contributing! This project is designed for easy extension via plug-and-play agents, environments, sensors, and actuators.
 

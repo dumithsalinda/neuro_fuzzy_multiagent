@@ -1,5 +1,52 @@
 # Neuro-Fuzzy Multi-Agent System
 
+A modular, plug-and-play platform for building, experimenting with, and deploying intelligent neuro-fuzzy agents in Python.
+
+---
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE) [![Docs](https://img.shields.io/badge/docs-latest-blue.svg)](docs/)
+
+## 🚀 Quickstart
+
+1. **Install requirements:**
+   ```sh
+   pip install -r requirements.txt
+   ```
+2. **Run the dashboard:**
+   ```sh
+   streamlit run dashboard.py
+   ```
+3. **Explore:**
+   - Select agents, environments, sensors, and actuators in the sidebar.
+   - Run simulations, visualize results, and interact live.
+   - Add your own plugin (see [DEVELOPER.md](docs/DEVELOPER.md)).
+
+---
+
+## Key Features
+- Modular neuro-fuzzy agents, easy plug-and-play extension
+- Privacy-aware knowledge sharing and multi-agent collaboration
+- Online learning and knowledge integration
+- Multi-modal fusion agent support (text, image, etc.)
+- Model management, versioning, and batch experimentation
+- Robust dashboard for simulation, analytics, and HITL (human-in-the-loop)
+
+## Documentation
+- [Model Registry & Agent Integration](docs/MODEL_REGISTRY_AND_AGENT.md)
+- [Plugin API Reference](docs/PLUGIN_DOCS.md)
+- [Developer Guide](docs/DEVELOPER.md)
+- [Contribution Guide](docs/CONTRIBUTING.md)
+
+## Community & Support
+- Open an issue or discussion on GitHub for help or suggestions.
+- Contributions welcome! See [CONTRIBUTING.md](docs/CONTRIBUTING.md).
+
+---
+
+## License
+MIT
+
+
 ---
 
 ## 🟢 Beginner’s Guide

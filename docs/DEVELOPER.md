@@ -1,4 +1,7 @@
-# Plug-and-Play Developer Guide
+# Developer Guide: Plug-and-Play Neuro-Fuzzy Multi-Agent System
+
+Welcome! This guide helps you extend the neuro-fuzzy multi-agent platform by adding new agents, environments, sensors, actuators, or neural networks—no core code changes required.
+
 
 Welcome to the plug-and-play neuro-fuzzy multi-agent platform! This guide explains how to add new environments, agents, neural networks, sensors, and actuators so that they are automatically discovered and available in the dashboard/config—**no core code changes required**.
 
