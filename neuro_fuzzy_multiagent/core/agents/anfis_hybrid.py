@@ -13,7 +13,7 @@ class ANFISHybrid:
     - Dynamic: can add/prune rules based on usage and error
     """
 
-    def __init__(self, input_dim, n_rules):
+    def __init__(self, **kwargs, input_dim, n_rules):
         self.input_dim = input_dim
         self.n_rules = n_rules
         # Each rule has a center and width per input dimension

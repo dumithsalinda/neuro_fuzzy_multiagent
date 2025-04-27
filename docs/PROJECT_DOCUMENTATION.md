@@ -39,7 +39,7 @@ neuro_fuzzy_multiagent/
 
 ### B. dashboard/
 
-- **main.py:** The entry-point for the Streamlit dashboard. Provides agent selection, simulation, analytics, chat, and experiment control.
+- **neuro_fuzzy_multiagent/main.py:** The entry-point for the Streamlit dashboard. Provides agent selection, simulation, analytics, chat, and experiment control.
 - **visualization.py:** Visualizations for agent positions, SOM grids, group analytics, and knowledge.
 - **simulation.py:** Batch/parallel experiment logic, simulation step execution, and group clustering.
 - **chat.py:** Human-agent chat interface, feedback, and explainability.
@@ -196,7 +196,7 @@ current_mode = agent.auto_switch_mode(error_history)
 - **To run the dashboard:**
   ```sh
   pip install -r requirements.txt
-  streamlit run dashboard/main.py
+  streamlit run neuro_fuzzy_multiagent/dashboard/neuro_fuzzy_multiagent/main.py
   ```
 - **To run tests:**
   ```sh
@@ -204,7 +204,7 @@ current_mode = agent.auto_switch_mode(error_history)
   ```
 - **To run examples:**
   ```sh
-  python examples/demo_multiagent_rl.py
+  python neuro_fuzzy_multiagent/examples/demo_multiagent_rl.py
   ```
 
 ---
@@ -246,7 +246,7 @@ current_mode = agent.auto_switch_mode(error_history)
 | src/core/neuro_fuzzy_fusion_agent.py | Main neuro-fuzzy agent logic        |
 | src/core/fuzzy_system.py             | Fuzzy inference and rule management |
 | src/core/robustness_wrappers.py      | Robustness and safety wrappers      |
-| dashboard/main.py                    | Streamlit dashboard entry point     |
+| neuro_fuzzy_multiagent/dashboard/neuro_fuzzy_multiagent/main.py                    | Streamlit dashboard entry point     |
 | dashboard/visualization.py           | Agent/group/SOM visualizations      |
 | dashboard/simulation.py              | Simulation and experiment logic     |
 | dashboard/chat.py                    | Human-agent chat and feedback       |

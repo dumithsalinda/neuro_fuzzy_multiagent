@@ -52,7 +52,8 @@ reward_history = []
 
 
 def initialize_env_and_agents(*args, **kwargs):
-    pass
+    # Always return (None, None) as a safe stub for test/CI environments
+    return None, None
 
 
 # --- END SAFE STUBS ---
@@ -291,9 +292,11 @@ else:
 
 # --- Session State Setup ---
 if "env" not in st.session_state or st.sidebar.button("Reset Environment"):
-    st.session_state.env, st.session_state.agents = initialize_env_and_agents(
-        agent_type, agent_count, n_obstacles
-    )
+    env_agents = initialize_env_and_agents(agent_type, agent_count, n_obstacles)
+    if env_agents is None or len(env_agents) != 2:
+        st.session_state.env, st.session_state.agents = None, None
+    else:
+        st.session_state.env, st.session_state.agents = env_agents
     st.session_state.obs = (
         st.session_state.env.reset() if st.session_state.env else None
     )
@@ -410,14 +413,15 @@ def simulate_step():
     # Update agents with new experience
     import random
 
-    for i, agent in enumerate(st.session_state.agents):
+    agents = st.session_state.agents if st.session_state.agents is not None else []
+for i, agent in enumerate(agents):
         # Simulate knowledge update
         agent.integrate_online_knowledge({"step": st.session_state.step})
         agent.online_knowledge = {
             "step": st.session_state.step
         }  # Ensure dashboard always updates
         # Agent-to-agent communication: send message to a random other agent
-        others = [a for a in st.session_state.agents if a is not agent]
+        others = [a for a in agents if a is not agent]
         if others:
             recipient = random.choice(others)
             msg = {
@@ -452,10 +456,10 @@ def simulate_step():
                 st.session_state["online_learning_log"] = (
                     f"Online update failed for agent {i}: {ex}"
                 )
-    st.session_state.obs = next_obs
-    st.session_state.rewards = rewards
-    st.session_state.done = done
-    st.session_state.step += 1
+        st.session_state.obs = next_obs
+        st.session_state.rewards = rewards
+        st.session_state.done = done
+        st.session_state.step += 1
 
 
 # --- Main UI ---
@@ -475,7 +479,8 @@ tabs = st.tabs(
 with tabs[2]:
     st.header("Manual Feedback Review and Edit")
     feedback = st.session_state.get("feedback", {})
-    for i, agent in enumerate(st.session_state.agents):
+    agents = st.session_state.agents if st.session_state.agents is not None else []
+for i, agent in enumerate(agents):
         with st.expander(f"Agent {i} Feedback History", expanded=False):
             approve = st.radio(
                 f"Approve action for Agent {i}? (Manual)",
@@ -609,7 +614,8 @@ if hasattr(st.session_state.agents[0], "position"):
     fig2, ax2 = plt.subplots(figsize=(6, 6))
     group_ids = list(set(agent.group for agent in st.session_state.agents))
     group_colors = {gid: plt.cm.tab10(i % 10) for i, gid in enumerate(group_ids)}
-    for i, agent in enumerate(st.session_state.agents):
+    agents = st.session_state.agents if st.session_state.agents is not None else []
+for i, agent in enumerate(agents):
         color = group_colors.get(agent.group, "gray")
         x, y = agent.position if hasattr(agent, "position") else (0, 0)
         marker = "*" if getattr(agent, "is_leader", False) else "o"
@@ -782,7 +788,8 @@ if hasattr(st.session_state.agents[0], "position"):
     fig2, ax2 = plt.subplots(figsize=(6, 6))
     group_ids = list(set(agent.group for agent in st.session_state.agents))
     group_colors = {gid: plt.cm.tab10(i % 10) for i, gid in enumerate(group_ids)}
-    for i, agent in enumerate(st.session_state.agents):
+    agents = st.session_state.agents if st.session_state.agents is not None else []
+for i, agent in enumerate(agents):
         color = group_colors.get(agent.group, "gray")
         x, y = agent.position if hasattr(agent, "position") else (0, 0)
         marker = "*" if getattr(agent, "is_leader", False) else "o"
@@ -918,7 +925,8 @@ if hasattr(st.session_state.agents[0], "position"):
     fig2, ax2 = plt.subplots(figsize=(6, 6))
     group_ids = list(set(agent.group for agent in st.session_state.agents))
     group_colors = {gid: plt.cm.tab10(i % 10) for i, gid in enumerate(group_ids)}
-    for i, agent in enumerate(st.session_state.agents):
+    agents = st.session_state.agents if st.session_state.agents is not None else []
+for i, agent in enumerate(agents):
         color = group_colors.get(agent.group, "gray")
         x, y = agent.position if hasattr(agent, "position") else (0, 0)
         marker = "*" if getattr(agent, "is_leader", False) else "o"
@@ -970,7 +978,8 @@ st.write({f"Agent {i}": v for i, v in enumerate(violations)})
 # --- Inline Feedback UI ---
 if not auto_approve:
     st.write("## Human-in-the-Loop Feedback (Approve, Override, or Reward)")
-    for i, agent in enumerate(st.session_state.agents):
+    agents = st.session_state.agents if st.session_state.agents is not None else []
+for i, agent in enumerate(agents):
         with st.expander(f"Agent {i} Feedback", expanded=True):
             default_action = getattr(agent, "last_action", None)
             approve = st.radio(
@@ -995,7 +1004,8 @@ if not auto_approve:
             }
 else:
     # Auto-approve: set feedback to approve for all
-    for i, agent in enumerate(st.session_state.agents):
+    agents = st.session_state.agents if st.session_state.agents is not None else []
+for i, agent in enumerate(agents):
         st.session_state.feedback[i] = {
             "approve": "Approve",
             "override_action": None,
@@ -1006,7 +1016,8 @@ else:
     st.write("### Agent Knowledge Table")
     import requests
 
-    for i, agent in enumerate(st.session_state.agents):
+    agents = st.session_state.agents if st.session_state.agents is not None else []
+for i, agent in enumerate(agents):
         ag_type = agent_types[i] if agent_types else agent.__class__.__name__
         last_msg = getattr(agent, "last_message", None)
         if (
@@ -1070,7 +1081,8 @@ else:
 
 
 agent_count = len(st.session_state.agents)
-for i, agent in enumerate(st.session_state.agents):
+agents = st.session_state.agents if st.session_state.agents is not None else []
+for i, agent in enumerate(agents):
     agent.group = "G1" if i < (agent_count // 2 + 1) else "G2"
 
 system = MultiAgentSystem(st.session_state.agents)
@@ -1176,7 +1188,8 @@ if fusion_agents and len(tabs) > 2:
         next_states = []
         dones = []
         # RL agents interact with st.session_state.env, others get random obs
-        for i, agent in enumerate(st.session_state.agents):
+        agents = st.session_state.agents if st.session_state.agents is not None else []
+for i, agent in enumerate(agents):
             state = st.session_state["env_states"][i] if st.session_state.env else None
             if agent_type == "Tabular Q-Learning":
                 action = agent.act(state)
@@ -1288,7 +1301,8 @@ if hasattr(st.session_state.agents[0], "position"):
     fig2, ax2 = plt.subplots(figsize=(6, 6))
     group_ids = list(set(agent.group for agent in st.session_state.agents))
     group_colors = {gid: plt.cm.tab10(i % 10) for i, gid in enumerate(group_ids)}
-    for i, agent in enumerate(st.session_state.agents):
+    agents = st.session_state.agents if st.session_state.agents is not None else []
+for i, agent in enumerate(agents):
         color = group_colors.get(agent.group, "gray")
         x, y = agent.position if hasattr(agent, "position") else (0, 0)
         marker = "*" if getattr(agent, "is_leader", False) else "o"
@@ -1490,7 +1504,8 @@ else:
     st.info("No messages have been logged yet.")
 
 # --- ANFIS Explainability Panel & Rule Controls ---
-for i, agent in enumerate(st.session_state.agents):
+agents = st.session_state.agents if st.session_state.agents is not None else []
+for i, agent in enumerate(agents):
     st.markdown("---")
     st.header(f"Agent {i+1} Explainability & Visualization")
     # --- Real-time Reward Plot ---
@@ -1943,7 +1958,8 @@ run_adv = st.button("Run Adversarial Test Batch")
 
 # Apply perturbation for demonstration (affects only displayed actions, not true agent state)
 perturbed_actions = []
-for i, agent in enumerate(st.session_state.agents):
+agents = st.session_state.agents if st.session_state.agents is not None else []
+for i, agent in enumerate(agents):
     act = getattr(agent, "last_action", 0.0)
     obs = getattr(agent, "last_obs", None)
     if rb["enabled"] and obs is not None:
@@ -2036,7 +2052,8 @@ if run_batch:
     log = []
     for run in range(bexp["runs"]):
         run_data = {}
-        for i, agent in enumerate(st.session_state.agents):
+        agents = st.session_state.agents if st.session_state.agents is not None else []
+for i, agent in enumerate(agents):
             # Simulate reward (random for stub)
             reward = np.random.normal(1.0, 0.5)
             # Simulate action variance
@@ -2219,7 +2236,8 @@ if (
 # RL-specific: Reward plot and Q-table
 if agent_type in ("Tabular Q-Learning", "DQN RL"):
     st.header("RL Agent Rewards")
-    for i, agent in enumerate(st.session_state.agents):
+    agents = st.session_state.agents if st.session_state.agents is not None else []
+for i, agent in enumerate(agents):
         st.subheader(f"Agent {i+1} Reward History")
         r = list(reward_history.get(agent, []))
         st.line_chart(r if r else [0])

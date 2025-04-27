@@ -9,7 +9,7 @@ from neuro_fuzzy_multiagent.env.realworld_api_env import (
     RealWorldAPIEnv,  # If/when this file is moved, update accordingly.
 )
 from neuro_fuzzy_multiagent.env.simple_env import SimpleContinuousEnv, SimpleDiscreteEnv
-from src.env.multiagent_gridworld import (
+from neuro_fuzzy_multiagent.env.multiagent_gridworld import (
     MultiAgentGridworldEnv as MultiAgentGridworldEnv2,
 )
 

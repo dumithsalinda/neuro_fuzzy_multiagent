@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import patch
 import streamlit as st
-from dashboard.login import login_form
+from neuro_fuzzy_multiagent.dashboard.login import login_form
 
 
 def test_login_form_success(monkeypatch):

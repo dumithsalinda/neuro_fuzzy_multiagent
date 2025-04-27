@@ -6,7 +6,7 @@ Uses pytest and Streamlit's testing utilities where possible.
 import pytest
 import types
 import pandas as pd
-from dashboard import simulation, visualization, tables, analytics
+from neuro_fuzzy_multiagent.dashboard import simulation, visualization, tables, analytics
 
 
 def test_som_group_agents_handles_missing_state(monkeypatch):

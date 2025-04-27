@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import patch, MagicMock
 import streamlit as st
-from dashboard.collab import collaborative_experiments_panel
+from neuro_fuzzy_multiagent.dashboard.collab import collaborative_experiments_panel
 
 
 def test_collaborative_experiments_panel_runs():

@@ -12,7 +12,7 @@ class MetaAgent(Agent):
     """
 
     def __init__(
-        self, candidate_agents, selection_strategy=None, perf_metric="reward", window=10
+        self, candidate_agents, selection_strategy=None, perf_metric="reward", window=10, **kwargs
     ):
         """
         candidate_agents: list of (agent_class, config_dict)
@@ -22,6 +22,7 @@ class MetaAgent(Agent):
         """
         # Start with the first candidate agent
         super().__init__(model=None)
+        self.extra_args = kwargs
         self.candidate_agents = [cls(**cfg) for cls, cfg in candidate_agents]
         self.active_idx = 0
         self.active_agent = self.candidate_agents[self.active_idx]

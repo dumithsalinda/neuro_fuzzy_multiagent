@@ -6,11 +6,11 @@ import networkx as nx
 import pandas as pd
 import streamlit as st
 
-from dashboard.chat import chat_panel
-from dashboard.login import login_form
-from dashboard.sidebar import render_sidebar
-from dashboard.simulation import run_batch_experiments, simulate_step, som_group_agents
-from dashboard.visualization import (
+from neuro_fuzzy_multiagent.dashboard.chat import chat_panel
+from neuro_fuzzy_multiagent.dashboard.login import login_form
+from neuro_fuzzy_multiagent.dashboard.sidebar import render_sidebar
+from neuro_fuzzy_multiagent.dashboard.simulation import run_batch_experiments, simulate_step, som_group_agents
+from neuro_fuzzy_multiagent.dashboard.visualization import (
     render_agent_positions,
     render_group_analytics,
     render_group_knowledge,
@@ -96,7 +96,7 @@ def simulation_controls():
     """
     import streamlit as st
 
-    from dashboard.simulation import simulate_step
+    from neuro_fuzzy_multiagent.dashboard.simulation import simulate_step
 
     st.header("Simulation Controls")
     if st.button("Step Simulation"):
@@ -111,8 +111,8 @@ def simulation_controls():
     """
     Simulation controls tab.
     """
-    from dashboard.simulation import simulate_step
-    from dashboard.visualization import render_agent_positions
+    from neuro_fuzzy_multiagent.dashboard.simulation import simulate_step
+    from neuro_fuzzy_multiagent.dashboard.visualization import render_agent_positions
 
     st.header("Simulation Controls")
     n_steps = st.number_input(
@@ -201,14 +201,14 @@ def analytics():
     """
     import streamlit as st
 
-    from dashboard.visualization import render_group_analytics
+    from neuro_fuzzy_multiagent.dashboard.visualization import render_group_analytics
 
     st.header("Analytics & Explainability")
     mas = st.session_state.get("multiagent_system")
     reward_history = st.session_state.get("reward_history", {})
     if mas:
         render_group_analytics(mas, reward_history=reward_history)
-        from dashboard.visualization import render_agent_reward_and_qtable
+        from neuro_fuzzy_multiagent.dashboard.visualization import render_agent_reward_and_qtable
 
         agents = st.session_state.get("agents", [])
         render_agent_reward_and_qtable(agents, reward_history=reward_history)
@@ -220,7 +220,7 @@ def analytics():
     """
     Analytics tab.
     """
-    from dashboard.analytics import render_advanced_metrics, render_batch_analytics
+    from neuro_fuzzy_multiagent.dashboard.analytics import render_advanced_metrics, render_batch_analytics
 
     st.header("Analytics")
     batch_results = st.session_state.get("batch_results", None)
@@ -259,7 +259,7 @@ def agent_chat():
     """
     Interventions tab.
     """
-    from dashboard.intervention import render_interventions_panel
+    from neuro_fuzzy_multiagent.dashboard.intervention import render_interventions_panel
 
     render_interventions_panel()
 
@@ -268,7 +268,7 @@ def feedback():
     """
     Feedback tab for human-in-the-loop agent feedback and learning.
     """
-    from dashboard.feedback import render_feedback_panel
+    from neuro_fuzzy_multiagent.dashboard.feedback import render_feedback_panel
 
     render_feedback_panel()
 
@@ -311,7 +311,7 @@ def collaboration():
         with tempfile.NamedTemporaryFile(delete=False, suffix=".json") as tmp:
             tmp.write(key_bytes)
             json_keyfile_path = tmp.name
-        from dashboard.google_sheets import (
+        from neuro_fuzzy_multiagent.dashboard.google_sheets import (
             get_gsheet_client,
             read_sheet_to_df,
             write_df_to_sheet,
@@ -396,7 +396,7 @@ def settings():
 
 # --- Ensure all tab functions are defined or stubbed for testability ---
 try:
-    from dashboard.interventions import interventions
+    from neuro_fuzzy_multiagent.dashboard.interventions import interventions
 except ImportError:
 
     def interventions():
@@ -405,7 +405,7 @@ except ImportError:
 
 
 try:
-    from dashboard.agent_chat import agent_chat
+    from neuro_fuzzy_multiagent.dashboard.agent_chat import agent_chat
 except ImportError:
 
     def agent_chat():
@@ -414,7 +414,7 @@ except ImportError:
 
 
 try:
-    from dashboard.analytics import analytics
+    from neuro_fuzzy_multiagent.dashboard.analytics import analytics
 except ImportError:
 
     def analytics():
@@ -423,7 +423,7 @@ except ImportError:
 
 
 try:
-    from dashboard.batch_experiments import batch_experiments
+    from neuro_fuzzy_multiagent.dashboard.batch_experiments import batch_experiments
 except ImportError:
 
     def batch_experiments():
@@ -432,7 +432,7 @@ except ImportError:
 
 
 try:
-    from dashboard.simulation_controls import simulation_controls
+    from neuro_fuzzy_multiagent.dashboard.simulation_controls import simulation_controls
 except ImportError:
 
     def simulation_controls():
@@ -532,7 +532,7 @@ def main():
             with tempfile.NamedTemporaryFile(delete=False, suffix=".json") as tmp:
                 tmp.write(key_bytes)
                 json_keyfile_path = tmp.name
-            from dashboard.google_sheets import (
+            from neuro_fuzzy_multiagent.dashboard.google_sheets import (
                 get_gsheet_client,
                 read_sheet_to_df,
                 write_df_to_sheet,
@@ -778,7 +778,7 @@ def main():
                 st.info(f"SOM grid visualization unavailable: {e}")
             # --- Group Analytics ---
             try:
-                from dashboard import simulation
+                from neuro_fuzzy_multiagent.dashboard import simulation
 
                 reward_history = getattr(simulation, "reward_history", None)
                 render_group_analytics(mas, reward_history=reward_history)
@@ -788,7 +788,7 @@ def main():
 
 
 def plugins_and_docs():
-    from dashboard.plugin_marketplace import render_plugin_marketplace_sidebar
+    from neuro_fuzzy_multiagent.dashboard.plugin_marketplace import render_plugin_marketplace_sidebar
 
     render_plugin_marketplace_sidebar()
     import inspect

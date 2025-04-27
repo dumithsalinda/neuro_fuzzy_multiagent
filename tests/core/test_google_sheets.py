@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import patch, MagicMock
 import pandas as pd
-from dashboard.google_sheets import (
+from neuro_fuzzy_multiagent.dashboard.google_sheets import (
     get_gsheet_client,
     read_sheet_to_df,
     write_df_to_sheet,

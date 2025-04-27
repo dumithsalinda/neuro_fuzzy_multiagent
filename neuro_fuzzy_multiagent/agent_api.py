@@ -10,10 +10,12 @@ from PIL import Image
 from pydantic import BaseModel
 
 from neuro_fuzzy_multiagent.core.agents.agent import Agent
-from neuro_fuzzy_multiagent.core.dqn_agent import DQNAgent
-from neuro_fuzzy_multiagent.core.multimodal_dqn_agent import MultiModalDQNAgent
+from neuro_fuzzy_multiagent.core.agents.dqn_agent import DQNAgent
+from neuro_fuzzy_multiagent.core.agents.multimodal_dqn_agent import MultiModalDQNAgent
+from neuro_fuzzy_multiagent.core.agents.tabular_q_learning_agent import (
+    TabularQLearningAgent,
+)
 from neuro_fuzzy_multiagent.core.neuro_fuzzy import NeuroFuzzyHybrid
-from neuro_fuzzy_multiagent.core.tabular_q_agent import TabularQLearningAgent
 from neuro_fuzzy_multiagent.env.multiagent_gridworld import MultiAgentGridworldEnv
 
 app = FastAPI()

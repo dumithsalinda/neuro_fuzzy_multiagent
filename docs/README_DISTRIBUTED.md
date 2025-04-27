@@ -4,16 +4,16 @@
 
 1. Launch the Ray cluster:
    ```bash
-   bash launch_ray_cluster.sh
+   bash neuro_fuzzy_multiagent/scripts/launch_ray_cluster.sh
    ```
 
 2. Submit a distributed experiment job:
    ```bash
-   ray submit ray-cluster.yaml run_distributed_fusion_experiment.py
+   ray submit neuro_fuzzy_multiagent/config/ray-cluster.yaml neuro_fuzzy_multiagent/run_distributed_fusion_experiment.py
    ```
 
 ## Cloud/Remote Cluster (Template)
-- Edit `ray-cluster.yaml` to use your cloud provider (see Ray docs for AWS/GCP/Azure setup).
+- Edit `neuro_fuzzy_multiagent/config/ray-cluster.yaml` to use your cloud provider (see Ray docs for AWS/GCP/Azure setup).
 - Make sure all nodes have access to your code and dependencies.
 
 ## Requirements
@@ -23,4 +23,4 @@
 
 ## Notes
 - The NeuroFuzzyFusionAgent is fully compatible with Ray distributed execution.
-- See `run_distributed_fusion_experiment.py` for an example.
+- See `neuro_fuzzy_multiagent/run_distributed_fusion_experiment.py` for an example.

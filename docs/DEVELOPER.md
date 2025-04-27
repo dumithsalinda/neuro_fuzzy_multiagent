@@ -75,7 +75,7 @@ src/
 
 ## 5. Plugin Auto-Documentation
 
-- Run `PYTHONPATH=. python3 src/core/plugins/generate_plugin_docs.py` to regenerate `PLUGIN_DOCS.md`.
+- Run `PYTHONPATH=. python3 src/core/plugins/neuro_fuzzy_multiagent/generate_plugin_docs.py` to regenerate `PLUGIN_DOCS.md`.
 - The dashboard sidebar displays the latest plugin documentation and provides a download button.
 - Add docstrings to your plugin classes and methods for best documentation.
 
@@ -122,7 +122,7 @@ src/
   - Use the “🔄 Reload Plugins” button.
   - Check for errors in the sidebar after reload.
 - **Docs not updating?**
-  - Regenerate with `PYTHONPATH=. python3 src/core/plugins/generate_plugin_docs.py` and commit changes.
+  - Regenerate with `PYTHONPATH=. python3 src/core/plugins/neuro_fuzzy_multiagent/generate_plugin_docs.py` and commit changes.
 - **CI failing?**
   - Run tests locally with `pytest tests/plugins/test_plugin_system.py` and ensure docs are up to date.
 - **Validator failing?**

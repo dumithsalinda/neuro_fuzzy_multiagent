@@ -3,7 +3,9 @@ import pytest
 
 from neuro_fuzzy_multiagent.core.agents.dqn_agent import DQNAgent
 from neuro_fuzzy_multiagent.core.agents.meta_agent import MetaAgent
-from neuro_fuzzy_multiagent.core.agents.tabular_q_agent import TabularQLearningAgent
+from neuro_fuzzy_multiagent.core.agents.tabular_q_learning_agent import (
+    TabularQLearningAgent,
+)
 
 
 class DummyEnv:

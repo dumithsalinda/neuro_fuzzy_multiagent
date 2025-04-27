@@ -11,7 +11,7 @@ class MetaRLAgent(Agent):
     This agent adapts its own learning strategy (e.g., learning rate, exploration policy, even algorithm) based on meta-feedback about its performance.
     """
 
-    def __init__(self, base_agent_cls, base_agent_kwargs, meta_lr=0.1, meta_window=10):
+    def __init__(self, base_agent_cls, base_agent_kwargs, meta_lr=0.1, meta_window=10, **kwargs):
         super().__init__(model=None)
         self.base_agent_cls = base_agent_cls
         self.base_agent_kwargs = base_agent_kwargs.copy()
@@ -20,6 +20,7 @@ class MetaRLAgent(Agent):
         self.base_agent = self.base_agent_cls(**self.base_agent_kwargs)
         self.reward_history = []
         self.meta_state = {"lr": self.base_agent_kwargs.get("lr", 0.1)}
+        self.extra_args = kwargs
 
     def act(self, observation, state=None):
         return self.base_agent.act(observation, state)

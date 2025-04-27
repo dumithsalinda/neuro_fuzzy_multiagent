@@ -4,7 +4,7 @@ All dashboard logic is delegated to modules in the dashboard/ folder.
 """
 
 import streamlit as st
-from dashboard.main import main
+from neuro_fuzzy_multiagent.dashboard.main import main
 
 if __name__ == "__main__":
     main()

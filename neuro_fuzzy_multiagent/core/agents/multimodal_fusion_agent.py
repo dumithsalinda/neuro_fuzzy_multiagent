@@ -21,6 +21,7 @@ class MultiModalFusionAgent:
         fusion_type="concat",
         lr=1e-3,
         gamma=0.99,
+        **kwargs
     ):
         """
         Args:
@@ -41,6 +42,7 @@ class MultiModalFusionAgent:
         self.gamma = gamma
         self.train_mode = False
         self.model.eval()
+        self.extra_args = kwargs
 
     def set_train_mode(self, is_train: bool):
         self.train_mode = is_train

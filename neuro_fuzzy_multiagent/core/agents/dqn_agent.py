@@ -32,6 +32,8 @@ class DQNAgent(Agent):
     def explain_action(self, observation):
         import torch
 
+        if self.q_net is None:
+            raise RuntimeError("DQNAgent.q_net is not initialized. Please provide state_dim and action_dim.")
         obs_tensor = (
             torch.FloatTensor(np.array(observation, copy=True))
             .unsqueeze(0)
@@ -50,19 +52,48 @@ class DQNAgent(Agent):
     Deep Q-Learning Agent for continuous or large state spaces.
     """
 
-    def __init__(self, state_dim, action_dim, alpha=1e-3, gamma=0.99, epsilon=0.1):
+    def __init__(self, state_dim=None, action_dim=None, alpha=1e-3, gamma=0.99, epsilon=0.1, **kwargs):
         super().__init__(model=None)
         self.state_dim = state_dim
         self.action_dim = action_dim
         self.gamma = gamma
         self.epsilon = epsilon
         self.device = torch.device("cpu")
-        self.q_net = QNetwork(state_dim, action_dim).to(self.device)
-        self.optimizer = optim.Adam(self.q_net.parameters(), lr=alpha)
+        if state_dim is not None and action_dim is not None:
+            self.q_net = QNetwork(state_dim, action_dim).to(self.device)
+            self.optimizer = optim.Adam(self.q_net.parameters(), lr=alpha)
+        else:
+            self.q_net = None
+            self.optimizer = None
+        self.extra_args = kwargs  # Store additional parameters for extensibility
         self.memory = []  # (state, action, reward, next_state, done)
         self.batch_size = 32
         self.last_state = None
         self.last_action = None
+
+    def load_model(self, model_path, model_format="pt"):
+        """
+        Load model weights from a file. Supports PyTorch (.pt/.pth), logs ONNX as not implemented.
+        """
+        import os
+        if not os.path.exists(model_path):
+            print(f"[DQNAgent] ERROR: Model file not found: {model_path}")
+            return False
+        if model_format in ("pt", "pth", "pytorch") or model_path.endswith(('.pt', '.pth')):
+            try:
+                state_dict = torch.load(model_path, map_location=self.device)
+                self.q_net.load_state_dict(state_dict)
+                print(f"[DQNAgent] Loaded PyTorch model weights from {model_path}")
+                return True
+            except Exception as e:
+                print(f"[DQNAgent] ERROR loading PyTorch model: {e}")
+                return False
+        elif model_format == "onnx" or model_path.endswith(".onnx"):
+            print(f"[DQNAgent] ONNX model loading not yet implemented: {model_path}")
+            return False
+        else:
+            print(f"[DQNAgent] Unsupported model format: {model_format}")
+            return False
 
     def act(self, observation, state=None):
         obs_tensor = (

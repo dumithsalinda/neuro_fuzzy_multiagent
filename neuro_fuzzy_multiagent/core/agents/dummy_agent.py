@@ -9,8 +9,9 @@ class DummyAgent(Agent):
     Always selects action 0 and does not learn.
     """
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         super().__init__(model=None)
+        self.extra_args = kwargs
 
     def act(self, observation):
         return 0

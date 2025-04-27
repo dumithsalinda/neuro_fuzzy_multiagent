@@ -5,7 +5,10 @@ from neuro_fuzzy_multiagent.core.agents.agent import Agent
 from neuro_fuzzy_multiagent.core.plugins.registration_utils import register_plugin
 
 
+from neuro_fuzzy_multiagent.core.neural_networks.fusion import FusionNetwork
+
 @register_plugin("agent")
+
 class MultiModalDQNAgent(Agent):
     def explain_action(self, features):
         import torch
@@ -25,7 +28,7 @@ class MultiModalDQNAgent(Agent):
     Features should be provided as a list of tensors (one per modality).
     """
 
-    def __init__(self, input_dims, action_dim, alpha=1e-3, gamma=0.99, epsilon=0.1):
+    def __init__(self, input_dims, action_dim, alpha=1e-3, gamma=0.99, epsilon=0.1, **kwargs):
         super().__init__(model=None)
         self.input_dims = input_dims  # list of input dims per modality
         self.action_dim = action_dim
@@ -40,6 +43,7 @@ class MultiModalDQNAgent(Agent):
         self.batch_size = 32
         self.last_features = None
         self.last_action = None
+        self.extra_args = kwargs
 
     def act(self, features, state=None):
         # features: list of numpy arrays or tensors

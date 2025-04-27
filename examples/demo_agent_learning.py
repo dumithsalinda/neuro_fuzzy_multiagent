@@ -1,7 +1,7 @@
 import numpy as np
 
 from neuro_fuzzy_multiagent.core.dqn_agent import DQNAgent
-from neuro_fuzzy_multiagent.core.tabular_q_agent import TabularQLearningAgent
+from neuro_fuzzy_multiagent.core.tabular_q_learning_agent import TabularQLearningAgent
 from neuro_fuzzy_multiagent.env.simple_env import SimpleContinuousEnv, SimpleDiscreteEnv
 
 # --- Tabular Q-Learning Demo ---

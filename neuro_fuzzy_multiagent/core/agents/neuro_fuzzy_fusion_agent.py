@@ -25,6 +25,7 @@ class NeuroFuzzyFusionAgent:
         fuzzy_config=None,
         fusion_alpha=0.5,
         device=None,
+        **kwargs
     ):
         self.device = device or ("cuda" if torch.cuda.is_available() else "cpu")
         # Neural fusion network
@@ -44,6 +45,7 @@ class NeuroFuzzyFusionAgent:
         self.loss_fn = nn.MSELoss()
         self.train_mode = False
         self.neural_fusion.eval()
+        self.extra_args = kwargs
 
     def act(self, obs_list):
         """

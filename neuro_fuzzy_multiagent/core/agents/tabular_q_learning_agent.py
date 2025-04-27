@@ -26,7 +26,12 @@ class TabularQLearningAgent(Agent):
     If n_states is None, uses a dict-based Q-table for large/sparse spaces.
     """
 
-    def __init__(self, n_states=None, n_actions=2, alpha=0.1, gamma=0.99, epsilon=0.1):
+    def __init__(self, n_states=None, n_actions=2, alpha=0.1, gamma=0.99, epsilon=0.1, state_dim=None, action_dim=None, **kwargs):
+        # Support CLI: state_dim/action_dim map to n_states/n_actions
+        if state_dim is not None:
+            n_states = state_dim
+        if action_dim is not None:
+            n_actions = action_dim
         super().__init__(model=None)
         self.n_states = n_states
         self.n_actions = n_actions
@@ -39,6 +44,8 @@ class TabularQLearningAgent(Agent):
             self.q_table = np.zeros((n_states, n_actions))
         self.last_state = None
         self.last_action = None
+        # Store any extra CLI kwargs
+        self.extra_args = kwargs
 
     def act(self, observation, state=None):
         # Epsilon-greedy policy
