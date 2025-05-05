@@ -4,9 +4,9 @@ from setuptools import setup, find_packages
 setup(
     name="neuro_fuzzy_multiagent",
     version="0.1.0",
-    description="A modular, plug-and-play platform for neuro-fuzzy multi-agent systems.",
-    author="Your Name",
-    author_email="your.email@example.com",
+    description="Enviroment Independent dynamic self Orgenizing Neuro Fuzzy Multi Agent System",
+    author="Dumith Salinda",
+    author_email="dumithrathnayaka@yahoo.com",
     packages=find_packages(include=["neuro_fuzzy_multiagent", "neuro_fuzzy_multiagent.*"]),
     install_requires=[
         line.strip() for line in open("requirements.txt")
