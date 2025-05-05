@@ -22,10 +22,10 @@ jobs:
         pip install flake8 black
     - name: Lint with flake8
       run: |
-        flake8 src/ --count --show-source --statistics
+        flake8 neuro_fuzzy_multiagent/ --count --show-source --statistics
     - name: Check formatting with black
       run: |
-        black --check src/
+        black --check neuro_fuzzy_multiagent/
     - name: Run tests with pytest
       run: |
         pytest tests/ --maxfail=2 --disable-warnings

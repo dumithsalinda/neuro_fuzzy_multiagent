@@ -3,19 +3,19 @@ name: Plugin System CI
 on:
   push:
     paths:
-      - 'src/core/plugins/**'
-      - 'src/plugins/**'
-      - 'src/env/**'
-      - 'src/core/agents/**'
+      - 'neuro_fuzzy_multiagent/core/plugins/**'
+      - 'neuro_fuzzy_multiagent/plugins/**'
+      - 'neuro_fuzzy_multiagent/env/**'
+      - 'neuro_fuzzy_multiagent/core/agents/**'
       - 'tests/plugins/**'
       - 'PLUGIN_DOCS.md'
       - '.github/workflows/plugin_ci.yml'
   pull_request:
     paths:
-      - 'src/core/plugins/**'
-      - 'src/plugins/**'
-      - 'src/env/**'
-      - 'src/core/agents/**'
+      - 'neuro_fuzzy_multiagent/core/plugins/**'
+      - 'neuro_fuzzy_multiagent/plugins/**'
+      - 'neuro_fuzzy_multiagent/env/**'
+      - 'neuro_fuzzy_multiagent/core/agents/**'
       - 'tests/plugins/**'
       - 'PLUGIN_DOCS.md'
       - '.github/workflows/plugin_ci.yml'
@@ -36,7 +36,7 @@ jobs:
       - name: Run plugin system tests
         run: PYTHONPATH=. pytest tests/plugins/test_plugin_system.py
       - name: Generate plugin docs
-        run: PYTHONPATH=. python3 src/core/plugins/generate_plugin_docs.py
+        run: PYTHONPATH=. python3 neuro_fuzzy_multiagent/core/plugins/generate_plugin_docs.py
       - name: Check plugin docs up to date
         run: |
           git diff --exit-code PLUGIN_DOCS.md || (echo 'PLUGIN_DOCS.md is out of date. Please regenerate.' && exit 1)
