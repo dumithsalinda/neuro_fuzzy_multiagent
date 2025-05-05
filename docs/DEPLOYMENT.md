@@ -13,7 +13,7 @@
 # enableCORS = false
 
 # Troubleshooting
-- If you have modules in subfolders, use `src` as a Python module root (add `__init__.py` files if needed).
+- If you have modules in subfolders, use `neuro_fuzzy_multiagent/` as a Python module root (add `__init__.py` files if needed).
 - If you use secrets, set them in the Streamlit Cloud dashboard.
 
 # To run locally:

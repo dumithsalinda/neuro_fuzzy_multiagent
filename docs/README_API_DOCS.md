@@ -11,7 +11,7 @@ This directory contains the configuration for auto-generating Python API documen
 2. **Build the documentation:**
    ```bash
    cd docs
-   sphinx-apidoc -o . ../src/core
+   sphinx-apidoc -o . ../neuro_fuzzy_multiagent/core
    sphinx-build -b html . _build/html
    ```
 3. **View the docs:**

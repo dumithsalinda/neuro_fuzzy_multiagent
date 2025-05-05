@@ -2,7 +2,16 @@
 
 ## 1. Project Overview
 
-This project is a modular framework for designing, training, and deploying **neuro-fuzzy multi-agent systems**. It integrates neural networks, fuzzy logic, and human feedback to enable robust, explainable, and collaborative AI agents. The system supports multi-modal input (vision, audio, text, sensors), distributed/cloud execution, real-time dashboard visualization, and advanced robustness/safety features.
+This project is evolving into an **intelligent operating system (OS)** platform, fundamentally different from traditional OSes by embedding neuro-fuzzy multiagent intelligence at its core. The system enables:
+
+- Adaptive resource management and optimization using neuro-fuzzy agents
+- Self-learning device recognition through installable AI drivers (trained models)
+- Proactive system optimization and context-aware user experiences
+- Plug-and-play installation of new AI capabilities, extending intelligence to new hardware or domains
+- Prototyping of intelligent agents (e.g., adaptive resource manager, smart USB handler)
+- AI driver/model installation tool for seamless integration of new learning models and dynamic adaptation
+
+It integrates neural networks, fuzzy logic, and human feedback to enable robust, explainable, and collaborative AI agents. The system supports multi-modal input (vision, audio, text, sensors), distributed/cloud execution, real-time dashboard visualization, and advanced robustness/safety features.
 
 ---
 
@@ -35,6 +44,8 @@ neuro_fuzzy_multiagent/
 - **neuro_fuzzy_fusion_agent.py:** Implements the NeuroFuzzyFusionAgent, combining neural and fuzzy logic for multi-modal input and decision-making.
 - **fuzzy_system.py:** Fuzzy inference system, supporting immutable core rules, append-only dynamic rules, and human-in-the-loop updates.
 - **robustness_wrappers.py:** Observation noise, action perturbation, and runtime safety monitoring wrappers for robustness and safety.
+- **ai_driver_installer.py:** Tool for installing and managing AI drivers/models, enabling self-learning device recognition and plug-and-play AI capabilities.
+- **agent_prototypes/**: Prototyping of intelligent agents, such as adaptive resource managers and smart device handlers.
 - **Other files:** Utilities for federated aggregation, fuzzy logic primitives, etc.
 
 ### B. dashboard/

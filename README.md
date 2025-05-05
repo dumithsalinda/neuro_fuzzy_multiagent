@@ -38,6 +38,12 @@ A modular, plug-and-play platform for building, experimenting with, and deployin
 
 ## Key Features
 
+- **Intelligent neuro-fuzzy agents** for adaptive resource management and system optimization
+- **Self-learning device recognition** via installable AI drivers (trained models)
+- **Proactive and context-aware system optimization** for dynamic user experiences
+- **Plug-and-play installation of new AI capabilities** (extend intelligence to new hardware or domains)
+- **Prototyping of intelligent agents** (e.g., adaptive resource manager, smart USB handler)
+- **AI driver/model installation tool** for seamless integration of new learning models
 - Modular neuro-fuzzy agents, easy plug-and-play extension
 - Privacy-aware knowledge sharing and multi-agent collaboration
 - Online learning and knowledge integration

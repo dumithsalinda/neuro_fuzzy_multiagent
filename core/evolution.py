@@ -1,5 +1,9 @@
 # core/evolution.py
-# Evolutionary algorithm stubs
+"""
+Evolutionary algorithms for adaptive optimization in the neuro-fuzzy multiagent OS.
+This module provides evolutionary strategies for optimizing agent populations, supporting self-learning and dynamic adaptation.
+"""
+
 class EvolutionaryStrategy:
     def __init__(self):
         pass

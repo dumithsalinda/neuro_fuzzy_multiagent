@@ -116,7 +116,7 @@ class HotReloadAgent:
 
 ## 7. References
 
-- See also: `src/utils/model_registry.py`, `src/utils/model_loader.py`, `src/utils/registry_watcher.py`, `examples/agent_with_model_hot_reload.py`
+- See also: `neuro_fuzzy_multiagent/utils/model_registry.py`, `neuro_fuzzy_multiagent/utils/model_loader.py`, `neuro_fuzzy_multiagent/utils/registry_watcher.py`, `examples/agent_with_model_hot_reload.py`
 - CLI: `scripts/nfmaos_model.py`
 
 ---

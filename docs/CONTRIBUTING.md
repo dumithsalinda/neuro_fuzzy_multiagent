@@ -1,9 +1,14 @@
 # Contributing to the Neuro-Fuzzy Multi-Agent Platform
 
-Thank you for your interest in contributing! This project is designed for easy extension and welcomes new agents, environments, sensors, actuators, documentation, and improvements from the community.
+Thank you for your interest in contributing! This project is evolving into an intelligent operating system (OS) platform, fundamentally different from traditional OSes. It features:
+- Neuro-fuzzy agents for adaptive resource management and system optimization
+- Self-learning device recognition via installable AI drivers (trained models)
+- Proactive and context-aware system optimization
+- Plug-and-play installation of new AI capabilities
+- Prototyping of intelligent agents (e.g., adaptive resource manager, smart USB handler)
+- AI driver/model installation tool for seamless integration of new learning models
 
-
-Thank you for your interest in contributing! This project is designed for easy extension via plug-and-play agents, environments, sensors, and actuators.
+The project welcomes new agents, environments, sensors, actuators, documentation, and improvements from the community.
 
 ## Ways to Contribute
 - Add new agents, environments, sensors, or actuators as plugins
@@ -16,15 +21,15 @@ Thank you for your interest in contributing! This project is designed for easy e
 ## Adding a New Plugin
 
 1. **Agents:**
-    - Create a new file in `src/core/`.
+    - Create a new file in `neuro_fuzzy_multiagent/core/`.
     - Subclass `Agent` and implement required methods.
     - Add a docstring and (optionally) metadata attributes (`author`, `version`, `description`).
 2. **Environments:**
-    - Create a new file in `src/env/`.
+    - Create a new file in `neuro_fuzzy_multiagent/env/`.
     - Subclass `BaseEnvironment` and implement required methods.
     - Add a docstring and (optionally) metadata attributes.
 3. **Sensors/Actuators:**
-    - Create a new file in `src/plugins/`.
+    - Create a new file in `neuro_fuzzy_multiagent/plugins/`.
     - Subclass `BaseSensor` or `BaseActuator` and implement required methods.
     - Add a docstring and (optionally) metadata attributes.
 4. **Test:**

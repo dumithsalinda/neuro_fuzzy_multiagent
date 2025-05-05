@@ -1,5 +1,7 @@
 # Developer Guide: Neuro-Fuzzy Multi-Agent System
 
+> **Note:** This project is evolving into an intelligent operating system (OS) platform. Unlike traditional OSes, it embeds neuro-fuzzy multiagent intelligence at its core for adaptive resource management, self-learning device recognition, proactive/context-aware optimization, and plug-and-play AI capabilities. The system supports prototyping of intelligent agents and seamless installation of new AI drivers/models for dynamic learning and adaptation.
+
 ## Project Structure Overview
 
 ```
@@ -10,17 +12,14 @@ project_root/
 │   requirements.txt
 │   pyproject.toml
 │
-├── src/
-│   ├── core/
-│   │   ├── agents/           # Core agent classes and agent plugins
-│   │   ├── experiment/       # Experiment management, analytics, MLflow integration
-│   │   ├── plugins/          # Plugin system (discovery, validation, hot reload, registry, docs)
-│   │   ├── environments/     # Environment plugins and wrappers
-│   │   ├── ...
-│   ├── env/                  # Base environment definitions
-│   └── ...
-├── tests/                    # All tests (mirrors src structure)
-├── examples/                 # Example scripts and configs
+├── neuro_fuzzy_multiagent/
+│   ├── core/           # Core agent classes and agent plugins
+│   ├── experiment/     # Experiment management, analytics, MLflow integration
+│   ├── plugins/        # Plugin system (discovery, validation, hot reload, registry, docs)
+│   ├── env/            # Environment plugins and wrappers
+│   ├── ...
+├── tests/              # All tests (mirrors main structure)
+├── examples/           # Example scripts and configs
 ```
 
 ## Adding New Agents, Environments, or Plugins
