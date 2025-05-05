@@ -8,6 +8,7 @@ Minimal feedforward neural network class for NeuroFuzzyHybrid:
 """
 
 import numpy as np
+print('[DEBUG] Loaded neural_network.py')
 
 from abc import ABC, abstractmethod
 
@@ -112,16 +113,54 @@ class ConvolutionalNeuralNetwork(BaseNeuralNetwork):
     Simple 1D CNN for plug-and-play extension.
     """
     def __init__(self, input_shape, num_filters, kernel_size, output_dim, activation=np.tanh):
-        self.input_shape = input_shape
-        self.num_filters = num_filters
-        self.kernel_size = kernel_size
-        self.output_dim = output_dim
-        self.activation = activation
-        # Initialize weights for 1D conv layer and FC output
-        self.W_conv = np.random.randn(num_filters, input_shape, kernel_size) * 0.1
-        self.b_conv = np.zeros((num_filters,))
-        self.W_fc = np.random.randn(num_filters, output_dim) * 0.1
-        self.b_fc = np.zeros(output_dim)
+        print(f"[DEBUG] ConvolutionalNeuralNetwork.__init__ in {__file__}")
+        print(f"[DEBUG] Class: {self.__class__.__name__}")
+        try:
+            self.input_shape = input_shape
+            self.num_filters = num_filters
+            self.kernel_size = kernel_size
+            self.output_dim = output_dim
+            self.activation = activation
+            # Support 1D and 2D input
+            print(f"[DEBUG] Entering ConvolutionalNeuralNetwork.__init__ with input_shape={input_shape} (type={type(input_shape)})")
+            print(f"[DEBUG] num_filters={num_filters}, kernel_size={kernel_size}, output_dim={output_dim}")
+            if isinstance(input_shape, int):
+                # 1D input (original behavior)
+                print(f"[DEBUG] 1D CNN: num_filters={num_filters}, input_shape={input_shape}, kernel_size={kernel_size}, output_dim={output_dim}")
+                self.is_2d = False
+                print("[DEBUG] Before np.random.randn for W_conv (1D)")
+                self.W_conv = np.random.randn(int(num_filters), int(input_shape), int(kernel_size)) * 0.1
+                print("[DEBUG] After np.random.randn for W_conv (1D)")
+                self.b_conv = np.zeros((int(num_filters),))
+                self.W_fc = np.random.randn(int(num_filters), int(output_dim)) * 0.1
+                self.b_fc = np.zeros(int(output_dim))
+            elif isinstance(input_shape, (tuple, list)):
+                # 2D input (e.g., images)
+                print(f"[DEBUG] 2D input_shape: {input_shape}")
+                if len(input_shape) == 2:
+                    h, w = input_shape
+                    c = 1
+                elif len(input_shape) == 3:
+                    h, w, c = input_shape
+                else:
+                    raise ValueError(f"Unsupported input_shape for 2D CNN: {input_shape}")
+                self.is_2d = True
+                print(f"[DEBUG] 2D CNN: num_filters={num_filters}, c={c}, kernel_size={kernel_size}, output_dim={output_dim}")
+                print("[DEBUG] Before np.random.randn for W_conv (2D)")
+                self.W_conv = np.random.randn(int(num_filters), int(c), int(kernel_size), int(kernel_size)) * 0.1
+                print("[DEBUG] After np.random.randn for W_conv (2D)")
+                self.b_conv = np.zeros((int(num_filters),))
+                self.W_fc = np.random.randn(int(num_filters), int(output_dim)) * 0.1
+                self.b_fc = np.zeros(int(output_dim))
+            else:
+                raise ValueError(f"input_shape must be int, tuple, or list, got {type(input_shape)}: {input_shape}")
+        except Exception as e:
+            print(f"[DEBUG][EXCEPTION] in ConvolutionalNeuralNetwork.__init__: {e}")
+            print(f"[DEBUG][EXCEPTION] input_shape={input_shape} (type={type(input_shape)})")
+            print(f"[DEBUG][EXCEPTION] num_filters={num_filters} (type={type(num_filters)})")
+            print(f"[DEBUG][EXCEPTION] kernel_size={kernel_size} (type={type(kernel_size)})")
+            print(f"[DEBUG][EXCEPTION] output_dim={output_dim} (type={type(output_dim)})")
+            raise TypeError(f"[DEBUG][RAISE] Exception in CNN __init__: {e}\ninput_shape={input_shape} (type={type(input_shape)}), num_filters={num_filters} (type={type(num_filters)}), kernel_size={kernel_size} (type={type(kernel_size)}), output_dim={output_dim} (type={type(output_dim)})")
 
     def conv1d(self, x):
         # x: (batch, input_shape)
@@ -133,11 +172,33 @@ class ConvolutionalNeuralNetwork(BaseNeuralNetwork):
                 conv_out[:, i, j] = np.sum(x[:, j:j+self.kernel_size] * self.W_conv[i, :, :], axis=1) + self.b_conv[i]
         return self.activation(conv_out)
 
+    def conv2d(self, x):
+        # x: (batch, h, w, c) or (batch, h, w) if single channel
+        if x.ndim == 3:
+            # Add channel dimension
+            x = x[..., np.newaxis]
+        batch, h, w, c = x.shape
+        out_h = h - self.kernel_size + 1
+        out_w = w - self.kernel_size + 1
+        conv_out = np.zeros((batch, self.num_filters, out_h, out_w))
+        for i in range(self.num_filters):
+            for j in range(out_h):
+                for k in range(out_w):
+                    patch = x[:, j:j+self.kernel_size, k:k+self.kernel_size, :]
+                    # (batch, kernel, kernel, c) * (c, kernel, kernel) -> sum over (kernel, kernel, c)
+                    conv_out[:, i, j, k] = np.sum(patch * self.W_conv[i], axis=(1,2,3)) + self.b_conv[i]
+        return self.activation(conv_out)
+
     def forward(self, x):
-        # x: (batch, input_shape)
-        conv_out = self.conv1d(x)  # (batch, num_filters, out_length)
-        # Global average pooling
-        pooled = np.mean(conv_out, axis=2)  # (batch, num_filters)
+        if self.is_2d:
+            # x: (batch, h, w, c) or (batch, h, w)
+            conv_out = self.conv2d(x)  # (batch, num_filters, out_h, out_w)
+            # Global average pooling
+            pooled = np.mean(conv_out, axis=(2,3))  # (batch, num_filters)
+        else:
+            # x: (batch, input_shape)
+            conv_out = self.conv1d(x)  # (batch, num_filters, out_length)
+            pooled = np.mean(conv_out, axis=2)  # (batch, num_filters)
         out = np.dot(pooled, self.W_fc) + self.b_fc  # (batch, output_dim)
         return out
 
@@ -212,7 +273,13 @@ class SimpleLSTM(BaseNeuralNetwork):
         h = np.zeros(self.hidden_dim)
         c = np.zeros(self.hidden_dim)
         for t in range(x.shape[0]):
-            concat = np.concatenate([x[t], h])
+            x_t = x[t]
+            # If x_t is 2D (batch, feat), flatten or select first batch
+            if x_t.ndim > 1:
+                x_t = x_t[0]
+            if h.ndim > 1:
+                h = h[0]
+            concat = np.concatenate([x_t, h])
             f = self._sigmoid(np.dot(concat, self.Wf) + self.bf)
             i = self._sigmoid(np.dot(concat, self.Wi) + self.bi)
             o = self._sigmoid(np.dot(concat, self.Wo) + self.bo)
