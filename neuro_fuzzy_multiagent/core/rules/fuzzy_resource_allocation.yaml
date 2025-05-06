@@ -1,0 +1,18 @@
+# Fuzzy rules for resource allocation negotiation
+# Inputs: urgency (low, medium, high), privacy_risk (low, medium, high), utility (low, medium, high)
+# Output: allocation_score (deny, maybe, allocate)
+inputs:
+  urgency: [low, medium, high]
+  privacy_risk: [low, medium, high]
+  utility: [low, medium, high]
+output:
+  allocation_score: [deny, maybe, allocate]
+rules:
+  - if: {urgency: high, privacy_risk: low} then: {allocation_score: allocate}
+  - if: {urgency: high, privacy_risk: medium, utility: high} then: {allocation_score: allocate}
+  - if: {urgency: medium, privacy_risk: low, utility: high} then: {allocation_score: allocate}
+  - if: {urgency: low, privacy_risk: high} then: {allocation_score: deny}
+  - if: {urgency: low, utility: low} then: {allocation_score: deny}
+  - if: {privacy_risk: medium, utility: high} then: {allocation_score: maybe}
+  - if: {urgency: medium, privacy_risk: medium} then: {allocation_score: maybe}
+  - if: {urgency: high, privacy_risk: high} then: {allocation_score: maybe}

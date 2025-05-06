@@ -1,0 +1,50 @@
+# Fuzzy rules for notification suppression
+# Inputs: urgency (low, medium, high), user_mode (focus, normal, dnd), interruption_cost (low, medium, high)
+# Output: notification_action (show, suppress, delay)
+inputs:
+  urgency: [low, medium, high]
+  user_mode: [focus, normal, dnd]
+  interruption_cost: [low, medium, high]
+output:
+  notification_action: [show, suppress, delay]
+rules:
+  - if:
+      urgency: high
+      user_mode: normal
+    then:
+      notification_action: show
+  - if:
+      urgency: high
+      user_mode: focus
+    then:
+      notification_action: show
+  - if:
+      urgency: low
+      user_mode: focus
+    then:
+      notification_action: suppress
+  - if:
+      user_mode: dnd
+    then:
+      notification_action: suppress
+  - if:
+      interruption_cost: high
+      urgency: medium
+    then:
+      notification_action: delay
+  - if:
+      interruption_cost: high
+      urgency: low
+    then:
+      notification_action: suppress
+  - if:
+      urgency: medium
+      user_mode: focus
+    then:
+      notification_action: delay
+  - if:
+      urgency: medium
+      interruption_cost: low
+    then:
+      notification_action: show
+
