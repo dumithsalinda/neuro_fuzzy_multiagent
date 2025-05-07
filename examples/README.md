@@ -1,12 +1,18 @@
 # Examples and Demos
 
-This folder contains example scripts and demonstration code for the Neuro-Fuzzy Multi-Agent System project, now evolving into an intelligent OS platform. These examples showcase:
+This folder contains example scripts and demonstration code for the Neuro-Fuzzy Multi-Agent OS. These examples showcase:
 - Neuro-fuzzy agents for adaptive resource management and system optimization
 - Self-learning device recognition via installable AI drivers (trained models)
 - Proactive and context-aware system optimization
 - Plug-and-play installation of new AI capabilities
 - Prototyping of intelligent agents (e.g., adaptive resource manager, smart USB handler)
 - AI driver/model installation tool for seamless integration of new learning models
+
+---
+
+## Contributing Examples
+
+To contribute new example scripts or demos, please see the [Contribution Guide](../docs/CONTRIBUTING.md) for instructions and best practices.
 
 Move or add your demo and example scripts here for better project organization.
 
@@ -78,3 +84,5 @@ agent = create_agent_from_file('examples/agent_config_fusion.yaml')
 ```
 
 For more details on config options, see the source code and agent class docstrings.
+
+**Note:** For advanced usage and customization, please refer to [DEVELOPER.md](../docs/DEVELOPER.md).

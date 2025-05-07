@@ -1,84 +1,162 @@
-# Developer Guide: Plug-and-Play Neuro-Fuzzy Multi-Agent System
+# Developer Guide: Neuro-Fuzzy Multi-Agent Framework
 
-Welcome! This guide helps you extend the neuro-fuzzy multi-agent platform by adding new agents, environments, sensors, actuators, or neural networks—no core code changes required.
-
-Welcome to the plug-and-play neuro-fuzzy multi-agent platform! This guide explains how to add new environments, agents, neural networks, sensors, and actuators so that they are automatically discovered and available in the dashboard/config—**no core code changes required**.
+Welcome! This guide explains how to extend, customize, and contribute to the Neuro-Fuzzy Multiagent Framework. This package is developed and maintained independently; any operating system (OS) integration will be handled as a separate project. It consolidates all developer and plugin instructions into a single, up-to-date resource.
 
 ---
 
-## 1. Directory Structure
+## 1. Welcome & Scope
 
-```
-src/
-  env/           # Environment plugins (BaseEnvironment subclasses)
-  core/          # Agent plugins (Agent subclasses, neural networks)
-  plugins/       # Sensor/actuator plugins (BaseSensor, BaseActuator)
-  utils/         # Utilities (e.g., config_loader.py)
-```
+This guide is for developers who want to extend the platform with new plugins, contribute code, or understand the system architecture. For contribution process, see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ---
 
-## 2. Plugin API Reference
+## 2. Project Structure
 
-### Environments
+```
+project_root/
+│   README.md
+│   requirements.txt
+│   pyproject.toml
+│
+├── neuro_fuzzy_multiagent/
+│   ├── core/           # Core agent classes and agent plugins
+│   ├── plugins/        # Sensor/actuator plugins (BaseSensor, BaseActuator)
+│   ├── env/            # Environment plugins (BaseEnvironment)
+│   ├── utils/          # Utilities (e.g., config_loader.py)
+│   └── ...
+├── dashboard/          # Streamlit dashboard and UI
+├── tests/              # All tests (mirrors main structure)
+├── examples/           # Example scripts and configs
+├── docs/               # Documentation
+```
 
-- Subclass `BaseEnvironment` in `src/env/`.
-- Use the `@register_plugin('environment')` decorator (already on base class).
-- Implement: `reset`, `step`, `get_observation`, `get_state`, `render`.
-- Add a docstring describing config options for auto-docs.
+- **Agents:** `core/agents/`
+- **Environments:** `env/`
+- **Sensors/Actuators:** `plugins/`
+- **Neural Networks:** `core/neural_network.py`
+- **Tests:** `tests/` (mirrors main structure)
+
+---
+
+## 3. Plugin System Overview
+
+The platform uses a drop-in plugin architecture for all core components:
+- **Agents** (decision-makers)
+- **Environments** (simulation/real-world wrappers)
+- **Sensors/Actuators** (inputs/outputs)
+- **Neural Networks** (plug-and-play models)
+
+Plugins are auto-discovered at startup and can be selected via config files or the dashboard.
+
+---
+
+## 4. How to Add a Plugin
 
 ### Agents
+- Place your agent class in `core/agents/`.
+- Subclass `Agent` and use the `@register_plugin('agent')` decorator.
+- Implement required methods (e.g., `act`, `reset`).
+- Add docstrings and (optionally) metadata: `author`, `version`, `description`.
 
-- Subclass `Agent` in `src/core/agents/`.
-- Use the `@register_plugin('agent')` decorator (already on base class).
-- Add docstrings for config options and main methods.
+### Environments
+- Place your environment class in `env/`.
+- Subclass `BaseEnvironment` and use `@register_plugin('environment')`.
+- Implement methods: `reset`, `step`, `get_observation`, `get_state`, `render`.
+- Add docstrings and metadata.
 
 ### Sensors/Actuators
+- Place in `plugins/`.
+- Subclass `BaseSensor` or `BaseActuator` and use the appropriate decorator.
+- Implement required methods (e.g., `read`, `actuate`).
+- Add docstrings and metadata.
 
-- Subclass `BaseSensor` or `BaseActuator` in `src/plugins/`.
-- Use the `@register_plugin('sensor')` or `@register_plugin('actuator')` decorator (already on base class).
-- Add docstrings for auto-docs.
+### Neural Networks
+- Subclass `BaseNeuralNetwork` in `core/neural_network.py`.
+- Use `@register_plugin('neural_network')` if needed.
+- Implement `forward`, `backward`, `evolve` (optional), and `__init__`.
 
-### Neural Networks (Plug-and-Play)
+**Example:**
+```python
+from neuro_fuzzy_multiagent.core.agents.agent import Agent
+@register_plugin('agent')
+class MyAgent(Agent):
+    """My custom agent."""
+    author = "Your Name"
+    version = "1.0"
+    def act(self, obs):
+        return 0
+```
 
-- Subclass `BaseNeuralNetwork` in `src/core/neural_network.py`.
-- Register using `@register_plugin('neural_network')` if you add this plugin type.
-- Required methods: `forward`, `backward`, `evolve` (optional), `__init__` with config params.
-- Add docstrings for config options.
-- Example config (YAML):
+For advanced API details, see the [Plugin API Reference](PLUGIN_DOCS.md).
+
+---
+
+## 5. Configuration & Dashboard Integration
+
+- Plugins are selected via YAML/JSON config files or interactively in the dashboard sidebar.
+- Use the dashboard “🔄 Reload Plugins” button after adding new files or making changes.
+- Plugin documentation is auto-generated and viewable/downloadable in the dashboard.
+- Example YAML for agent config:
   ```yaml
+  agent_type: NeuroFuzzyAgent
   nn_config:
-    nn_type: FeedforwardNeuralNetwork
     input_dim: 4
     hidden_dim: 8
     output_dim: 2
-    activation: tanh
   ```
 
 ---
 
-## 3. Auto-Discovery & Registration
+## 6. Coding Standards
 
-- All plugins are auto-discovered by scanning their respective directories.
-- Use the `@register_plugin` decorator (already on base classes) or ensure your class is a subclass of the appropriate base class.
-- No need to manually edit registries.
-
----
-
-## 4. Config & Dashboard Integration
-
-- Plugins can be selected via YAML/JSON config files or interactively in the dashboard sidebar.
-- Use the dashboard “🔄 Reload Plugins” button after adding new files or making changes.
-- Plugin documentation is auto-generated and viewable/downloadable in the dashboard sidebar.
+- **Type Hints:** Required for all public functions and methods.
+- **Docstrings:** Every class and function must have a clear docstring (purpose, args, returns).
+- **Formatting:** Use Black, isort, and flake8 (see `pyproject.toml`).
+- **Error Handling:** Use try/except for I/O, plugin loading, subprocess calls.
+- **Logging:** Use the `logging` module for warnings, errors, and key actions.
+- **Modularity:** Keep plugins stateless and modular where possible.
 
 ---
 
-## 5. Plugin Auto-Documentation
+## 7. Testing
 
-- Run `PYTHONPATH=. python3 src/core/plugins/neuro_fuzzy_multiagent/generate_plugin_docs.py` to regenerate `PLUGIN_DOCS.md`.
-- The dashboard sidebar displays the latest plugin documentation and provides a download button.
-- Add docstrings to your plugin classes and methods for best documentation.
+- All tests are in the `tests/` directory, mirroring the main structure.
+- Add new tests for each feature or plugin.
+- To run all tests:
+  ```sh
+  python3 -m pytest
+  ```
+- To run a specific test file:
+  ```sh
+  python3 -m pytest tests/core/test_my_agent.py
+  ```
 
+---
+
+## 8. Troubleshooting & Best Practices
+
+- **Validator Failing?**
+  - Run `python3 scripts/validate_plugins.py` and check for [FAIL] lines. Fix missing methods as indicated.
+- **Dashboard Not Showing Plugin?**
+  - Check for typos, missing decorators, or missing docstrings.
+- **Plugin Not Auto-Discovered?**
+  - Ensure the file is in the correct directory and uses the correct base class.
+- **Need More Examples?**
+  - See `examples/` and the [Plugin API Reference](PLUGIN_DOCS.md).
+
+---
+
+## 9. References & Further Reading
+
+- [Plugin API Reference](PLUGIN_DOCS.md)
+- [CONTRIBUTING.md](CONTRIBUTING.md)
+- [Model Registry & Agent Integration](MODEL_REGISTRY_AND_AGENT.md)
+- [Project Documentation](PROJECT_DOCUMENTATION.md)
+- [README](../README.md)
+
+---
+
+Thank you for helping build the Neuro-Fuzzy Multi-Agent OS!
 ---
 
 ## 6. Hot-Reloading Plugins

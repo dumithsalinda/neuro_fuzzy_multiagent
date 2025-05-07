@@ -1,6 +1,8 @@
-# Neuro-Fuzzy Multi-Agent System
+# Neuro-Fuzzy Multiagent Framework
 
 A modular, plug-and-play platform for building, experimenting with, and deploying intelligent neuro-fuzzy agents in Python.
+
+**Note:** This package is a standalone neuro-fuzzy multiagent framework, not an operating system. It provides a flexible and extensible platform for developing and testing intelligent agents, but it does not include operating system features.
 
 ---
 
@@ -118,14 +120,17 @@ A robust, environment-independent, dynamic self-organizing neuro-fuzzy multi-age
 
 ---
 
-## Documentation & Community
+## Documentation
 
+- [Project Documentation](docs/PROJECT_DOCUMENTATION.md) — Full system overview and architecture
+- [Developer Guide](docs/DEVELOPER.md) — How to extend the OS, create plugins, and contribute code
+- [Contribution Guide](docs/CONTRIBUTING.md) — How to report issues, suggest features, and contribute
+- [Plugin API Reference](docs/PLUGIN_DOCS.md) — Plugin types and configuration options
 - [Model Registry & Agent Integration](docs/MODEL_REGISTRY_AND_AGENT.md)
-- [Plugin API Reference](docs/PLUGIN_DOCS.md)
-- [Developer Guide](docs/DEVELOPER.md)
-- [Contribution Guide](docs/CONTRIBUTING.md)
-- Open an issue or discussion on GitHub for help or suggestions.
-- Contributions welcome! See [CONTRIBUTING.md](docs/CONTRIBUTING.md).
+- [Distributed Execution Guide](docs/README_DISTRIBUTED.md)
+- [API Docs & Generation](docs/README_API_DOCS.md)
+
+For questions or suggestions, open an issue or discussion on GitHub. Contributions are welcome!
 
 ---
 
@@ -182,51 +187,6 @@ sudo docker run -p 8501:8501 neuro-fuzzy-multiagent
 - **Explainability & Playback:**
   - Inspect fuzzy rules, group structure, and agent decisions.
   - Use scenario playback to step through and analyze episodes interactively.
-
----
-
-## Troubleshooting & FAQ
-
-- **Google Sheets Errors:** Ensure your service account has access to the target spreadsheet and the JSON key is valid.
-- **Docker Issues:** Make sure Docker is installed and running, and ports are not in use.
-- **Missing Dependencies:** Double-check `requirements.txt` for all needed Python packages.
-- **Some features are marked as 'in development':** You may encounter NotImplementedError or TODO comments in the codebase. These are active areas for contribution. See the roadmap and consider contributing!
-- **Streamlit/Matplotlib/NetworkX errors:** Install missing packages with `pip install ...` or rebuild the Docker image.
-- **Performance:** Enable "Fast Mode" in the dashboard for large-scale experiments.
-
----
-
-## Running Tests
-
-To run all tests (requires pytest):
-
-```sh
-pytest tests/
-```
-
-All dashboard and core functions are covered by the test suite. If you encounter any errors, see the test output for details and troubleshooting.
-
-### Test Suite Organization (2025)
-
-Tests are now organized by feature/module for clarity and maintainability:
-
-```
-tests/
-  agents/         # Tests for agent classes and agent-related logic
-  core/           # Core system, law, online learning, and plugin tests
-  environments/   # Environment and environment-controller tests
-  management/     # Multi-agent system, group, dashboard, and management tests
-  integration/    # Cross-module, knowledge sharing, and integration tests
-```
-
-- Place new agent tests in `tests/agents/`, environment tests in `tests/environments/`, etc.
-- Each subfolder contains an `__init__.py` for pytest discovery.
-- Example: To test a new agent, add `test_my_agent.py` to `tests/agents/`.
-- Update imports to use relative paths (e.g., `from neuro_fuzzy_multiagent.core.agents.dummy_agent import DummyAgent`).
-
----
-
-## Meta-Learning & AutoML
 
 The platform supports meta-learning and automated hyperparameter optimization for agents:
 
@@ -520,22 +480,22 @@ agents[0].share_knowledge(knowledge, system=system)
 
 ## Extensibility
 
-- **Add a new law:** Define a function and decorate with `@register_law`.
-- **Add a new agent type:** Subclass `Agent` and override methods as needed.
+For all extension and plugin instructions—including adding new laws, agent types, group aggregation methods, sensors, actuators, and more—see the unified [Developer Guide](docs/DEVELOPER.md).
+
+- **Add a new law:** Define a function and decorate with `@register_law` (see Developer Guide for details).
+- **Add a new agent type:** Subclass `Agent` and override required methods (see Developer Guide for best practices).
 - **Add a group aggregation method:** Use `MultiAgentSystem.group_decision(..., method="custom", custom_fn=...)`.
 
 ## Project Goals
 
-- Environment-independent, dynamic, and robust multi-agent learning.
-- Strict compliance with unbreakable laws.
-- Modular, extensible, and well-documented codebase.
+- Build an intelligent, environment-independent, and robust multi-agent OS.
+- Enable adaptive, explainable, and modular neuro-fuzzy agents for resource management and optimization.
+- Strict compliance with unbreakable laws and safe AI principles.
+- Support plug-and-play extensibility and well-documented contributions.
 
 ---
 
-For more details, see module/class/method docstrings in the source code.
-trained_model = transfer_learning(env1, env2, model, feat, steps=10)
-
-````
+For more details, see module/class/method docstrings in the source code, and refer to the [Developer Guide](docs/DEVELOPER.md) for in-depth extension and integration instructions.
 
 ### Integration with Neuro-Fuzzy Hybrid Model
 You can use the `NeuroFuzzyHybrid` model in place of the neural network in transfer learning:
@@ -544,14 +504,18 @@ from neuro_fuzzy_multiagent.core.neuro_fuzzy import NeuroFuzzyHybrid
 # ... setup fuzzy system and configs ...
 model = NeuroFuzzyHybrid(nn_config, fis_config)
 trained_model = transfer_learning(env1, env2, model, feat, steps=10)
-````
+```
 
 ### Testing
 
-- Run all tests with `pytest` in the project root.
+- Run all tests with `pytest` in the project root:
+  ```sh
+  pytest tests/
+  ```
 - See `tests/test_environment.py` for environment and transfer learning tests.
 - See `tests/test_neuro_fuzzy.py` for hybrid model tests.
 
 ## Requirements
 
-See requirements.txt
+See [requirements.txt](requirements.txt) for dependencies.
+

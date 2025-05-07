@@ -1,30 +1,26 @@
 # Plugin API Documentation
 
+> **Note:** For plugin creation and development instructions, see the unified [DEVELOPER.md](DEVELOPER.md) guide. This file is a reference for available plugin types and their configuration options only.
+
 The plugin system enables easy extension of the platform with new agents, environments, sensors, actuators, and neural networks. All plugins are auto-discovered and available in the dashboard/config—no core code changes required.
 
-
+---
 
 ## Agent Plugins
 
 ### MetaAgent
-
-MetaAgent adapts its own learning algorithm or architecture based on performance metrics.
-It can switch between different agent models (DQN, NeuroFuzzy, etc.) or tune hyperparameters on the fly.
+MetaAgent adapts its own learning algorithm or architecture based on performance metrics. It can switch between different agent models (DQN, NeuroFuzzy, etc.) or tune hyperparameters on the fly.
 
 **Config options:**
-
 - `candidate_agents`: Any (default: required)
 - `selection_strategy`: Any (default: None)
 - `perf_metric`: Any (default: reward)
 - `window`: Any (default: 10)
 
 ### NeuroFuzzyFusionAgent
-
-Multi-modal agent combining neural and fuzzy logic for decision making.
-Accepts multiple input modalities, fuses both neural and fuzzy outputs.
+Multi-modal agent combining neural and fuzzy logic for decision making. Accepts multiple input modalities, fuses both neural and fuzzy outputs.
 
 **Config options:**
-
 - `input_dims`: Any (default: required)
 - `hidden_dim`: Any (default: required)
 - `output_dim`: Any (default: required)
@@ -34,20 +30,9 @@ Accepts multiple input modalities, fuses both neural and fuzzy outputs.
 - `device`: Any (default: None)
 
 ### TabularQLearningAgent
-
-Generic agent that interacts with an environment using a model and policy.
-
-Supports online learning, dynamic group membership, plug-and-play fuzzy logic (UniversalFuzzyLayer),
-and a standardized communication API (send_message, receive_message).
-
-Args:
-    model: The agent's underlying model (e.g., DQN, NeuroFuzzyHybrid).
-    policy: Callable for action selection (optional).
-    bus: Optional message bus for inter-agent communication.
-    group: Optional group identifier.
+Generic agent that interacts with an environment using a model and policy. Supports online learning, dynamic group membership, plug-and-play fuzzy logic (UniversalFuzzyLayer), and a standardized communication API (send_message, receive_message).
 
 **Config options:**
-
 - `n_states`: Any (default: None)
 - `n_actions`: Any (default: 2)
 - `alpha`: Any (default: 0.1)
@@ -55,49 +40,30 @@ Args:
 - `epsilon`: Any (default: 0.1)
 
 ### MetaRLAgent
-
-Meta-Reinforcement Learning Agent.
-This agent adapts its own learning strategy (e.g., learning rate, exploration policy, even algorithm) based on meta-feedback about its performance.
+Meta-Reinforcement Learning Agent. This agent adapts its own learning strategy (e.g., learning rate, exploration policy, even algorithm) based on meta-feedback about its performance.
 
 **Config options:**
-
 - `base_agent_cls`: Any (default: required)
 - `base_agent_kwargs`: Any (default: required)
 - `meta_lr`: Any (default: 0.1)
 - `meta_window`: Any (default: 10)
 
 ### MultiModalFusionAgent
-
-Agent that accepts multiple modalities as input and uses a fusion network for policy/Q-value computation.
-Easily extensible: add new fusion strategies in FusionNetwork and update here.
-TODO: Add support for training (currently eval-only), more modalities, and advanced fusion methods (e.g., attention, gating).
+Agent that accepts multiple modalities as input and uses a fusion network for policy/Q-value computation. Easily extensible: add new fusion strategies in FusionNetwork and update here. TODO: Add support for training (currently eval-only), more modalities, and advanced fusion methods (e.g., attention, gating).
 
 **Config options:**
-
 - `input_dims`: Any (default: required)
 - `hidden_dim`: Any (default: required)
 - `output_dim`: Any (default: required)
 - `fusion_type`: Any (default: concat)
 - `lr`: Any (default: 0.001)
-- `gamma`: Any (default: 0.99)
 
-### DQNAgent
+---
 
-Generic agent that interacts with an environment using a model and policy.
+*For more plugin types and config options, see the dashboard auto-generated documentation or source code. For all development instructions, see [DEVELOPER.md](DEVELOPER.md).
 
-Supports online learning, dynamic group membership, plug-and-play fuzzy logic (UniversalFuzzyLayer),
-and a standardized communication API (send_message, receive_message).
+**Note:** This package is a standalone neuro-fuzzy multiagent framework. Any operating system (OS) integration will be developed and maintained as a separate package.
 
-Args:
-    model: The agent's underlying model (e.g., DQN, NeuroFuzzyHybrid).
-    policy: Callable for action selection (optional).
-    bus: Optional message bus for inter-agent communication.
-    group: Optional group identifier.
-
-**Config options:**
-
-- `state_dim`: Any (default: required)
-- `action_dim`: Any (default: required)
 - `alpha`: Any (default: 0.001)
 - `gamma`: Any (default: 0.99)
 - `epsilon`: Any (default: 0.1)

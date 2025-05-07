@@ -1,5 +1,7 @@
 # Distributed Execution with Ray
 
+> **Note:** For distributed agent/plugin development and troubleshooting, see the [Developer Guide](DEVELOPER.md).
+
 ## Local Ray Cluster
 
 1. Launch the Ray cluster:
@@ -20,6 +22,12 @@
 - Python 3.8+
 - Ray (`pip install ray`)
 - All project dependencies (`pip install -r requirements.txt`)
+
+## Troubleshooting
+- **Ray not found:** Ensure Ray is installed in your Python environment.
+- **Cluster connection issues:** Check firewall, YAML config, and cloud provider setup.
+- **Plugin/agent not running as expected:** See [Developer Guide](DEVELOPER.md) for debugging distributed plugins.
+- **Missing dependencies:** Double-check `requirements.txt` and sync all nodes.
 
 ## Notes
 - The NeuroFuzzyFusionAgent is fully compatible with Ray distributed execution.

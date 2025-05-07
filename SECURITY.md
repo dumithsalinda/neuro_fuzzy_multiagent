@@ -6,7 +6,7 @@ We release security updates for the latest major version. Please ensure you are 
 
 ## Reporting a Vulnerability
 
-If you discover a security vulnerability, please report it by opening a private issue or contacting the maintainers at [YOUR EMAIL HERE]. We will coordinate a fix and disclose the issue responsibly.
+If you discover a security vulnerability, please report it by opening a private issue or following the instructions in the [Contribution Guide](docs/CONTRIBUTING.md). The maintainers will coordinate a fix and disclose the issue responsibly.
 
 ## Best Practices
 - Never commit secrets, passwords, or API keys to the repository.

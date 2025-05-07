@@ -19,53 +19,46 @@ It integrates neural networks, fuzzy logic, and human feedback to enable robust,
 
 ```
 neuro_fuzzy_multiagent/
-├── core/                # Legacy core logic (minimal, now superseded by src/core)
+├── core/                # Core logic: agents, neural networks, utilities
+├── plugins/             # Sensor/actuator plugins
+├── env/                 # Environment plugins
 ├── dashboard/           # Streamlit dashboard UI and supporting modules
 ├── examples/            # Example/demo scripts for various use-cases
-├── internet_learning/   # Modules for web/video knowledge integration
-├── models/              # (Empty) Placeholder for model files
-├── multiagent/          # Collaboration and environment logic
-├── src/                 # Main source code: agents, fuzzy logic, envs, etc.
-│   └── core/            # Core neuro-fuzzy agent, system, wrappers
 ├── tests/               # Comprehensive test suite for all modules
 ├── README.md            # Project overview and quickstart
-├── ROADMAP.md           # Development roadmap and milestones
 ├── requirements.txt     # Python dependencies
 ├── Dockerfile           # Containerization support
 ├── ...                  # Utility scripts and configs
 ```
 
+For detailed development and contribution instructions, see:
+- [Developer Guide](DEVELOPER.md)
+- [Contribution Guide](CONTRIBUTING.md)
+
 ---
 
-## 3. Main Modules & Their Roles
+## Documentation
 
-### A. src/core/
+- [Developer Guide](DEVELOPER.md) — How to extend the OS, create plugins, and contribute code
+- [Contribution Guide](CONTRIBUTING.md) — How to report issues, suggest features, and contribute
+- [Plugin API Reference](PLUGIN_DOCS.md) — Plugin types and configuration options
+- [Model Registry & Agent Integration](MODEL_REGISTRY_AND_AGENT.md)
+- [Distributed Execution Guide](README_DISTRIBUTED.md)
+- [API Docs & Generation](README_API_DOCS.md)
 
-- **neuro_fuzzy_fusion_agent.py:** Implements the NeuroFuzzyFusionAgent, combining neural and fuzzy logic for multi-modal input and decision-making.
-- **fuzzy_system.py:** Fuzzy inference system, supporting immutable core rules, append-only dynamic rules, and human-in-the-loop updates.
-- **robustness_wrappers.py:** Observation noise, action perturbation, and runtime safety monitoring wrappers for robustness and safety.
-- **ai_driver_installer.py:** Tool for installing and managing AI drivers/models, enabling self-learning device recognition and plug-and-play AI capabilities.
-- **agent_prototypes/**: Prototyping of intelligent agents, such as adaptive resource managers and smart device handlers.
-- **Other files:** Utilities for federated aggregation, fuzzy logic primitives, etc.
+---
 
-### B. dashboard/
+## Main Modules & Their Roles
 
-- **neuro_fuzzy_multiagent/main.py:** The entry-point for the Streamlit dashboard. Provides agent selection, simulation, analytics, chat, and experiment control.
-- **visualization.py:** Visualizations for agent positions, SOM grids, group analytics, and knowledge.
-- **simulation.py:** Batch/parallel experiment logic, simulation step execution, and group clustering.
-- **chat.py:** Human-agent chat interface, feedback, and explainability.
-- **collab.py, google_sheets.py:** Collaboration features, experiment sharing, and Google Sheets integration.
-- **sidebar.py, layout.py, intervention.py:** UI controls and layout helpers.
+### Core Modules
+- **core/**: Agents, neural/fuzzy logic, utilities
+- **plugins/**: Sensor/actuator plugins
+- **env/**: Environment plugins
+- **dashboard/**: Streamlit UI, analytics, and collaboration
+- **examples/**: Example/demo scripts
+- **tests/**: Comprehensive test suite
 
-### C. examples/
-
-- Contains ready-to-run demo scripts for agent learning, multiagent RL, transfer learning, and simulation.
-
-### D. tests/
-
-- Extensive test suite covering all major modules, agent behaviors, dashboard features, and robustness.
-
-### E. Other Directories
+For full extension instructions, see [Developer Guide](DEVELOPER.md). For contribution process, see [Contribution Guide](CONTRIBUTING.md).
 
 - **internet_learning/**: Integrates web/video knowledge for agent learning.
 - **multiagent/**: Collaboration and environment abstractions.

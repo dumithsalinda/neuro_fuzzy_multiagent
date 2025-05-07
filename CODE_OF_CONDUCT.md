@@ -26,12 +26,8 @@ Community leaders are responsible for clarifying and enforcing our standards of 
 
 ## Enforcement
 
-Instances of abusive, harassing, or otherwise unacceptable behavior may be reported to the community leaders responsible for enforcement at [YOUR EMAIL HERE].
-
-All complaints will be reviewed and investigated promptly and fairly.
+To report unacceptable behavior, see the [Contribution Guide](docs/CONTRIBUTING.md) for how to contact the maintainers. All complaints will be reviewed and investigated promptly and fairly.
 
 ## Attribution
 
-This Code of Conduct is adapted from the [Contributor Covenant][homepage], version 2.1, available at https://www.contributor-covenant.org/version/2/1/code_of_conduct.html
-
-[homepage]: https://www.contributor-covenant.org
+Adapted from the [Contributor Covenant](https://www.contributor-covenant.org/version/2/1/code_of_conduct.html), version 2.1.
