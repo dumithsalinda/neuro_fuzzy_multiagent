@@ -13,7 +13,6 @@ class CNNAgent:
     Supports both 1D and 2D input (e.g., images with shape (height, width, channels)).
     """
     def __init__(self, input_shape, num_filters, kernel_size, output_dim, activation=np.tanh, policy=None):
-        print(f"[DEBUG] CNNAgent.__init__ input_shape={input_shape} (type={type(input_shape)}), num_filters={num_filters} (type={type(num_filters)}), kernel_size={kernel_size} (type={type(kernel_size)}), output_dim={output_dim} (type={type(output_dim)})")
         self.model = ConvolutionalNeuralNetwork(input_shape, num_filters, kernel_size, output_dim, activation)
         self.policy = policy if policy is not None else self.default_policy
 
